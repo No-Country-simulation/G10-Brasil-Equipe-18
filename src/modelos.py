@@ -3,7 +3,7 @@
 Compatíveis com os JSON Schemas do CommunityLab, garantindo tipagem estrita,
 validação de regras de negócio e fácil serialização/desserialização.
 """
-from typing import List, Optional, Literal
+from typing import List, Optional, Literal, Union
 from datetime import datetime, timezone
 from pydantic import BaseModel, Field, field_validator
 
@@ -29,7 +29,7 @@ class AnaliseInteracao(BaseModel):
 class Interacao(BaseModel):
     """Modelo estruturado para uma interação de comunidade."""
     versao_schema: str = Field(default="1.0", pattern="^1\\.0$")
-    id: int = Field(..., ge=1)
+    id: Union[int, str] = Field(...)
     autor_id: str = Field(..., pattern=r"^membro_[0-9]{3,}$")
     data: str
     origem: Literal["simulado", "discord", "slack", "forum", "outro"] = "discord"
@@ -49,16 +49,16 @@ class Interacao(BaseModel):
 class Citacao(BaseModel):
     """Citação literal extraída de uma interação."""
     texto: str = Field(..., min_length=1, max_length=500)
-    id_interacao: int = Field(..., ge=1)
+    id_interacao: Union[int, str] = Field(...)
 
 
 class HistoriaDetectada(BaseModel):
     """História de sucesso detectada com fatos, resultados e citações."""
     versao_schema: str = Field(default="1.1", pattern="^1\\.1$")
-    id_historia: str = Field(..., pattern=r"^historia_[0-9]{3,}$")
+    id_historia: str = Field(..., pattern=r"^(historia_[0-9]{3,}|hist-[0-9]{3,})$")
     tipo: Literal["conquista_profissional", "superacao", "projeto_destaque"]
     resumo: str = Field(..., min_length=1, max_length=1000)
-    interacoes_origem: List[int] = Field(..., min_length=1)
+    interacoes_origem: List[Union[int, str]] = Field(..., min_length=1)
     fatos: List[str] = Field(..., min_length=1)
     resultados: List[str] = Field(default_factory=list)
     citacoes: List[Citacao] = Field(..., min_length=1)
@@ -74,7 +74,7 @@ class AtivoGerado(BaseModel):
     tipo: Literal["testemunho_estruturado", "case_sucesso", "post_linkedin", "resumo_newsletter", "card_conquista"]
     titulo: Optional[str] = Field(None, max_length=200)
     texto: str = Field(..., min_length=1)
-    interacoes_origem: List[int] = Field(..., min_length=1)
+    interacoes_origem: List[Union[int, str]] = Field(..., min_length=1)
     status_revisao: Literal["pendente", "aprovado", "rejeitado"] = "pendente"
     revisor: Optional[str] = None
     observacao_revisor: Optional[str] = Field(None, max_length=500)
@@ -91,7 +91,7 @@ class AvaliacaoCQF(BaseModel):
     """Avaliação de qualidade e governança editorial conforme CommunityLab Quality Framework (CQF v1.0)."""
     versao_schema: str = Field(default="1.0", pattern=r"^1\.0$")
     id_avaliacao: str = Field(..., pattern=r"^cqf_[0-9]{3,}$")
-    id_historia: str = Field(..., pattern=r"^historia_[0-9]{3,}$")
+    id_historia: str = Field(..., pattern=r"^(historia_[0-9]{3,}|hist-[0-9]{3,})$")
     id_ativo: Optional[str] = Field(None, pattern=r"^ativo_[0-9]{3,}$")
     versao_framework: str = Field(default="1.0", pattern=r"^1\.0$")
     nota_relevancia: float = Field(..., ge=0.0, le=5.0)
