@@ -91,29 +91,57 @@ def validar_integridade_evidencias(
         citacoes = historia.get("citacoes", [])
         interacoes_origem = historia.get("interacoes_origem", [])
 
-    # Indexar interações por ID
-    mapa_interacoes: Dict[int, str] = {}
+    # Indexar interações por ID (suporta int, str e prefixo int_XXX)
+    mapa_interacoes: Dict[Any, str] = {}
     for item in interacoes:
         if isinstance(item, Interacao):
-            mapa_interacoes[item.id] = item.texto
+            iid = item.id
+            txt = item.texto
         elif isinstance(item, dict):
-            if "id" in item and "texto" in item:
-                mapa_interacoes[item["id"]] = item["texto"]
+            iid = item.get("id")
+            txt = item.get("texto", "")
+        else:
+            continue
+        if iid is not None:
+            mapa_interacoes[iid] = txt
+            mapa_interacoes[str(iid)] = txt
+            if isinstance(iid, int):
+                mapa_interacoes[f"int_{iid:03d}"] = txt
+            elif isinstance(iid, str) and iid.startswith("int_") and iid[4:].isdigit():
+                try:
+                    num = int(iid[4:])
+                    mapa_interacoes[num] = txt
+                    mapa_interacoes[str(num)] = txt
+                except ValueError:
+                    pass
 
     if not citacoes:
         erros.append("A história não possui nenhuma citação para sustentação factual.")
+
+    # Constrói conjunto de origens com variações int/str para comparação robusta
+    origens_equivalentes = set()
+    for o in interacoes_origem:
+        origens_equivalentes.add(o)
+        origens_equivalentes.add(str(o))
+        if isinstance(o, int):
+            origens_equivalentes.add(f"int_{o:03d}")
+        elif isinstance(o, str) and o.startswith("int_") and o[4:].isdigit():
+            try:
+                origens_equivalentes.add(int(o[4:]))
+            except ValueError:
+                pass
 
     for idx, cit in enumerate(citacoes, 1):
         id_interacao = cit.get("id_interacao")
         texto_citacao = cit.get("texto", "").strip()
 
-        if not id_interacao or id_interacao not in mapa_interacoes:
+        if id_interacao is None or id_interacao not in mapa_interacoes:
             erros.append(
                 f"Citação #{idx} refere-se à interação ID {id_interacao}, inexistente no conjunto de origem."
             )
             continue
 
-        if id_interacao not in interacoes_origem:
+        if id_interacao not in origens_equivalentes:
             erros.append(
                 f"Interação ID {id_interacao} citada não consta na lista de interacoes_origem da história."
             )
@@ -123,9 +151,12 @@ def validar_integridade_evidencias(
         citacao_normalizada = " ".join(texto_citacao.split())
         original_normalizado = " ".join(texto_original.split())
         if citacao_normalizada not in original_normalizado:
-            erros.append(
-                f"RG-01 Violação: Citação #{idx} ('{texto_citacao[:40]}...') não foi encontrada textualmente na interação ID {id_interacao}."
-            )
+            # Tenta removendo reticências (... / …), aspas e pontuações periféricas adicionadas pelo LLM
+            citacao_limpa = citacao_normalizada.strip(' .…"\',;:!-')
+            if not citacao_limpa or citacao_limpa not in original_normalizado:
+                erros.append(
+                    f"RG-01 Violação: Citação #{idx} ('{texto_citacao[:40]}...') não foi encontrada textualmente na interação ID {id_interacao}."
+                )
 
     return len(erros) == 0, erros
 

@@ -50,13 +50,31 @@ def init_state():
     ss.pacotes_oci = svc.listar_pacotes()
     ss.toast = None
     ss.mostrar_copia = False
-    for h in ss.historias:
-        for a in h["ativos"]:
+    inicializar_controles_historias(ss.historias)
+
+
+def inicializar_controles_historias(historias):
+    """Garante que todas as histórias e ativos possuam controles de curadoria inicializados."""
+    ss = st.session_state
+    if "status_ativos" not in ss:
+        ss.status_ativos = {}
+    if "validacao_factual" not in ss:
+        ss.validacao_factual = {}
+    if "status_curadoria" not in ss:
+        ss.status_curadoria = {}
+    if "autorizacao" not in ss:
+        ss.autorizacao = {}
+    for h in historias or []:
+        for a in h.get("ativos", []):
             chave = f"{h['id']}:{a['id']}"
-            ss.status_ativos[chave] = "rascunho"
-            ss.validacao_factual[chave] = "pendente"
-            ss.status_curadoria[chave] = "rascunho"
-            ss.autorizacao[chave] = "nao_registrada"
+            if chave not in ss.status_ativos:
+                ss.status_ativos[chave] = "rascunho"
+            if chave not in ss.validacao_factual:
+                ss.validacao_factual[chave] = "pendente"
+            if chave not in ss.status_curadoria:
+                ss.status_curadoria[chave] = "rascunho"
+            if chave not in ss.autorizacao:
+                ss.autorizacao[chave] = "nao_registrada"
 
 
 def reiniciar():

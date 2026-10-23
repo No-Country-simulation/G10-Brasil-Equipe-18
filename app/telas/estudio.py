@@ -85,9 +85,9 @@ def _coluna_conteudo(h):
         
         # Conteúdo editável
         if ativo["tipo"] == "testemunho":
-            campo(st.text_input, "Título", _chave(hid, aid, "titulo"), ativo["campos"]["titulo"])
-            campo(st.text_area, "Descrição", _chave(hid, aid, "descricao"), ativo["campos"]["descricao"], height=120)
-            campo(st.text_area, "Citação", _chave(hid, aid, "citacao"), ativo["campos"]["citacao"], height=60)
+            campo(st.text_input, "Título", _chave(hid, aid, "titulo"), ativo["campos"].get("titulo", ""))
+            campo(st.text_area, "Descrição", _chave(hid, aid, "descricao"), ativo["campos"].get("descricao", ""), height=120)
+            campo(st.text_area, "Citação", _chave(hid, aid, "citacao"), ativo["campos"].get("citacao", ""), height=60)
             
             # Contador de caracteres
             titulo = valor(_chave(hid, aid, "titulo"), "")
@@ -97,11 +97,26 @@ def _coluna_conteudo(h):
             st.caption(f"{total} caracteres no total")
             
             copiavel = f"{titulo}\n\n{descricao}\n\n\"{citacao}\""
-        else:  # texto
-            campo(st.text_area, "Texto do case", _chave(hid, aid, "texto"), ativo["campos"]["texto"], height=300)
+        elif ativo["tipo"] == "card":
+            campo(st.text_input, "Título do card", _chave(hid, aid, "titulo"), ativo["campos"].get("titulo", ""))
+            campo(st.text_area, "Frase", _chave(hid, aid, "frase"), ativo["campos"].get("frase", ""), height=80)
+            
+            titulo = valor(_chave(hid, aid, "titulo"), "")
+            frase = valor(_chave(hid, aid, "frase"), "")
+            st.caption(f"{len(titulo) + len(frase)} caracteres no total")
+            
+            copiavel = f"{titulo}\n\n{frase}"
+        else:  # texto / post_linkedin / qualquer outro
+            # Pega o primeiro campo de texto disponível
+            texto_inicial = (
+                ativo["campos"].get("texto")
+                or next(iter(ativo["campos"].values()), "")
+            )
+            campo(st.text_area, "Texto", _chave(hid, aid, "texto"), texto_inicial, height=300)
             texto = valor(_chave(hid, aid, "texto"), "")
             st.caption(f"{len(texto)} caracteres")
             copiavel = texto
+
         
         st.divider()
         

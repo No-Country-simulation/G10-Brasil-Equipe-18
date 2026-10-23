@@ -968,7 +968,238 @@ def test_regra_rg01_normalizacao_espacos():
     assert len(erros) == 0
 
 
+def test_data_service_regenerar_validacao_rg01():
+    """Valida que data_service.regenerar aplica a regra RG-01 e descarta variações com citações alucinadas."""
+    from app.services.data_service import regenerar
+
+    historia = {
+        "id": "hist_001",
+        "interacoes_origem": ["int_001"],
+        "mensagem_original": "Consegui minha primeira vaga como dev júnior! O portfólio fez a diferença.",
+        "ativos": [
+            {
+                "id": "testemunho",
+                "campos": {
+                    "titulo": "Primeira vaga",
+                    "citacao": "O portfólio fez a diferença."
+                },
+                "variacoes": [
+                    {
+                        "titulo": "Variação Válida",
+                        "citacao": "Consegui minha primeira vaga como dev júnior!"
+                    },
+                    {
+                        "titulo": "Variação Alucinada",
+                        "citacao": "Fui contratado para ganhar 100 mil dólares por mês."
+                    }
+                ]
+            }
+        ]
+    }
+
+    # Vez 0 -> campos base (válido)
+    res0 = regenerar(historia, "testemunho", 0)
+    assert res0["titulo"] == "Primeira vaga"
+    assert res0["citacao"] == "O portfólio fez a diferença."
+
+    # Vez 1 -> variação 1 (válida pela RG-01)
+    res1 = regenerar(historia, "testemunho", 1)
+    assert res1["titulo"] == "Variação Válida"
+    assert res1["citacao"] == "Consegui minha primeira vaga como dev júnior!"
+
+    # Vez 2 -> variação 2 (alucinada: viola RG-01 e aciona fallback seguro da versão base)
+    res2 = regenerar(historia, "testemunho", 2)
+    assert res2["titulo"] == "Primeira vaga"
+    assert res2["citacao"] == "O portfólio fez a diferença."
 
 
+def test_parse_interacoes_csv_virgula_e_ponto_e_virgula():
+    """Valida suporte a arquivos CSV delimitados por vírgula (,) e por ponto e vírgula (;)."""
+    from app.services.data_service import parse_interacoes
+
+    csv_virgula = (
+        'autor,canal,tipo,texto\n'
+        '"Marina Costa","#conquistas",mensagem,"Consegui minha primeira vaga!"\n'
+    )
+    itens_v = parse_interacoes("teste_virgula.csv", csv_virgula)
+    assert len(itens_v) == 1
+    assert itens_v[0]["autor"] == "Marina Costa"
+    assert itens_v[0]["canal"] == "#conquistas"
+    assert itens_v[0]["texto"] == "Consegui minha primeira vaga!"
+
+    csv_ponto_virgula = (
+        'autor;canal;tipo;texto\n'
+        'Carlos Silva;#geral;mensagem;Estudando todos os dias.\n'
+    )
+    itens_pv = parse_interacoes("teste_ponto_virgula.csv", csv_ponto_virgula)
+    assert len(itens_pv) == 1
+    assert itens_pv[0]["autor"] == "Carlos Silva"
+    assert itens_pv[0]["canal"] == "#geral"
+    assert itens_pv[0]["texto"] == "Estudando todos os dias."
+
+
+def test_curto_prazo_r02_validacao_rg01_id_flexivel():
+    """R-02: Testa correspondência de IDs flexível entre int e str (ex: 'int_001' vs 1)."""
+    interacoes = [
+        {"id": "int_001", "texto": "Depois de 6 meses de estudo, fui aprovado no processo seletivo!"}
+    ]
+    historia = {
+        "id": "hist-001",
+        "interacoes_origem": ["int_001"],
+        "citacoes": [
+            {"id_interacao": "int_001", "texto": "fui aprovado no processo seletivo!"}
+        ]
+    }
+    valido, erros = validar_integridade_evidencias(historia, interacoes)
+    assert valido is True
+    assert len(erros) == 0
+
+    # Com id numérico na citação e int_XXX na origem
+    historia_num = {
+        "id": "hist-001",
+        "interacoes_origem": [1],
+        "citacoes": [
+            {"id_interacao": 1, "texto": "fui aprovado no processo seletivo!"}
+        ]
+    }
+    valido_num, erros_num = validar_integridade_evidencias(historia_num, interacoes)
+    assert valido_num is True
+
+
+def test_curto_prazo_f03_pydantic_historia_e_interacao():
+    """F-03/M-01: Garante que HistoriaDetectada aceita 'hist-001' e Interacao aceita id int ou str."""
+    cit = Citacao(texto="Consegui meu estágio!", id_interacao="int_001")
+    hist = HistoriaDetectada(
+        id_historia="hist-001",
+        tipo="conquista_profissional",
+        resumo="Aluno conquistou seu estágio",
+        interacoes_origem=["int_001"],
+        fatos=["Entrou no estágio"],
+        citacoes=[cit]
+    )
+    assert hist.id_historia == "hist-001"
+    assert hist.citacoes[0].id_interacao == "int_001"
+
+
+def test_curto_prazo_i01_i02_pseudonimizacao_na_ingestao():
+    """I-01/I-02: Verifica que _normalizar gera autor_id no padrão membro_XXXXXX."""
+    from app.services.data_service import parse_interacoes
+    conteudo = json.dumps([
+        {"autor": "Ana Maria", "canal": "#carreira", "tipo": "mensagem", "texto": "Comecei hoje no curso!"}
+    ])
+    itens = parse_interacoes("lote.json", conteudo)
+    assert len(itens) == 1
+    assert itens[0]["autor"] == "Ana Maria"
+    assert itens[0]["autor_id"].startswith("membro_")
+    assert len(itens[0]["autor_id"]) >= 13
+
+
+def test_curto_prazo_f04_origem_analise_e_c01_cqf_dinamico():
+    """F-04 e C-01/C-02: Verifica isolamento de estado e cálculo dinâmico das dimensões CQF."""
+    from app.services.data_service import (
+        obter_origem_analise,
+        _definir_origem_analise,
+        _enriquecer_historias_com_cqf,
+    )
+    _definir_origem_analise("gemini", "")
+    assert obter_origem_analise() == "gemini"
+
+    # Enriquecimento com dimensões CQF dinâmicas
+    interacoes = [
+        {"id": "int_001", "texto": "Após transição de carreira, fui contratado como desenvolvedor com salário 40% maior!"}
+    ]
+    historias = [
+        {
+            "id": "hist-001",
+            "relevancia": 95.0,
+            "mensagem_original": "Após transição de carreira, fui contratado como desenvolvedor com salário 40% maior!",
+            "fatos": ["Fez transição de carreira", "Foi contratado como dev"],
+            "destaques": ["fui contratado como desenvolvedor"]
+        }
+    ]
+    enriquecidas = _enriquecer_historias_com_cqf(historias, interacoes)
+    h = enriquecidas[0]
+    assert h["cqf_score"] > 80.0
+    assert h["cqf_classificacao"] == "alta_prioridade"
+    # Dimensões dinâmicas calculadas
+    assert "clareza_impacto" in h["cqf_dimensoes"]
+    assert "evidencias" in h["cqf_dimensoes"]
+    assert h["cqf_dimensoes"]["clareza_impacto"] >= 4.0
+    assert h["cqf_dimensoes"]["evidencias"] >= 4.0
+
+
+def test_rg01_resiliencia_reticencias_llm():
+    """Verifica que o validador RG-01 aceita citações do LLM com reticências (...) no final."""
+    interacao = {"id": 1, "texto": "Nosso projeto de controle financeiro foi destaque no desafio. Fizemos tudo em equipe!"}
+    historia = {
+        "interacoes_origem": [1],
+        "citacoes": [
+            {"id_interacao": 1, "texto": "projeto de controle financeiro foi desta..."},
+            {"id_interacao": 1, "texto": "Fizemos tudo em equipe!..."}
+        ]
+    }
+    valido, erros = validar_integridade_evidencias(historia, [interacao])
+    assert valido
+    assert len(erros) == 0
+
+
+def test_pipeline_limpeza_e_classificacao_lote():
+    """Verifica que as funções de limpeza e classificação enriquecem o lote com sucesso."""
+    from app.services.data_service import limpar_interacoes_lote, classificar_interacoes_lote
+    lote = [
+        {"id": 1, "autor": "Carlos", "canal": "#geral", "texto": "Curto"},  # < 10 caracteres -> rejeitado
+        {"id": 2, "autor": "Marina", "canal": "#conquistas", "texto": "Consegui minha primeira vaga como dev júnior!"},
+        {"id": 3, "autor": "Marina", "canal": "#conquistas", "texto": "Consegui minha primeira vaga como dev júnior!"},  # duplicata
+    ]
+    validas, rejeitadas = limpar_interacoes_lote(lote)
+    assert len(validas) == 1
+    assert len(rejeitadas) == 2
+    assert validas[0]["id"] == 2
+
+    classificadas = classificar_interacoes_lote(validas)
+    assert len(classificadas) == 1
+    assert "analise" in classificadas[0]
+    assert classificadas[0]["analise"]["sentimento"] == "positivo"
+    assert classificadas[0]["analise"]["tipo_insight"] == "conquista"
+
+
+def test_salvar_no_oci_com_auditoria_cqf(tmp_path):
+    """Verifica que salvar_no_oci grava pacotes e cria trilha formal de auditoria CQF."""
+    from app.services import data_service as svc
+    import app.services.data_service as ds_mod
+    original_oci_dir = ds_mod._OCI_DIR
+    ds_mod._OCI_DIR = tmp_path
+
+    try:
+        pacotes = [{"id": "DEMO-TESTE", "status": "salvo"}]
+        historias = [
+            {
+                "id": "hist-001",
+                "cqf_score": 92.5,
+                "cqf_classificacao": "alta_prioridade",
+                "avaliacao_cqf": {
+                    "id_avaliacao": "cqf_001",
+                    "id_historia": "hist-001",
+                    "cqf_score": 92.5,
+                    "classificacao_editorial": "alta_prioridade"
+                }
+            }
+        ]
+        svc.salvar_no_oci(pacotes, "LOTE-UNIT-001", historias=historias)
+        
+        # Verifica se o pacote de ativos foi gravado
+        ativos_salvos = list(tmp_path.glob("ativos/*/*.json"))
+        assert len(ativos_salvos) == 1
+
+        # Verifica se a auditoria CQF foi persistida
+        auditorias = list(tmp_path.glob("auditorias/*/*.json"))
+        assert len(auditorias) == 1
+        with open(auditorias[0], "r", encoding="utf-8") as f:
+            dados_auditoria = json.load(f)
+            assert dados_auditoria["lote_id"] == "LOTE-UNIT-001"
+            assert len(dados_auditoria["avaliacoes"]) == 1
+            assert dados_auditoria["avaliacoes"][0]["id_avaliacao"] == "cqf_001"
+    finally:
+        ds_mod._OCI_DIR = original_oci_dir
 
 

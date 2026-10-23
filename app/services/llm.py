@@ -1,6 +1,16 @@
-"""Análise de interações com provedor de LLM (Gemini).
+"""Análise de interações com dois provedores de LLM: Groq (principal) + Gemini (fallback).
 
 Substitui o mock de `data_service.analisar()` por uma chamada real.
+
+ESTRATÉGIA DE DOIS PROVEDORES
+-------------------------------
+- Groq (llama-3.3-70b-versatile): análise principal — maior throughput, sem rate-limit
+  agressivo, contexto mais amplo para análise semântica complexa de histórias.
+- Gemini (gemini-3.5-flash): fallback — caso o Groq falhe ou não esteja configurado.
+
+Configurável via LLM_STRATEGY em .streamlit/secrets.toml:
+  "groq_first"   → Groq principal, Gemini fallback (padrão)
+  "gemini_first" → Gemini principal, Groq fallback
 
 O modelo responde no vocabulário fechado de
 `docs/architecture/docs_data_ml/guia_rotulagem.md` e nos campos de `analise`
@@ -22,21 +32,34 @@ Contrato de saída (o que as telas consomem, com os campos do contrato junto):
 não mudar. Valor fora da lista fechada é recusado com o motivo escrito em
 ULTIMAS_RECUSADAS; valor apenas escrito de outra forma (caixa ou acento) é
 aceito com o ajuste registrado em ULTIMOS_AVISOS — nada é corrigido em silêncio.
-
-A chave é lida de st.secrets["GEMINI_API_KEY"] ou da variável de ambiente
-GEMINI_API_KEY. Nunca fica no código.
 """
 from __future__ import annotations
 
 import json
 import os
 import re
+import time
 import unicodedata
 
 import requests
 
-MODELO_PADRAO = "gemini-3.8-flash"
-ENDPOINT = "https://generativelanguage.googleapis.com/v1beta/models/{modelo}:generateContent"
+# ── Gemini ───────────────────────────────────────────────────────────────────
+MODELO_PADRAO_GEMINI = "gemini-3.5-flash"
+MODELOS_FALLBACK_GEMINI = ["gemini-3.5-flash-lite"]
+ENDPOINT_GEMINI = "https://generativelanguage.googleapis.com/v1beta/models/{modelo}:generateContent"
+
+# Mantido por compatibilidade com código existente que importa MODELO_PADRAO/ENDPOINT
+MODELO_PADRAO = MODELO_PADRAO_GEMINI
+MODELOS_FALLBACK = MODELOS_FALLBACK_GEMINI
+ENDPOINT = ENDPOINT_GEMINI
+
+# ── Groq ─────────────────────────────────────────────────────────────────────
+MODELO_PADRAO_GROQ = "openai/gpt-oss-120b"
+MODELOS_FALLBACK_GROQ = ["openai/gpt-oss-20b", "qwen/qwen3.8-27b"]
+ENDPOINT_GROQ = "https://api.groq.com/openai/v1/chat/completions"
+
+# Rastreia qual provedor atendeu a última análise ("groq" ou "gemini")
+ULTIMO_PROVEDOR_USADO: str = ""
 
 # Quantidade maxima de historias por lote analisado.
 MAXIMO_HISTORIAS = 3
@@ -154,15 +177,20 @@ class ErroAnalise(RuntimeError):
     """Falha controlada na análise por LLM."""
 
 
-def _chave() -> str:
-    chave = ""
+def _secrets_get(chave_secrets: str, default="") -> str:
+    """Lê um valor de st.secrets ou variável de ambiente com fallback seguro."""
     try:
-        import streamlit as st  # import local: o teste roda fora do Streamlit
-
-        chave = st.secrets.get("GEMINI_API_KEY", "")  # type: ignore[union-attr]
+        import streamlit as st
+        val = st.secrets.get(chave_secrets, None)
+        if val is not None:
+            return str(val)
     except Exception:
-        chave = ""
-    chave = chave or os.environ.get("GEMINI_API_KEY", "")
+        pass
+    return os.environ.get(chave_secrets, default)
+
+
+def _chave_gemini() -> str:
+    chave = _secrets_get("GEMINI_API_KEY")
     if not chave:
         raise ErroAnalise(
             "Chave do Gemini ausente. Defina GEMINI_API_KEY em .streamlit/secrets.toml "
@@ -171,13 +199,60 @@ def _chave() -> str:
     return chave.strip()
 
 
-def _modelo() -> str:
+# Alias de compatibilidade
+_chave = _chave_gemini
+
+
+def _chave_groq() -> str:
+    chave = _secrets_get("GROQ_API_KEY")
+    if not chave:
+        raise ErroAnalise(
+            "Chave do Groq ausente. Defina GROQ_API_KEY em .streamlit/secrets.toml "
+            "ou como variável de ambiente."
+        )
+    return chave.strip()
+
+
+def _modelo_gemini() -> str:
+    return _secrets_get("GEMINI_MODEL", MODELO_PADRAO_GEMINI) or MODELO_PADRAO_GEMINI
+
+
+# Alias de compatibilidade
+_modelo = _modelo_gemini
+
+
+def _modelo_groq() -> str:
+    return _secrets_get("GROQ_MODEL", MODELO_PADRAO_GROQ) or MODELO_PADRAO_GROQ
+
+
+def _estrategia() -> str:
+    """Retorna 'groq_first' ou 'gemini_first' conforme configurado."""
+    return _secrets_get("LLM_STRATEGY", "groq_first").lower()
+
+
+def _maximo_historias() -> int:
     try:
         import streamlit as st
-
-        return st.secrets.get("GEMINI_MODEL", MODELO_PADRAO) or MODELO_PADRAO
+        val = st.secrets.get("MAX_HISTORIAS", None)
+        if val is not None:
+            return int(val)
     except Exception:
-        return os.environ.get("GEMINI_MODEL", MODELO_PADRAO) or MODELO_PADRAO
+        pass
+    env_val = os.environ.get("MAX_HISTORIAS", "")
+    if env_val.isdigit():
+        return int(env_val)
+    return 3
+
+
+def _temperatura() -> float:
+    """Retorna a temperatura configurada (0.0 a 1.0, padrão 0.4)."""
+    val = _secrets_get("GEMINI_TEMPERATURE") or _secrets_get("LLM_TEMPERATURE")
+    try:
+        if val:
+            return float(val)
+    except ValueError:
+        pass
+    return 0.4
 
 
 def _iniciais(nome: str) -> str:
@@ -421,11 +496,22 @@ def _normalizar(historias: list, interacoes: list) -> list:
     ULTIMAS_AMBIGUIDADES = []
 
     por_posicao = {}
+    por_id_lote = {}  # índice por id original do lote (str e int)
     for posicao, item in enumerate(interacoes, start=1):
         # O id vem do lote quando existir; senao, usa a posicao para referencia.
         item = dict(item)
         id_lote = item.get("id")
-        item["_id"] = id_lote if isinstance(id_lote, int) and id_lote >= 1 else posicao
+        # Aceita tanto IDs numéricos quanto strings como "int_001"
+        if id_lote is not None and str(id_lote).strip():
+            item["_id"] = id_lote
+            por_id_lote[str(id_lote)] = item
+            # Se for numérico, também indexa pelo número inteiro
+            try:
+                por_id_lote[int(id_lote)] = item
+            except (ValueError, TypeError):
+                pass
+        else:
+            item["_id"] = posicao
         por_posicao[posicao] = item
 
     saida = []
@@ -442,7 +528,10 @@ def _normalizar(historias: list, interacoes: list) -> list:
         canal = str(hist.get("canal") or (base.get("canal") if base else "") or "")
         # O texto usado para validar a citacao vem do lote, nunca do modelo.
         texto_fonte = str(base.get("texto") or "") if base else ""
-        id_interacao = int(base.get("_id") or 0) if base else 0
+        # Preserva o ID original do lote (pode ser str como "int_001" ou int)
+        id_interacao = base.get("_id") if base else 0
+        if id_interacao is None:
+            id_interacao = 0
 
         ativos = []
         for ativo in hist.get("ativos") or []:
@@ -555,12 +644,164 @@ def _normalizar(historias: list, interacoes: list) -> list:
     return saida
 
 
-def analisar(interacoes: list, maximo: int = MAXIMO_HISTORIAS, timeout: int = 60) -> list:
-    """Envia as interações ao Gemini e devolve as histórias no contrato do front."""
+def _chamar_gemini(modelo: str, corpo: dict, chave: str, timeout: int, max_retries: int = 2) -> str:
+    """Faz a chamada HTTP ao Gemini com retry exponencial para erros transitórios (429, 503)."""
+    for tentativa in range(max_retries + 1):
+        try:
+            resposta = requests.post(
+                ENDPOINT_GEMINI.format(modelo=modelo),
+                params={"key": chave},
+                json=corpo,
+                timeout=timeout,
+            )
+            if resposta.status_code == 200:
+                try:
+                    dados = resposta.json()
+                    return dados["candidates"][0]["content"]["parts"][0]["text"]
+                except (KeyError, IndexError, ValueError) as erro:
+                    raise ErroAnalise(f"Resposta inesperada do Gemini ({modelo}): {erro}") from erro
+
+            if resposta.status_code in (429, 503):
+                if tentativa < max_retries:
+                    espera = (2 ** tentativa) + 0.5
+                    print(
+                        f"[llm:gemini] {modelo} respondeu {resposta.status_code}. "
+                        f"Aguardando {espera:.1f}s (backoff #{tentativa + 1})...",
+                        flush=True,
+                    )
+                    time.sleep(espera)
+                    continue
+                raise ErroAnalise(f"{resposta.status_code}")
+
+            raise ErroAnalise(f"Gemini respondeu {resposta.status_code}: {resposta.text[:300]}")
+        except requests.exceptions.Timeout:
+            if tentativa < max_retries:
+                espera = 2 ** tentativa
+                print(f"[llm:gemini] {modelo} timeout. Aguardando {espera}s...", flush=True)
+                time.sleep(espera)
+                continue
+            raise
+    raise ErroAnalise(f"Gemini {modelo}: máximo de retries atingido")
+
+
+# Alias de compatibilidade (código externo que chame _chamar_modelo ainda funciona)
+_chamar_modelo = _chamar_gemini
+
+
+def _chamar_groq(modelo: str, prompt_texto: str, payload_texto: str, chave: str,
+                 timeout: int, max_retries: int = 2) -> str:
+    """Faz a chamada HTTP ao Groq (API compatível com OpenAI) com retry exponencial."""
+    headers = {
+        "Authorization": f"Bearer {chave}",
+        "Content-Type": "application/json",
+        "User-Agent": "CommunityLab-G10/1.0",
+    }
+    corpo = {
+        "model": modelo,
+        "messages": [
+            {
+                "role": "user",
+                "content": f"{prompt_texto}\n\n{payload_texto}",
+            }
+        ],
+        "temperature": _temperatura(),
+        "response_format": {"type": "json_object"},
+    }
+    for tentativa in range(max_retries + 1):
+        try:
+            resposta = requests.post(
+                ENDPOINT_GROQ,
+                headers=headers,
+                json=corpo,
+                timeout=timeout,
+            )
+            if resposta.status_code == 200:
+                try:
+                    dados = resposta.json()
+                    return dados["choices"][0]["message"]["content"]
+                except (KeyError, IndexError, ValueError) as erro:
+                    raise ErroAnalise(f"Resposta inesperada do Groq ({modelo}): {erro}") from erro
+
+            if resposta.status_code in (429, 503):
+                if tentativa < max_retries:
+                    espera = (2 ** tentativa) + 0.5
+                    print(
+                        f"[llm:groq] {modelo} respondeu {resposta.status_code}. "
+                        f"Aguardando {espera:.1f}s (backoff #{tentativa + 1})...",
+                        flush=True,
+                    )
+                    time.sleep(espera)
+                    continue
+                raise ErroAnalise(f"Groq {resposta.status_code}")
+
+            raise ErroAnalise(f"Groq respondeu {resposta.status_code}: {resposta.text[:300]}")
+        except requests.exceptions.Timeout:
+            if tentativa < max_retries:
+                espera = 2 ** tentativa
+                print(f"[llm:groq] {modelo} timeout. Aguardando {espera}s...", flush=True)
+                time.sleep(espera)
+                continue
+            raise
+    raise ErroAnalise(f"Groq {modelo}: máximo de retries atingido")
+
+
+def _tentar_groq(prompt_texto: str, payload_texto: str, timeout: int) -> str:
+    """Tenta chamar o Groq percorrendo os modelos da sequência de fallback."""
+    chave = _chave_groq()
+    modelo_cfg = _modelo_groq()
+    sequencia = [modelo_cfg] + [m for m in MODELOS_FALLBACK_GROQ if m != modelo_cfg]
+    ultimo_erro = ""
+    for modelo in sequencia:
+        try:
+            texto = _chamar_groq(modelo, prompt_texto, payload_texto, chave, timeout)
+            if modelo != modelo_cfg:
+                print(f"[llm:groq] usando modelo de fallback: {modelo}", flush=True)
+            return texto
+        except ErroAnalise as e:
+            ultimo_erro = str(e)
+            print(f"[llm:groq] {modelo} falhou ({ultimo_erro}), tentando próximo...", flush=True)
+        except requests.exceptions.Timeout:
+            ultimo_erro = f"Timeout em {modelo}"
+            print(f"[llm:groq] {modelo} timeout, tentando próximo...", flush=True)
+    raise ErroAnalise(f"Todos os modelos Groq falharam. Último erro: {ultimo_erro}")
+
+
+def _tentar_gemini(corpo: dict, timeout: int) -> str:
+    """Tenta chamar o Gemini percorrendo os modelos da sequência de fallback."""
+    chave = _chave_gemini()
+    modelo_cfg = _modelo_gemini()
+    sequencia = [modelo_cfg] + [m for m in MODELOS_FALLBACK_GEMINI if m != modelo_cfg]
+    ultimo_erro = ""
+    for modelo in sequencia:
+        try:
+            texto = _chamar_gemini(modelo, corpo, chave, timeout)
+            if modelo != modelo_cfg:
+                print(f"[llm:gemini] usando modelo de fallback: {modelo}", flush=True)
+            return texto
+        except ErroAnalise as e:
+            ultimo_erro = str(e)
+            print(f"[llm:gemini] {modelo} falhou ({ultimo_erro}), tentando próximo...", flush=True)
+        except requests.exceptions.Timeout:
+            ultimo_erro = f"Timeout em {modelo}"
+            print(f"[llm:gemini] {modelo} timeout, tentando próximo...", flush=True)
+    raise ErroAnalise(f"Todos os modelos Gemini falharam. Último erro: {ultimo_erro}")
+
+
+def analisar(interacoes: list, maximo: int | None = None, timeout: int = 60) -> list:
+    """Envia as interações ao LLM e devolve as histórias no contrato do front.
+
+    Estratégia configurável via LLM_STRATEGY em secrets.toml:
+    - "groq_first"  (padrão): Groq como principal, Gemini como fallback.
+      Ideal para análise complexa — maior throughput, sem rate-limits agressivos.
+    - "gemini_first": Gemini como principal, Groq como fallback.
+    """
     if not interacoes:
         raise ErroAnalise("Nenhuma interação para analisar.")
 
-    payload = [
+    if maximo is None:
+        maximo = _maximo_historias()
+
+    payload_lista = [
         {
             "autor": i.get("autor", ""),
             "canal": i.get("canal", ""),
@@ -569,37 +810,53 @@ def analisar(interacoes: list, maximo: int = MAXIMO_HISTORIAS, timeout: int = 60
         }
         for i in interacoes
     ]
+    payload_texto = json.dumps(payload_lista, ensure_ascii=False)
+    prompt_texto = PROMPT.format(maximo=maximo)
 
-    corpo = {
+    # Corpo para Gemini (formato específico)
+    corpo_gemini = {
         "contents": [
             {
                 "parts": [
-                    {"text": PROMPT.format(maximo=maximo)},
-                    {"text": json.dumps(payload, ensure_ascii=False)},
+                    {"text": prompt_texto},
+                    {"text": payload_texto},
                 ]
             }
         ],
-        "generationConfig": {"responseMimeType": "application/json", "temperature": 0.4},
+        "generationConfig": {"responseMimeType": "application/json", "temperature": _temperatura()},
     }
 
-    resposta = requests.post(
-        ENDPOINT.format(modelo=_modelo()),
-        params={"key": _chave()},
-        json=corpo,
-        timeout=timeout,
-    )
+    estrategia = _estrategia()
+    texto_resposta: str = ""
+    provedor_usado: str = ""
 
-    if resposta.status_code != 200:
-        raise ErroAnalise(f"Gemini respondeu {resposta.status_code}: {resposta.text[:300]}")
+    if estrategia == "gemini_first":
+        # Gemini principal → Groq fallback
+        try:
+            texto_resposta = _tentar_gemini(corpo_gemini, timeout)
+            provedor_usado = "gemini"
+        except ErroAnalise as e_gemini:
+            print(f"[llm] Gemini falhou ({e_gemini}), tentando Groq...", flush=True)
+            texto_resposta = _tentar_groq(prompt_texto, payload_texto, timeout)
+            provedor_usado = "groq"
+    else:
+        # groq_first (padrão): Groq principal → Gemini fallback
+        try:
+            texto_resposta = _tentar_groq(prompt_texto, payload_texto, timeout)
+            provedor_usado = "groq"
+        except ErroAnalise as e_groq:
+            print(f"[llm] Groq falhou ({e_groq}), tentando Gemini...", flush=True)
+            texto_resposta = _tentar_gemini(corpo_gemini, timeout)
+            provedor_usado = "gemini"
+
+    global ULTIMO_PROVEDOR_USADO
+    ULTIMO_PROVEDOR_USADO = provedor_usado
+
+    if provedor_usado and provedor_usado != estrategia.split("_")[0]:
+        print(f"[llm] usando provedor de fallback: {provedor_usado}", flush=True)
 
     try:
-        dados = resposta.json()
-        texto = dados["candidates"][0]["content"]["parts"][0]["text"]
-    except (KeyError, IndexError, ValueError) as erro:
-        raise ErroAnalise(f"Resposta inesperada do Gemini: {erro}") from erro
-
-    try:
-        conteudo = json.loads(texto)
+        conteudo = json.loads(texto_resposta)
     except json.JSONDecodeError as erro:
         raise ErroAnalise(f"O modelo não devolveu JSON válido: {erro}") from erro
 
