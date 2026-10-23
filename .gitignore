@@ -33,9 +33,12 @@ htmlcov/
 
 # Logs
 *.log
-__pycache__/
-*.py[cod]
-.venv/
-venv/
-.env
+
+# Segredos e configurações locais do Streamlit
 .streamlit/secrets.toml
+
+# Armazenamento local OCI (dados de execução / runtime)
+data/oci_storage/
+
+# Arquivos temporários de teste local
+tests/dados_teste.*
