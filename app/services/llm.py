@@ -31,11 +31,15 @@ from __future__ import annotations
 import json
 import os
 import re
+import time
 import unicodedata
 
 import requests
 
+# Modelos válidos da API Gemini (v1beta) — nomes confirmados via error 404 da própria API.
+# Configurável via GEMINI_MODEL em .streamlit/secrets.toml ou variável de ambiente.
 MODELO_PADRAO = "gemini-3.8-flash"
+MODELOS_FALLBACK = ["gemini-3.5-flash", "gemini-3.5-flash-lite"]
 ENDPOINT = "https://generativelanguage.googleapis.com/v1beta/models/{modelo}:generateContent"
 
 # Quantidade maxima de historias por lote analisado.
@@ -178,6 +182,40 @@ def _modelo() -> str:
         return st.secrets.get("GEMINI_MODEL", MODELO_PADRAO) or MODELO_PADRAO
     except Exception:
         return os.environ.get("GEMINI_MODEL", MODELO_PADRAO) or MODELO_PADRAO
+
+
+def _maximo_historias() -> int:
+    try:
+        import streamlit as st
+
+        val = st.secrets.get("MAX_HISTORIAS", None)
+        if val is not None:
+            return int(val)
+    except Exception:
+        pass
+    env_val = os.environ.get("MAX_HISTORIAS", "")
+    if env_val.isdigit():
+        return int(env_val)
+    return 3
+
+
+def _temperatura() -> float:
+    """Retorna a temperatura configurada para o Gemini (0.0 a 1.0, padrão 0.4)."""
+    try:
+        import streamlit as st
+
+        val = st.secrets.get("GEMINI_TEMPERATURE", None)
+        if val is not None:
+            return float(val)
+    except Exception:
+        pass
+    env_val = os.environ.get("GEMINI_TEMPERATURE", "")
+    try:
+        if env_val:
+            return float(env_val)
+    except ValueError:
+        pass
+    return 0.4
 
 
 def _iniciais(nome: str) -> str:
@@ -555,10 +593,57 @@ def _normalizar(historias: list, interacoes: list) -> list:
     return saida
 
 
-def analisar(interacoes: list, maximo: int = MAXIMO_HISTORIAS, timeout: int = 60) -> list:
-    """Envia as interações ao Gemini e devolve as histórias no contrato do front."""
+def _chamar_modelo(modelo: str, corpo: dict, chave: str, timeout: int, max_retries: int = 2) -> str:
+    """Faz a chamada HTTP com retry exponencial para erros transitórios (429, 503)."""
+    for tentativa in range(max_retries + 1):
+        try:
+            resposta = requests.post(
+                ENDPOINT.format(modelo=modelo),
+                params={"key": chave},
+                json=corpo,
+                timeout=timeout,
+            )
+            if resposta.status_code == 200:
+                try:
+                    dados = resposta.json()
+                    return dados["candidates"][0]["content"]["parts"][0]["text"]
+                except (KeyError, IndexError, ValueError) as erro:
+                    raise ErroAnalise(f"Resposta inesperada do Gemini ({modelo}): {erro}") from erro
+
+            # Erros recuperáveis: cota (429) ou alta demanda (503) -> aguarda com backoff
+            if resposta.status_code in (429, 503):
+                if tentativa < max_retries:
+                    espera = (2 ** tentativa) + 0.5
+                    print(
+                        f"[llm] {modelo} respondeu {resposta.status_code}. "
+                        f"Aguardando {espera:.1f}s (backoff exponencial #{tentativa + 1})...",
+                        flush=True,
+                    )
+                    time.sleep(espera)
+                    continue
+                raise ErroAnalise(f"{resposta.status_code}")
+
+            raise ErroAnalise(f"Gemini respondeu {resposta.status_code}: {resposta.text[:300]}")
+        except requests.exceptions.Timeout:
+            if tentativa < max_retries:
+                espera = (2 ** tentativa)
+                print(f"[llm] {modelo} timeout. Aguardando {espera}s...", flush=True)
+                time.sleep(espera)
+                continue
+            raise
+
+
+def analisar(interacoes: list, maximo: int | None = None, timeout: int = 60) -> list:
+    """Envia as interações ao Gemini e devolve as histórias no contrato do front.
+
+    Tenta o modelo configurado primeiro; se receber 429 (cota esgotada) ou 503
+    (alta demanda), percorre a lista MODELOS_FALLBACK até encontrar um que responda.
+    """
     if not interacoes:
         raise ErroAnalise("Nenhuma interação para analisar.")
+
+    if maximo is None:
+        maximo = _maximo_historias()
 
     payload = [
         {
@@ -579,24 +664,33 @@ def analisar(interacoes: list, maximo: int = MAXIMO_HISTORIAS, timeout: int = 60
                 ]
             }
         ],
-        "generationConfig": {"responseMimeType": "application/json", "temperature": 0.4},
+        "generationConfig": {"responseMimeType": "application/json", "temperature": _temperatura()},
     }
 
-    resposta = requests.post(
-        ENDPOINT.format(modelo=_modelo()),
-        params={"key": _chave()},
-        json=corpo,
-        timeout=timeout,
-    )
+    chave = _chave()
+    modelo_cfg = _modelo()
+    # Constrói a sequência: modelo configurado + fallbacks (sem duplicar)
+    sequencia = [modelo_cfg] + [m for m in MODELOS_FALLBACK if m != modelo_cfg]
 
-    if resposta.status_code != 200:
-        raise ErroAnalise(f"Gemini respondeu {resposta.status_code}: {resposta.text[:300]}")
-
-    try:
-        dados = resposta.json()
-        texto = dados["candidates"][0]["content"]["parts"][0]["text"]
-    except (KeyError, IndexError, ValueError) as erro:
-        raise ErroAnalise(f"Resposta inesperada do Gemini: {erro}") from erro
+    ultimo_erro: str = ""
+    for modelo in sequencia:
+        try:
+            texto = _chamar_modelo(modelo, corpo, chave, timeout)
+            if modelo != modelo_cfg:
+                print(f"[llm] usando modelo de fallback: {modelo}", flush=True)
+            break
+        except ErroAnalise as e:
+            ultimo_erro = str(e)
+            print(f"[llm] {modelo} falhou ({ultimo_erro}), tentando próximo...", flush=True)
+            continue
+        except requests.exceptions.Timeout:
+            ultimo_erro = f"Timeout em {modelo}"
+            print(f"[llm] {modelo} timeout, tentando próximo...", flush=True)
+            continue
+    else:
+        raise ErroAnalise(
+            f"Todos os modelos falharam. Último erro: {ultimo_erro}"
+        )
 
     try:
         conteudo = json.loads(texto)

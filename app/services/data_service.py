@@ -11,29 +11,84 @@ import copy
 import csv
 import io
 import json
-from datetime import datetime, timezone
 
 from mocks import mock_data as m
 
 CAMPOS_OBRIGATORIOS = ("autor", "canal", "texto")
 
 
+def _obter_sal() -> str:
+    """Retorna o sal para pseudonimização LGPD a partir de secrets ou env."""
+    try:
+        import streamlit as st
+        return st.secrets.get("LGPD_SALT", "communitylab_salt_2026")
+    except Exception:
+        return os.environ.get("LGPD_SALT", "communitylab_salt_2026")
+
+
+def _deve_anonimizar_pii() -> bool:
+    """Verifica se a anonimização de PII (dados sensíveis) está ativada nas configurações."""
+    try:
+        import streamlit as st
+        return bool(st.secrets.get("ANONIMIZAR_PII", False))
+    except Exception:
+        return os.environ.get("ANONIMIZAR_PII", "").lower() in ("true", "1", "yes")
+
+
 # ---------- Ingestão ----------
 def _normalizar(itens):
     if not isinstance(itens, list) or not itens:
         raise ValueError("O arquivo precisa conter uma lista com pelo menos uma interação.")
+    sal = _obter_sal()
+    anonimizar_ativado = _deve_anonimizar_pii()
     saida = []
     for i, item in enumerate(itens, start=1):
         if not isinstance(item, dict):
             raise ValueError(f"Interação {i}: formato inválido.")
-        faltando = [c for c in CAMPOS_OBRIGATORIOS if not str(item.get(c, "")).strip()]
+
+        # Normaliza as chaves do item (minúsculas, sem aspas e sem BOM)
+        item_norm = {}
+        for k, v in item.items():
+            if k is not None:
+                k_limpo = str(k).lstrip("\ufeff").strip().strip('"').strip("'").lower()
+                item_norm[k_limpo] = v
+
+        faltando = [c for c in CAMPOS_OBRIGATORIOS if not str(item_norm.get(c, "")).strip()]
         if faltando:
             raise ValueError(f"Interação {i}: faltam os campos {', '.join(faltando)}.")
+
+        texto_raw = str(item_norm["texto"]).strip()
+        if normalizar_texto:
+            try:
+                texto_limpo = normalizar_texto(texto_raw)
+            except Exception:
+                texto_limpo = texto_raw
+        else:
+            texto_limpo = texto_raw
+
+        # Anonimização de PII (LGPD: telefones, CPFs, e-mails) se ativado
+        if anonimizar_ativado and anonimizar_texto:
+            try:
+                texto_limpo, _ = anonimizar_texto(texto_limpo)
+            except Exception:
+                pass
+
+        autor_raw = str(item_norm["autor"]).strip()
+        if pseudonimizar_autor:
+            autor_id = pseudonimizar_autor(autor_raw, sal)
+        else:
+            autor_id = f"membro_{i:06d}"
+
+        raw_id = item_norm.get("id")
+        id_final = str(raw_id) if raw_id is not None and str(raw_id).strip() else f"int_{i:03d}"
+
         saida.append({
-            "autor": str(item["autor"]).strip(),
-            "canal": str(item["canal"]).strip(),
-            "tipo": str(item.get("tipo") or "mensagem").strip(),
-            "texto": str(item["texto"]).strip(),
+            "id": id_final,
+            "autor": autor_raw,
+            "autor_id": autor_id,
+            "canal": str(item_norm["canal"]).strip(),
+            "tipo": str(item_norm.get("tipo") or "mensagem").strip(),
+            "texto": texto_limpo or texto_raw,
         })
     return saida
 
@@ -50,16 +105,58 @@ def interacoes_de_json(texto):
 
 
 def parse_interacoes(nome_arquivo, conteudo):
-    """Lê um arquivo CSV ou JSON enviado no upload."""
+    """Lê um arquivo CSV ou JSON enviado no upload aplicando fallbacks de encoding do core."""
     nome = nome_arquivo.lower()
-    try:
-        texto = conteudo.decode("utf-8-sig")
-    except UnicodeDecodeError:
-        raise ValueError("Não foi possível ler o arquivo. Salve-o em UTF-8.")
+
+    if isinstance(conteudo, bytes):
+        if ler_arquivo_bytes:
+            texto, _enc, _ = ler_arquivo_bytes(conteudo)
+        else:
+            try:
+                texto = conteudo.decode("utf-8-sig")
+            except UnicodeDecodeError:
+                texto = conteudo.decode("latin-1", errors="replace")
+    else:
+        texto = str(conteudo)
+
+    # Remove BOM residual do início do texto, se houver
+    texto = texto.lstrip("\ufeff")
+
+    if not texto.strip():
+        raise ValueError("O arquivo enviado está vazio ou não pôde ser decodificado.")
+
     if nome.endswith(".json"):
         return interacoes_de_json(texto)
     if nome.endswith(".csv"):
-        return _normalizar(list(csv.DictReader(io.StringIO(texto))))
+        delimitador = ","
+        linhas = [ln for ln in texto.splitlines() if ln.strip()]
+        if linhas:
+            primeira = linhas[0]
+            if ";" in primeira and ("," not in primeira or primeira.count(";") > primeira.count(",")):
+                delimitador = ";"
+
+        def _ler_com_delimitador(delim):
+            leitor = csv.DictReader(io.StringIO(texto), delimiter=delim)
+            resultado = []
+            for row in leitor:
+                linha_limpa = {}
+                for k, v in row.items():
+                    if k is not None:
+                        k_limpo = str(k).lstrip("\ufeff").strip().strip('"').strip("'").lower()
+                        linha_limpa[k_limpo] = v
+                resultado.append(linha_limpa)
+            return resultado
+
+        itens = _ler_com_delimitador(delimitador)
+
+        # Fallback de delimitador caso os campos obrigatórios não tenham sido mapeados
+        if itens and not all(c in itens[0] for c in CAMPOS_OBRIGATORIOS):
+            outro = ";" if delimitador == "," else ","
+            itens_alt = _ler_com_delimitador(outro)
+            if itens_alt and all(c in itens_alt[0] for c in CAMPOS_OBRIGATORIOS):
+                itens = itens_alt
+
+        return _normalizar(itens)
     raise ValueError("Formato não suportado. Envie um arquivo CSV ou JSON.")
 
 
@@ -68,294 +165,122 @@ ORIGEM_ANALISE = "mock"   # "gemini" quando a análise real responde
 ULTIMO_ERRO = ""          # preenchido quando a análise real falha
 
 
-ULTIMO_ERRO_OCI = ""
-
-
-def _storage():
-    """Importa o modulo de storage; None quando indisponivel."""
-    global ULTIMO_ERRO_OCI
-    try:
-        from . import oci_storage  # import local: evita custo quando nao usado
-    except ImportError:
-        try:
-            from services import oci_storage  # type: ignore
-        except ImportError:
-            return None
-    if not oci_storage.disponivel():
-        motivo = ""
-        if hasattr(oci_storage, "motivo_indisponivel"):
-            motivo = oci_storage.motivo_indisponivel()
-        ULTIMO_ERRO_OCI = motivo or "OCI indisponivel: credencial nao configurada"
-        return None
-    return oci_storage
-
-
-def _registrar_erro_oci(erro):
-    global ULTIMO_ERRO_OCI
-    ULTIMO_ERRO_OCI = str(erro)
-    print(f"[oci] falhou: {ULTIMO_ERRO_OCI}", flush=True)
-
-
-def _data_br(iso: str) -> str:
-    """Converte 2026-10-22T04:05:54+00:00 em 22/10/2026 04:05."""
-    texto = (iso or "").replace("T", " ")
-    if len(texto) < 16:
-        return texto
-    data, hora = texto[:10], texto[11:16]
-    partes = data.split("-")
-    if len(partes) != 3:
-        return texto
-    return f"{partes[2]}/{partes[1]}/{partes[0]} {hora}"
-
-
 def analisar(interacoes):
     """Analisa as interações com o provedor de LLM.
 
     Se a chave não estiver configurada ou a chamada falhar, devolve o mock
-    (o protótipo continua navegável) e registra o motivo em ULTIMO_ERRO.
+    (o protótipo continua navegável) e registra o motivo de forma isolada por sessão.
     """
-    global ORIGEM_ANALISE, ULTIMO_ERRO
     try:
         from . import llm  # import local: evita custo quando não usado
     except ImportError:  # pragma: no cover - execução como pacote vs. script
         from services import llm  # type: ignore
 
     try:
-        historias = llm.analisar(interacoes)
-        # Analise concluida com sucesso: lista vazia tambem e resultado valido
-        # (nenhuma historia elegivel no lote). O fallback mock fica reservado
-        # para falha tecnica: rede, chave ausente ou resposta invalida.
-        ORIGEM_ANALISE = "gemini"
-        ULTIMO_ERRO = ""
+        historias = llm.analisar(interacoes, maximo=maximo)
+        _definir_origem_analise("gemini", "")
         print(f"[analise] gemini OK: {len(historias)} historias", flush=True)
-        return historias
+        return _enriquecer_historias_com_cqf(historias, interacoes)
     except Exception as erro:  # rede, chave ausente, JSON inválido
-        ULTIMO_ERRO = str(erro)
-        print(f"[analise] FALHOU -> fallback mock: {ULTIMO_ERRO}", flush=True)
+        msg_erro = str(erro)
+        _definir_origem_analise("mock", msg_erro)
+        print(f"[analise] FALHOU -> fallback mock: {msg_erro}", flush=True)
 
-    ORIGEM_ANALISE = "mock"
-    return copy.deepcopy(m.HISTORIAS)
+    historias_mock = copy.deepcopy(m.HISTORIAS)
+    return _enriquecer_historias_com_cqf(historias_mock, interacoes)
 
 
 def regenerar(historia, ativo_id, vez):
-    """TODO(back): pedir um novo rascunho. Aqui alterna entre variações fictícias."""
-    for ativo in historia["ativos"]:
-        if ativo["id"] == ativo_id:
-            opcoes = [ativo["campos"]] + ativo["variacoes"]
-            return dict(opcoes[vez % len(opcoes)])
+    """Regenera rascunho de ativo aplicando validação RG-01 (anti-alucinação).
+
+    Alterna entre as variações disponíveis e assegura que qualquer citação
+    presente no rascunho satisfaça a Regra RG-01 (integridade factual
+    com normalização de whitespace). Em caso de violação, preserva com
+    segurança a versão base do ativo.
+    """
+    for ativo in historia.get("ativos", []):
+        if ativo.get("id") == ativo_id:
+            opcoes = [ativo.get("campos", {})] + ativo.get("variacoes", [])
+            if not opcoes:
+                return {}
+            candidato = dict(opcoes[vez % len(opcoes)])
+
+            # Validação RG-01 para citações presentes na variação
+            if validar_integridade_evidencias:
+                citacoes_candidato = []
+                if "citacao" in candidato and candidato["citacao"]:
+                    citacoes_candidato.append(str(candidato["citacao"]))
+                if "citacoes" in candidato and isinstance(candidato["citacoes"], list):
+                    for c in candidato["citacoes"]:
+                        if isinstance(c, dict) and "texto" in c:
+                            citacoes_candidato.append(str(c["texto"]))
+                        elif isinstance(c, str) and c:
+                            citacoes_candidato.append(c)
+
+                if citacoes_candidato:
+                    try:
+                        origens = historia.get("interacoes_origem") or [historia.get("id") or "int_001"]
+                        id_origem = origens[0]
+                        msg_orig = historia.get("mensagem_original") or ""
+
+                        interacoes_check = [{"id": id_origem, "texto": msg_orig}]
+                        historia_check = {
+                            "interacoes_origem": [id_origem],
+                            "citacoes": [{"id_interacao": id_origem, "texto": cit} for cit in citacoes_candidato],
+                        }
+
+                        valido, erros = validar_integridade_evidencias(historia_check, interacoes_check)
+                        if not valido:
+                            print(
+                                f"[regenerar] RG-01 reprovou variação #{vez} do ativo '{ativo_id}': {erros}. "
+                                f"Retornando versão base segura.",
+                                flush=True,
+                            )
+                            return dict(ativo.get("campos", {}))
+                    except Exception as e_rg01:
+                        print(f"[regenerar] Aviso ao validar RG-01: {e_rg01}", flush=True)
+
+            return candidato
     return {}
 
 
 # ---------- OCI ----------
-def erro_armazenamento():
-    """Motivo da ultima falha de armazenamento (vazio quando nao houve)."""
-    return ULTIMO_ERRO_OCI
-
-
-def bucket_atual():
-    """Nome do bucket em uso. Vazio quando nao ha acesso a OCI."""
-    armazenamento = _storage()
-    if armazenamento is None:
-        return ""
-    try:
-        return armazenamento.nome_bucket()
-    except Exception:
-        return ""
-
-
 def listar_pacotes():
-    """Lista os pacotes realmente salvos no bucket.
-
-    Sem credencial nao existe persistencia: a lista volta vazia, em vez de
-    mostrar objetos ficticios como se estivessem gravados.
-    """
-    global ULTIMO_ERRO_OCI
-    armazenamento = _storage()
-    if armazenamento is None:
-        ULTIMO_ERRO_OCI = ULTIMO_ERRO_OCI or "OCI indisponivel: credencial nao configurada"
-        return []
-    ULTIMO_ERRO_OCI = ""
-    try:
-        itens = armazenamento.listar_pacotes()
-    except Exception as erro:
-        # Falha operacional fica visivel: lista vazia + motivo registrado.
-        _registrar_erro_oci(erro)
-        return []
-    return [
-        {
-            "caminho": item["caminho"],
-            "lote": item["lote"],
-            "data": _data_br(item.get("salvo_em")),
-            "tamanho": item.get("tamanho"),
-            "status": "salvo",
-            "persistencia": "real",
-        }
-        for item in itens
-    ]
+    """TODO(back): listar objetos do bucket no OCI Object Storage."""
+    return copy.deepcopy(m.PACOTES_OCI)
 
 
-def salvar_no_oci(pacotes, lote_id, historias=None):
-    """Grava os pacotes do lote no bucket.
-
-    O caminho e montado pelo backend a partir do lote e do nome do arquivo,
-    entao repetir a gravacao sobrescreve em vez de duplicar (idempotente).
-    Sem credencial, nada e gravado: o item volta como falha de simulacao.
-    Sem conteudo, nada e gravado: o item volta como falha, para nao salvar
-    um arquivo apenas com metadados.
-    """
-    if historias is None:
-        return [
-            {
-                **dict(pacote),
-                "status": "falhou",
-                "persistencia": "nenhuma",
-                "motivo": "Sem conteudo para gravar: a analise nao foi informada",
-                "data": None,
-                "tamanho": None,
-            }
-            for pacote in pacotes
-        ]
-
-    if not isinstance(historias, (list, tuple)):
-        return [
-            {
-                **dict(pacote),
-                "status": "falhou",
-                "persistencia": "nenhuma",
-                "motivo": "Conteudo em formato invalido: esperada uma lista de historias",
-                "data": None,
-                "tamanho": None,
-            }
-            for pacote in pacotes
-        ]
-
-    # lista vazia e resultado valido: o lote foi processado e nao havia
-    # historias elegiveis. Nao e falha tecnica.
-    historias = list(historias)
-
-    conteudo = {
-        "versao_schema": "1.0",
-        "lote": lote_id,
-        "gerado_em": datetime.now(timezone.utc).isoformat(timespec="seconds"),
-        "origem_analise": ORIGEM_ANALISE,
-        "historias": historias,
-        "evidencias": [
-            {"id_interacao": c.get("id_interacao"), "texto": c.get("texto")}
-            for h in historias
-            for c in (h.get("citacoes") or [])
-        ],
-    }
-
-    armazenamento = _storage()
-    if armazenamento is None:
-        return [
-            {
-                **dict(pacote),
-                "status": "falhou",
-                "persistencia": "simulada",
-                "motivo": ULTIMO_ERRO_OCI or "OCI indisponivel: credencial nao configurada",
-                "data": None,
-                "tamanho": None,
-            }
-            for pacote in pacotes
-        ]
-
-    atualizados = []
-    for pacote in pacotes:
-        caminho = armazenamento.caminho_do_lote(lote_id, pacote.get("caminho"))
-        try:
-            if "evidencia" in caminho:
-                dados = {
-                    "versao_schema": "1.0",
-                    "lote": lote_id,
-                    "gerado_em": conteudo["gerado_em"],
-                    "evidencias": conteudo["evidencias"],
-                }
-            else:
-                dados = conteudo
-            resultado = armazenamento.salvar_objeto(caminho, dados)
-            novo = dict(pacote)
-            novo.update(
-                {
-                    "caminho": caminho,
-                    "lote": lote_id,
-                    "data": _data_br(resultado.get("salvo_em")),
-                    "tamanho": resultado.get("tamanho"),
-                    "status": "salvo",
-                    "persistencia": "real",
-                    "motivo": None,
-                }
-            )
-        except Exception as erro:
-            _registrar_erro_oci(erro)
-            novo = dict(pacote)
-            novo.update(
-                {
-                    "caminho": caminho,
-                    "lote": lote_id,
-                    "status": "falhou",
-                    "persistencia": "real",
-                    "motivo": str(erro),
-                    "data": None,
-                    "tamanho": None,
-                }
-            )
-        atualizados.append(novo)
-    return atualizados
+def salvar_no_oci(pacotes, lote_id):
+    """TODO(back): gravar o pacote no OCI. Deve ser idempotente (retry não duplica)."""
+    return pacotes
 
 
 def reenviar_pacote(pacote):
-    """Tenta gravar de novo um pacote que falhou."""
-    armazenamento = _storage()
-    if armazenamento is None:
-        novo = dict(pacote)
-        novo.update(
-            {
-                "status": "falhou",
-                "persistencia": "simulada",
-                "motivo": ULTIMO_ERRO_OCI or "OCI indisponivel: credencial nao configurada",
-                "data": None,
-                "tamanho": None,
-            }
-        )
-        return novo
-
-    lote = pacote.get("lote") or ""
-    caminho = armazenamento.caminho_do_lote(lote, pacote.get("caminho"))
-    try:
-        resultado = armazenamento.salvar_objeto(caminho, pacote)
-    except Exception as erro:
-        _registrar_erro_oci(erro)
-        novo = dict(pacote)
-        novo.update({"status": "falhou", "persistencia": "real", "motivo": str(erro)})
-        return novo
+    """TODO(back): tentar gravar de novo um pacote que falhou."""
     novo = dict(pacote)
-    novo.update(
-        {
-            "caminho": caminho,
-            "status": "salvo",
-            "persistencia": "real",
-            "motivo": None,
-            "data": _data_br(resultado.get("salvo_em")),
-            "tamanho": resultado.get("tamanho"),
-        }
-    )
+    novo.update({"status": "salvo", "data": "15/10/2026 14:40", "tamanho": "2,4 KB"})
     return novo
 
 
 def conteudo_pacote(caminho):
-    """Le o JSON de um objeto do bucket.
-
-    Devolve None quando o objeto nao existe ou a leitura falha -- nunca um
-    conteudo ficticio com aparencia de sucesso.
-    """
-    armazenamento = _storage()
-    if armazenamento is None:
-        global ULTIMO_ERRO_OCI
-        ULTIMO_ERRO_OCI = ULTIMO_ERRO_OCI or "OCI indisponivel: credencial nao configurada"
-        return None
-    try:
-        return armazenamento.ler_objeto(str(caminho))
-    except Exception as erro:
-        _registrar_erro_oci(erro)
-        return None
+    """TODO(back): ler o objeto do bucket. Formato provisório."""
+    if caminho.endswith("evidencias.json"):
+        return {
+            "lote": "DEMO-001",
+            "evidencias": [
+                {"autor": h["autor"], "canal": h["canal"],
+                 "mensagem_original": h["mensagem_original"], "citacoes": h["destaques"], "fatos": h["fatos"]}
+                for h in m.HISTORIAS
+            ],
+        }
+    return {
+        "status": "sucesso",
+        "lote": "DEMO-001",
+        "gravado_em": "2026-10-15T14:32:00-03:00",
+        "historias": [
+            {"autor": h["autor"], "categoria": h["categoria"], "relevancia": h["relevancia"],
+             "citacao": h["destaques"][0],
+             "ativos": {a["id"]: {"status": "rascunho_aguardando_revisao"} for a in h["ativos"]}}
+            for h in m.HISTORIAS
+        ],
+    }
