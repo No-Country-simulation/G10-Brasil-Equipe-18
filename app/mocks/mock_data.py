@@ -26,6 +26,12 @@ INTERACOES = [
 ]
 
 # tipo do ativo: "texto" (um campo de texto) ou "testemunho" (título + descrição + citação)
+# Cada historia tem duas partes:
+# - campos que as telas leem (autor, canal, categoria, sentimento, relevancia,
+#   mensagem_original, destaques, fatos, ativos);
+# - campos do contrato de historia (tipo, resumo, resultados, topicos,
+#   tipo_insight, justificativa, confianca, citacoes).
+# Os valores seguem o guia de rotulagem e o schemas/historia_detectada.json.
 HISTORIAS = [
     {
         "id": "hist-001",
@@ -34,140 +40,185 @@ HISTORIAS = [
         "canal": "#conquistas",
         "origem": "Mensagem da comunidade",
         "categoria": "Conquista profissional",
-        "sentimento": "Positivo",
-        "relevancia": 96,
-        "mensagem_original": "Consegui minha primeira vaga como dev júnior! O portfólio que construí no ONE fez a diferença.",
-        "destaques": ["primeira vaga como dev júnior!", "O portfólio que construí no ONE fez a diferença."],
-        "fatos": ["Conquista: primeira vaga como dev júnior", "Origem: portfólio construído no ONE"],
-        "ativos": [
-            {"id": "testemunho", "nome": "Testemunho estruturado", "tipo": "testemunho",
-             "campos": {
-                 "titulo": "Da comunidade para o mercado: primeira vaga tech",
-                 "descricao": "Marina Costa conquistou sua primeira posição como desenvolvedora júnior após participar do Programa ONE. O diferencial foi o portfólio construído durante a formação, que demonstrou suas habilidades práticas aos recrutadores.",
-                 "citacao": "O portfólio que construí no ONE fez a diferença."
-             },
-             "variacoes": [{
-                 "titulo": "Primeira vaga como dev júnior conquistada",
-                 "descricao": "Participante do Programa ONE, Marina Costa conseguiu sua primeira vaga como desenvolvedora júnior. O portfólio desenvolvido durante o programa foi decisivo no processo seletivo.",
-                 "citacao": "Consegui minha primeira vaga como dev júnior! O portfólio que construí no ONE fez a diferença."
-             }],
-             "fontes": [
-                 {"afirmacao": "Marina conquistou primeira vaga como dev júnior", "fato": "Conquista: primeira vaga como dev júnior", "trecho": "primeira vaga como dev júnior!"},
-                 {"afirmacao": "Portfólio construído no ONE foi decisivo", "fato": "Origem: portfólio construído no ONE", "trecho": "O portfólio que construí no ONE fez a diferença."}
-             ]},
-            {"id": "case", "nome": "Case de sucesso", "tipo": "texto",
-             "campos": {"texto": "Case de Sucesso: Transição para Tecnologia\n\n"
-                                 "Marina Costa ingressou no mercado tech conquistando sua primeira vaga como desenvolvedora júnior. "
-                                 "O diferencial competitivo veio do portfólio prático construído durante o Programa ONE, "
-                                 "que demonstrou suas habilidades técnicas aos recrutadores.\n\n"
-                                 "Resultado: Primeira colocação profissional na área de tecnologia."},
-             "variacoes": [{"texto": "História de Sucesso: Primeira Vaga Tech\n\n"
-                                     "Participante: Marina Costa\n"
-                                     "Conquista: Primeira vaga como desenvolvedora júnior\n"
-                                     "Fator decisivo: Portfólio construído no Programa ONE\n\n"
-                                     "Marina ingressou no mercado de tecnologia após concluir a formação. "
-                                     "O portfólio desenvolvido durante o programa foi destacado como diferencial no processo seletivo."}],
-             "fontes": [
-                 {"afirmacao": "Marina conquistou primeira vaga como dev júnior", "fato": "Conquista: primeira vaga como dev júnior", "trecho": "primeira vaga como dev júnior!"},
-                 {"afirmacao": "Portfólio foi o diferencial", "fato": "Origem: portfólio construído no ONE", "trecho": "O portfólio que construí no ONE fez a diferença."}
-             ]},
+        "sentimento": "positivo",
+        "relevancia": 90,
+        "relevancia_nivel": "alta",
+        "tipo_insight": "conquista",
+        "topicos": [
+            "carreira",
+            "estudos"
         ],
+        "justificativa": "Resultado concreto: primeira vaga como desenvolvedora júnior, com o portfólio da formação como diferencial.",
+        "confianca": 0.92,
+        "tipo": "conquista_profissional",
+        "resumo": "Participante do Programa ONE conquista a primeira vaga como desenvolvedora júnior, com o portfólio construído durante a formação como diferencial.",
+        "resultados": [
+            "Primeira vaga como desenvolvedora júnior"
+        ],
+        "mensagem_original": "Consegui minha primeira vaga como dev júnior! O portfólio que construí no ONE fez a diferença.",
+        "citacoes": [
+            {
+                "texto": "Consegui minha primeira vaga como dev júnior!",
+                "id_interacao": 1
+            },
+            {
+                "texto": "O portfólio que construí no ONE fez a diferença.",
+                "id_interacao": 1
+            }
+        ],
+        "interacoes_origem": [
+            1
+        ],
+        "destaques": [
+            "Consegui minha primeira vaga como dev júnior!",
+            "O portfólio que construí no ONE fez a diferença."
+        ],
+        "fatos": [
+            "Conquista: primeira vaga como dev júnior",
+            "Origem: portfólio construído no ONE"
+        ],
+        "ativos": [
+            {
+                "id": "testemunho",
+                "nome": "Testemunho estruturado",
+                "tipo": "testemunho",
+                "campos": {
+                    "titulo": "Da comunidade para o mercado: primeira vaga tech",
+                    "descricao": "Marina Costa conquistou sua primeira posição como desenvolvedora júnior após participar do Programa ONE. O diferencial foi o portfólio construído durante a formação, que mostrou suas habilidades práticas aos recrutadores.",
+                    "citacao": "O portfólio que construí no ONE fez a diferença."
+                },
+                "variacoes": [
+                    {
+                        "titulo": "Primeira vaga como dev júnior conquistada",
+                        "descricao": "Participante do Programa ONE, Marina Costa conseguiu sua primeira vaga como desenvolvedora júnior. O portfólio desenvolvido durante o programa foi decisivo no processo seletivo.",
+                        "citacao": "Consegui minha primeira vaga como dev júnior! O portfólio que construí no ONE fez a diferença."
+                    }
+                ]
+            },
+            {
+                "id": "post_linkedin",
+                "nome": "Post para LinkedIn",
+                "tipo": "texto",
+                "campos": {
+                    "texto": "Primeira vaga como dev júnior conquistada. O portfólio feito durante a formação foi o que abriu a porta."
+                }
+            }
+        ]
     },
     {
         "id": "hist-002",
+        "autor": "Camila Santos",
+        "iniciais": "CS",
+        "canal": "#carreira",
+        "origem": "Mensagem da comunidade",
+        "categoria": "Superação",
+        "sentimento": "positivo",
+        "relevancia": 70,
+        "relevancia_nivel": "media",
+        "tipo_insight": "historia",
+        "topicos": [
+            "carreira"
+        ],
+        "justificativa": "Relato de percurso: dez anos no varejo e o início da transição para tecnologia depois da formação.",
+        "confianca": 0.86,
+        "tipo": "superacao",
+        "resumo": "Depois de dez anos no varejo, participante conclui a formação e começa a transição de carreira para a área de tecnologia.",
+        "resultados": [
+            "Início da transição para tecnologia"
+        ],
+        "mensagem_original": "Depois de 10 anos no varejo, concluí a formação e comecei minha transição para tecnologia.",
+        "citacoes": [
+            {
+                "texto": "Depois de 10 anos no varejo",
+                "id_interacao": 3
+            },
+            {
+                "texto": "comecei minha transição para tecnologia",
+                "id_interacao": 3
+            }
+        ],
+        "interacoes_origem": [
+            3
+        ],
+        "destaques": [
+            "Depois de 10 anos no varejo",
+            "comecei minha transição para tecnologia"
+        ],
+        "fatos": [
+            "Percurso: dez anos no varejo",
+            "Processo: concluiu a formação",
+            "Resultado: início da transição para tecnologia"
+        ],
+        "ativos": [
+            {
+                "id": "case_sucesso",
+                "nome": "Case de sucesso",
+                "tipo": "texto",
+                "campos": {
+                    "titulo": "Dez anos no varejo até a transição para tecnologia",
+                    "texto": "Camila Santos passou dez anos no varejo antes de concluir a formação e começar a transição de carreira para tecnologia."
+                }
+            }
+        ]
+    },
+    {
+        "id": "hist-003",
         "autor": "Lucas Almeida",
         "iniciais": "LA",
         "canal": "#projetos",
         "origem": "Mensagem da comunidade",
         "categoria": "Projeto de destaque",
-        "sentimento": "Positivo",
-        "relevancia": 89,
+        "sentimento": "positivo",
+        "relevancia": 90,
+        "relevancia_nivel": "alta",
+        "tipo_insight": "conquista",
+        "topicos": [
+            "tecnologia",
+            "comunidade"
+        ],
+        "justificativa": "Entrega concreta: projeto em equipe destacado no desafio da comunidade.",
+        "confianca": 0.9,
+        "tipo": "projeto_destaque",
+        "resumo": "Projeto de controle financeiro feito em equipe é destacado no desafio da comunidade.",
+        "resultados": [
+            "Destaque no desafio da comunidade"
+        ],
         "mensagem_original": "Nosso projeto de controle financeiro foi destaque no desafio. Fizemos tudo em equipe!",
-        "destaques": ["projeto de controle financeiro foi destaque no desafio.", "Fizemos tudo em equipe!"],
-        "fatos": ["Projeto: controle financeiro", "Reconhecimento: destaque no desafio", "Trabalho em equipe"],
-        "ativos": [
-            {"id": "testemunho", "nome": "Testemunho estruturado", "tipo": "testemunho",
-             "campos": {
-                 "titulo": "Projeto colaborativo reconhecido no desafio",
-                 "descricao": "Lucas Almeida e sua equipe desenvolveram um sistema de controle financeiro que foi destacado no desafio do Programa ONE. O projeto demonstrou não apenas competências técnicas, mas também habilidades de trabalho em equipe.",
-                 "citacao": "Nosso projeto de controle financeiro foi destaque no desafio. Fizemos tudo em equipe!"
-             },
-             "variacoes": [{
-                 "titulo": "Equipe conquista destaque com projeto financeiro",
-                 "descricao": "O time de Lucas Almeida foi reconhecido no desafio do Programa ONE com um projeto de controle financeiro. A iniciativa destacou-se pela qualidade técnica e pela colaboração entre os participantes.",
-                 "citacao": "Fizemos tudo em equipe!"
-             }],
-             "fontes": [
-                 {"afirmacao": "Projeto de controle financeiro foi destaque", "fato": "Projeto: controle financeiro", "trecho": "projeto de controle financeiro foi destaque no desafio."},
-                 {"afirmacao": "Desenvolvido em equipe", "fato": "Trabalho em equipe", "trecho": "Fizemos tudo em equipe!"}
-             ]},
-            {"id": "case", "nome": "Case de sucesso", "tipo": "texto",
-             "campos": {"texto": "Case de Sucesso: Projeto Colaborativo em Destaque\n\n"
-                                 "Equipe liderada por Lucas Almeida desenvolveu um sistema de controle financeiro "
-                                 "que foi reconhecido como destaque no desafio do Programa ONE. "
-                                 "O projeto demonstrou competências técnicas sólidas e excelente capacidade de colaboração.\n\n"
-                                 "Resultado: Reconhecimento oficial no desafio e validação das habilidades de trabalho em equipe."},
-             "variacoes": [{"texto": "História de Sucesso: Destaque em Projeto de Equipe\n\n"
-                                     "Equipe: Lucas Almeida e colaboradores\n"
-                                     "Projeto: Sistema de controle financeiro\n"
-                                     "Reconhecimento: Destaque no desafio do Programa ONE\n\n"
-                                     "O projeto foi desenvolvido de forma colaborativa e destacou-se pela qualidade técnica. "
-                                     "A iniciativa evidenciou tanto as competências individuais quanto a capacidade de trabalho em equipe."}],
-             "fontes": [
-                 {"afirmacao": "Projeto foi destaque no desafio", "fato": "Reconhecimento: destaque no desafio", "trecho": "projeto de controle financeiro foi destaque no desafio."},
-                 {"afirmacao": "Trabalho realizado em equipe", "fato": "Trabalho em equipe", "trecho": "Fizemos tudo em equipe!"}
-             ]},
+        "citacoes": [
+            {
+                "texto": "Nosso projeto de controle financeiro foi destaque no desafio.",
+                "id_interacao": 2
+            },
+            {
+                "texto": "Fizemos tudo em equipe!",
+                "id_interacao": 2
+            }
         ],
-    },
-    {
-        "id": "hist-003",
-        "autor": "Camila Santos",
-        "iniciais": "CS",
-        "canal": "#carreira",
-        "origem": "Mensagem da comunidade",
-        "categoria": "Superação e transição de carreira",
-        "sentimento": "Positivo",
-        "relevancia": 84,
-        "mensagem_original": "Depois de 10 anos no varejo, concluí a formação e comecei minha transição para tecnologia.",
-        "destaques": ["Depois de 10 anos no varejo,", "concluí a formação", "comecei minha transição para tecnologia."],
-        "fatos": ["Trajetória: 10 anos no varejo", "Marco: formação concluída", "Mudança: início da transição para tecnologia"],
-        "ativos": [
-            {"id": "testemunho", "nome": "Testemunho estruturado", "tipo": "testemunho",
-             "campos": {
-                 "titulo": "Transição de carreira: do varejo para a tecnologia",
-                 "descricao": "Após uma década de experiência no varejo, Camila Santos concluiu a formação no Programa ONE e iniciou sua transição para a área de tecnologia. A trajetória exemplifica que mudanças de carreira são possíveis em qualquer momento da vida profissional.",
-                 "citacao": "Depois de 10 anos no varejo, concluí a formação e comecei minha transição para tecnologia."
-             },
-             "variacoes": [{
-                 "titulo": "Recomeço profissional na tecnologia",
-                 "descricao": "Camila Santos decidiu mudar de carreira após 10 anos no setor de varejo. Concluiu a formação no Programa ONE e deu início à sua jornada na área tech, demonstrando que nunca é tarde para recomeçar.",
-                 "citacao": "Concluí a formação e comecei minha transição para tecnologia."
-             }],
-             "fontes": [
-                 {"afirmacao": "Camila trabalhou 10 anos no varejo", "fato": "Trajetória: 10 anos no varejo", "trecho": "Depois de 10 anos no varejo,"},
-                 {"afirmacao": "Concluiu a formação no programa", "fato": "Marco: formação concluída", "trecho": "concluí a formação"},
-                 {"afirmacao": "Iniciou transição para tecnologia", "fato": "Mudança: início da transição para tecnologia", "trecho": "comecei minha transição para tecnologia."}
-             ]},
-            {"id": "case", "nome": "Case de sucesso", "tipo": "texto",
-             "campos": {"texto": "Case de Sucesso: Transição de Carreira para Tecnologia\n\n"
-                                 "Camila Santos construiu 10 anos de experiência no setor de varejo antes de decidir mudar de área. "
-                                 "Após concluir a formação no Programa ONE, iniciou sua transição para o mercado de tecnologia.\n\n"
-                                 "Resultado: Transição de carreira bem-sucedida, demonstrando que mudanças profissionais "
-                                 "são viáveis com dedicação e formação adequada."},
-             "variacoes": [{"texto": "História de Sucesso: Nova Carreira em Tech\n\n"
-                                     "Participante: Camila Santos\n"
-                                     "Trajetória anterior: 10 anos no varejo\n"
-                                     "Mudança: Transição para tecnologia após formação\n\n"
-                                     "Camila decidiu recomeçar profissionalmente na área tech. "
-                                     "Concluiu a formação no Programa ONE e iniciou sua nova trajetória, "
-                                     "provando que é possível mudar de carreira em qualquer etapa da vida profissional."}],
-             "fontes": [
-                 {"afirmacao": "Experiência de 10 anos no varejo", "fato": "Trajetória: 10 anos no varejo", "trecho": "Depois de 10 anos no varejo,"},
-                 {"afirmacao": "Formação concluída", "fato": "Marco: formação concluída", "trecho": "concluí a formação"},
-                 {"afirmacao": "Transição iniciada", "fato": "Mudança: início da transição para tecnologia", "trecho": "comecei minha transição para tecnologia."}
-             ]},
+        "interacoes_origem": [
+            2
         ],
-    },
+        "destaques": [
+            "Nosso projeto de controle financeiro foi destaque no desafio.",
+            "Fizemos tudo em equipe!"
+        ],
+        "fatos": [
+            "Projeto: controle financeiro",
+            "Resultado: destaque no desafio",
+            "Formato: trabalho em equipe"
+        ],
+        "ativos": [
+            {
+                "id": "testemunho",
+                "nome": "Testemunho estruturado",
+                "tipo": "testemunho",
+                "campos": {
+                    "titulo": "Projeto em equipe destacado no desafio",
+                    "descricao": "O projeto de controle financeiro de Lucas Almeida e da equipe foi destaque no desafio da comunidade.",
+                    "citacao": "Nosso projeto de controle financeiro foi destaque no desafio."
+                }
+            }
+        ]
+    }
 ]
 
 PACOTES_OCI = [
