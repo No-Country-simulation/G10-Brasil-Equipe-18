@@ -4,7 +4,7 @@ import time
 import streamlit as st
 
 from services import data_service as svc
-from state import ir_para
+from state import inicializar_controles_historias, ir_para
 from styles import caixa, cabecalho, esc, md, topbar
 
 ETAPAS = [
@@ -76,12 +76,18 @@ def _desenhar(etapas, botoes):
                 situacao = "6 rascunhos gerados · " + ("gravação pendente" if com_erro else "salvos no OCI" if etapas[5] == "concluida" else "gravando")
             else:
                 situacao = "Ativos ainda não gerados"
+            # Badge de origem: informa se a análise usou o LLM real ou o modo mock
+            origem = svc.obter_origem_analise()
+            if origem == "gemini":
+                ambiente_label = '<span style="color:#047857;font-weight:600;">✓ IA (Gemini)</span>'
+            else:
+                ambiente_label = '<span style="color:#B45309;font-weight:600;">⚠ Modo demonstração (mock)</span>'
             md(
                 '<b style="font-size:17px;">Resumo do lote</b><hr style="margin:10px 0;border:none;border-top:1px solid #EEF0F4;">'
                 f'<div class="cl-kv"><span>Interações</span><span>{len(ss.interacoes)}</span></div>'
                 f'<div class="cl-kv"><span>Canais</span><span>{canais}</span></div>'
                 f'<div class="cl-kv"><span>Origem</span><span>{esc(ss.arquivo["origem"])}</span></div>'
-                '<div class="cl-kv"><span>Ambiente</span><span>Demonstração</span></div>'
+                f'<div class="cl-kv"><span>Ambiente</span><span>{ambiente_label}</span></div>'
                 '<hr style="margin:10px 0;border:none;border-top:1px solid #EEF0F4;">'
                 f'<b>{len(ss.historias) if historias_ok else "–"} histórias identificadas</b><br>'
                 f'<span class="cl-muted">{situacao}</span>'
@@ -118,21 +124,51 @@ def render():
         etapas = ["concluida"] * inicio + ["pendente"] * (6 - inicio)
         area = st.empty()
         terminou = True
+
         for i in range(inicio, 6):
             etapas[i] = "andamento"
             with area.container():
                 _desenhar(etapas, botoes=False)
-            time.sleep(ATRASO)
+
+            # Etapa 1 (index 0): limpeza e filtragem real de ruídos e duplicatas (src.preprocessing.limpeza)
+            if i == 0 and ss.proc_status == "novo":
+                try:
+                    interacoes_limpas, rejeitadas = svc.limpar_interacoes_lote(ss.interacoes)
+                    if interacoes_limpas:
+                        ss.interacoes = interacoes_limpas
+                        ss.dados["interacoes_rejeitadas"] = len(rejeitadas)
+                except Exception as _e_limp:
+                    print(f"[processamento] limpeza falhou: {_e_limp}", flush=True)
+
+            # Etapa 2 (index 1): classificação de sentimentos e tópicos (src.analysis.classificacao)
+            elif i == 1 and ss.proc_status == "novo":
+                try:
+                    ss.interacoes_analisadas = svc.classificar_interacoes_lote(ss.interacoes)
+                except Exception as _e_cls:
+                    print(f"[processamento] classificacao falhou: {_e_cls}", flush=True)
+
+            # Etapa 3 (index 2): detecção de histórias e ativos com LLM
+            elif i == 2 and ss.proc_status == "novo":
+                try:
+                    ss.historias = svc.analisar(ss.interacoes)
+                    inicializar_controles_historias(ss.historias)
+                except Exception as _e_analise:
+                    print(f"[processamento] analisar falhou: {_e_analise}", flush=True)
+                    ss.historias = []
+            else:
+                time.sleep(ATRASO)
+
             if i == 5 and ss.get("dados", {}).get("demo_erro_oci"):
                 etapas[i] = "erro"
                 ss.proc_status = "erro"
                 terminou = False
                 break
             etapas[i] = "concluida"
+
         if terminou:
             ss.proc_status = "concluido"
             ss.historias = svc.analisar(ss.interacoes)
-            ss.pacotes_oci = svc.salvar_no_oci(ss.pacotes_oci, ss.lote_id, ss.historias)
+            ss.pacotes_oci = svc.salvar_no_oci(ss.pacotes_oci, ss.lote_id)
         ss.proc_etapas = etapas
         with area.container():
             _desenhar(etapas, botoes=True)
