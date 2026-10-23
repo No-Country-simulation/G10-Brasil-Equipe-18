@@ -109,7 +109,9 @@ def validar_integridade_evidencias(
                 mapa_interacoes[f"int_{iid:03d}"] = txt
             elif isinstance(iid, str) and iid.startswith("int_") and iid[4:].isdigit():
                 try:
-                    mapa_interacoes[int(iid[4:])] = txt
+                    num = int(iid[4:])
+                    mapa_interacoes[num] = txt
+                    mapa_interacoes[str(num)] = txt
                 except ValueError:
                     pass
 
