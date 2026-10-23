@@ -27,7 +27,7 @@ include = ["src*"]
 src = ["*.json"]
 
 [tool.pytest.ini_options]
-pythonpath = [".", "src"]
+pythonpath = [".", "src", "app"]
 
 [tool.pyright]
-extraPaths = [".", "src"]
+extraPaths = [".", "src", "app"]
