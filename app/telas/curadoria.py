@@ -104,15 +104,19 @@ def _coluna_rascunhos(h, ativo, status):
     hid, aid = h["id"], ativo["id"]
     editavel = status in ["rascunho", "ajustes"]
     if ativo["tipo"] == "texto":
+        texto_inicial = (
+            ativo["campos"].get("texto")
+            or next(iter(ativo["campos"].values()), "")
+        )
         campo(st.text_area, "Texto do case" if "Case" in ativo["nome"] else "Texto",
-              _chave(hid, aid, "texto"), ativo["campos"]["texto"], height=240, disabled=not editavel)
+              _chave(hid, aid, "texto"), texto_inicial, height=240, disabled=not editavel)
         texto_atual = valor(_chave(hid, aid, "texto"), "")
         st.caption(f"{len(texto_atual)} caracteres")
         copiavel = texto_atual
     elif ativo["tipo"] == "testemunho":
-        campo(st.text_input, "Título", _chave(hid, aid, "titulo"), ativo["campos"]["titulo"], disabled=not editavel)
-        campo(st.text_area, "Descrição", _chave(hid, aid, "descricao"), ativo["campos"]["descricao"], height=100, disabled=not editavel)
-        campo(st.text_area, "Citação", _chave(hid, aid, "citacao"), ativo["campos"]["citacao"], height=60, disabled=not editavel)
+        campo(st.text_input, "Título", _chave(hid, aid, "titulo"), ativo["campos"].get("titulo", ""), disabled=not editavel)
+        campo(st.text_area, "Descrição", _chave(hid, aid, "descricao"), ativo["campos"].get("descricao", ""), height=100, disabled=not editavel)
+        campo(st.text_area, "Citação", _chave(hid, aid, "citacao"), ativo["campos"].get("citacao", ""), height=60, disabled=not editavel)
         total = len(valor(_chave(hid, aid, "titulo"), "")) + len(valor(_chave(hid, aid, "descricao"), "")) + len(valor(_chave(hid, aid, "citacao"), ""))
         st.caption(f"{total} caracteres no total")
         copiavel = f"{valor(_chave(hid, aid, 'titulo'), '')}\n\n{valor(_chave(hid, aid, 'descricao'), '')}\n\n\"{valor(_chave(hid, aid, 'citacao'), '')}\""
