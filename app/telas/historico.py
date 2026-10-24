@@ -125,7 +125,8 @@ def render():
         unicos.append(pacote)
     pacotes = unicos
     motivo_erro = svc.erro_armazenamento()
-    if motivo_erro:
+    if motivo_erro and "credencial" not in motivo_erro.lower():
+        # Mostra erro apenas quando não for falta de credencial (modo demo)
         caixa("red", f"<b>Falha ao consultar o bucket</b><br>{motivo_erro}")
     if estado == "Erro de conexão":
         c1, c2 = st.columns([4, 1])
