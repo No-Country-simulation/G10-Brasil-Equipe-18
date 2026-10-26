@@ -1,4 +1,4 @@
-# CommunityLab Acceptance Test Plan (CATP)  
+# CommunityLab Acceptance Test Plan (CATP)   
 
 **Versão:** 1.1  
 **Projeto:** CommunityLab — Hackathon ONE G10  
