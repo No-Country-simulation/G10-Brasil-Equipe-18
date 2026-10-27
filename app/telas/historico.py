@@ -7,6 +7,7 @@ from mocks import mock_data as m
 from services import data_service as svc
 from state import campo, definir, ir_para, valor
 from styles import caixa, cabecalho, chip, esc, md, topbar
+from src.config import MODO_DEMONSTRACAO
 
 try:
     _dialogo = st.dialog
@@ -125,11 +126,11 @@ def render():
         unicos.append(pacote)
     pacotes = unicos
     motivo_erro = svc.erro_armazenamento()
-    # Em modo demonstração, oculta erro de credencial; fora dele, mostra explicitamente
+    # Em modo demonstração (MODO_DEMONSTRACAO), oculta erro de credencial
+    # Fora do modo demonstração, mostra erro de credencial explicitamente
     if motivo_erro:
         eh_erro_credencial = "credencial" in motivo_erro.lower()
-        em_modo_demo = estado in ("Vazio", "Carregando", "Erro de conexão")
-        if eh_erro_credencial and not em_modo_demo:
+        if eh_erro_credencial and not MODO_DEMONSTRACAO:
             # Fora do modo demo: exibe erro de credencial explicitamente
             caixa("red", f"<b>Falha ao consultar o bucket</b><br>{motivo_erro}")
         elif not eh_erro_credencial:
