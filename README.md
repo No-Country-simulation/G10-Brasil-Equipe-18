@@ -109,6 +109,22 @@ O PR #9 implementa comunicação com o OCI Object Storage, com configuração ex
 
 Dados demonstrativos e operações reais devem ser distinguíveis. **Nenhum status de sucesso deve ser atribuído a uma gravação que não ocorreu.**
 
+#### Configuração de credenciais OCI
+
+O sistema suporta dois métodos de configuração:
+
+1. **Streamlit Secrets** (recomendado para deploy no Streamlit Cloud):
+   - Configure as cinco variáveis em `.streamlit/secrets.toml` (desenvolvimento local) ou em **Settings > Secrets** do app publicado.
+   - Variáveis: `OCI_USER`, `OCI_FINGERPRINT`, `OCI_TENANCY`, `OCI_REGION`, `OCI_KEY_CONTENT`.
+   - Use `.streamlit/secrets.toml.example` como referência (apenas os NOMES das variáveis, sem valores reais).
+   - Quando secrets estão presentes, o sistema usa apenas eles, sem fallback silencioso para o arquivo de config.
+
+2. **Arquivo ~/.oci/config** (fallback para desenvolvimento local):
+   - Usado automaticamente quando Streamlit secrets não estão disponíveis.
+   - Configure conforme a documentação oficial da OCI.
+
+**Importante:** `secrets.toml` está no `.gitignore` e nunca deve ser commitado. Em produção, substitua o sal de pseudonimização padrão em `.env`.
+
 ## 🛠️ Tecnologias
 
 | Tecnologia | Utilização |
