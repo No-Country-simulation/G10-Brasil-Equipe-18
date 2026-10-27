@@ -63,12 +63,14 @@ def _config() -> tuple[object, str, str]:
     if _tem_secrets:
         # Secrets OCI presentes → usa obrigatoriamente, sem fallback silencioso
         try:
+            # Normaliza quebras de linha: literal \n vira quebra real
+            key_content = st.secrets["OCI_KEY_CONTENT"].replace("\\n", "\n")
             config = {
                 "user": st.secrets["OCI_USER"],
                 "fingerprint": st.secrets["OCI_FINGERPRINT"],
                 "tenancy": st.secrets["OCI_TENANCY"],
                 "region": st.secrets.get("OCI_REGION", "sa-saopaulo-1"),
-                "key_content": st.secrets["OCI_KEY_CONTENT"],
+                "key_content": key_content,
             }
             cliente = oci.object_storage.ObjectStorageClient(config)
             namespace = st.secrets.get("OCI_NAMESPACE") or cliente.get_namespace().data
