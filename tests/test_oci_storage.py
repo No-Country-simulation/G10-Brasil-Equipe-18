@@ -4,8 +4,9 @@ Testa o caminho de credenciais (st.secrets vs arquivo de config) e normalizaçã
 do OCI_KEY_CONTENT chamando código real com mocks, sem acessar OCI de verdade.
 """
 import sys
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, PropertyMock, patch
 import pytest
+from streamlit.errors import StreamlitSecretNotFoundError
 
 
 def test_config_usa_secrets_quando_presentes():
@@ -189,3 +190,54 @@ def test_normalizacao_key_content_chamando_codigo_real():
         for mod in ['streamlit', 'oci', 'oci.object_storage', 'oci.config', 'app.services.oci_storage']:
             if mod in sys.modules:
                 del sys.modules[mod]
+
+
+def test_config_sem_secrets_toml_cai_no_arquivo():
+    """Caso em que não há secrets.toml acessível: st.secrets levanta
+    StreamlitSecretNotFoundError ao ser consultado. O erro não deve propagar
+    e o fluxo deve seguir para ~/.oci/config."""
+    # Mock do OCI SDK
+    mock_oci = MagicMock()
+    mock_client = MagicMock()
+    mock_client.get_namespace.return_value.data = "namespace_from_file"
+    mock_oci.object_storage.ObjectStorageClient.return_value = mock_client
+    mock_oci.config.from_file.return_value = {
+        "user": "ocid1.user.fromfile",
+        "fingerprint": "11:22:33:44:55:66",
+        "tenancy": "ocid1.tenancy.fromfile",
+        "region": "us-ashburn-1",
+        "key_file": "/path/to/key.pem",
+    }
+    sys.modules['oci'] = mock_oci
+    sys.modules['oci.object_storage'] = mock_oci.object_storage
+    sys.modules['oci.config'] = mock_oci.config
+
+    # Mock do streamlit onde consultar st.secrets levanta StreamlitSecretNotFoundError
+    mock_st = MagicMock()
+    type(mock_st).secrets = PropertyMock(
+        side_effect=StreamlitSecretNotFoundError("No secrets file found")
+    )
+    sys.modules['streamlit'] = mock_st
+
+    try:
+        with patch("app.services.oci_storage.Path") as mock_path_class:
+            mock_path_inst = MagicMock()
+            mock_path_inst.exists.return_value = True
+            mock_path_class.return_value = mock_path_inst
+
+            # Remove cache e importa
+            if 'app.services.oci_storage' in sys.modules:
+                del sys.modules['app.services.oci_storage']
+            from app.services import oci_storage
+
+            cliente, namespace, bucket = oci_storage._config()
+
+            # Verifica que usou o arquivo e o erro não propagou
+            assert cliente is not None
+            assert namespace == "namespace_from_file"
+            mock_oci.config.from_file.assert_called_once()
+    finally:
+        for mod in ['streamlit', 'oci', 'oci.object_storage', 'oci.config', 'app.services.oci_storage']:
+            if mod in sys.modules:
+                del sys.modules[mod]
+
