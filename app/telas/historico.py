@@ -18,6 +18,33 @@ FILTROS = ["Todos", "Salvos", "Com erro"]
 ESTADOS_DEMO = ["Normal", "Vazio", "Carregando", "Erro de conexão"]
 
 
+def deve_exibir_erro(motivo_erro: str, modo_demo: bool) -> bool:
+    """Decide se um erro de armazenamento deve ser exibido ao usuário.
+    
+    Regras:
+    - Erro de credencial: exibe apenas se modo_demo=False
+    - Erro operacional (rede, permissão, etc.): sempre exibe
+    
+    Args:
+        motivo_erro: Mensagem de erro retornada pelo armazenamento
+        modo_demo: True se o sistema está em modo demonstração
+    
+    Returns:
+        True se o erro deve ser exibido, False caso contrário
+    """
+    if not motivo_erro:
+        return False
+    
+    eh_erro_credencial = "credencial" in motivo_erro.lower()
+    
+    # Erro de credencial só aparece fora do modo demo
+    if eh_erro_credencial:
+        return not modo_demo
+    
+    # Erros operacionais sempre aparecem
+    return True
+
+
 @_dialogo("Visualizar JSON", width="large")
 def _dialogo_json(caminho):
     dados = svc.conteudo_pacote(caminho)
@@ -128,14 +155,8 @@ def render():
     motivo_erro = svc.erro_armazenamento()
     # Em modo demonstração (MODO_DEMONSTRACAO), oculta erro de credencial
     # Fora do modo demonstração, mostra erro de credencial explicitamente
-    if motivo_erro:
-        eh_erro_credencial = "credencial" in motivo_erro.lower()
-        if eh_erro_credencial and not MODO_DEMONSTRACAO:
-            # Fora do modo demo: exibe erro de credencial explicitamente
-            caixa("red", f"<b>Falha ao consultar o bucket</b><br>{motivo_erro}")
-        elif not eh_erro_credencial:
-            # Erros não relacionados a credencial: sempre exibe
-            caixa("red", f"<b>Falha ao consultar o bucket</b><br>{motivo_erro}")
+    if deve_exibir_erro(motivo_erro, MODO_DEMONSTRACAO):
+        caixa("red", f"<b>Falha ao consultar o bucket</b><br>{motivo_erro}")
     if estado == "Erro de conexão":
         c1, c2 = st.columns([4, 1])
         with c1:

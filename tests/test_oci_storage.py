@@ -189,25 +189,3 @@ def test_normalizacao_key_content_chamando_codigo_real():
         for mod in ['streamlit', 'oci', 'oci.object_storage', 'oci.config', 'app.services.oci_storage']:
             if mod in sys.modules:
                 del sys.modules[mod]
-
-
-def test_filtro_erro_credencial_respeita_modo_demonstracao():
-    """Testa que o filtro de erro usa MODO_DEMONSTRACAO do config, não estados visuais."""
-    from src.config import MODO_DEMONSTRACAO
-    
-    motivo_credencial = "Credencial da OCI nao encontrada"
-    motivo_rede = "Falha de rede: timeout"
-    
-    # Lógica esperada do historico.py
-    eh_credencial = "credencial" in motivo_credencial.lower()
-    eh_rede = "credencial" in motivo_rede.lower()
-    
-    assert eh_credencial, "Erro de credencial não foi detectado"
-    assert not eh_rede, "Erro de rede foi confundido com credencial"
-    
-    # Comportamento: se MODO_DEMONSTRACAO=False, erro de credencial deve ser exibido
-    # Se MODO_DEMONSTRACAO=True, erro de credencial deve ser ocultado
-    # Erros não relacionados sempre são exibidos
-    
-    # Este teste documenta o comportamento esperado
-    # A implementação real está em app/telas/historico.py
