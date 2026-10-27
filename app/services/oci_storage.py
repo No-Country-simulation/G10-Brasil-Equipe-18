@@ -59,6 +59,8 @@ def _config() -> tuple[object, str, str]:
         _tem_secrets = hasattr(st, "secrets") and "OCI_USER" in st.secrets
     except ImportError:
         pass  # Streamlit não disponível, usa arquivo
+    except Exception:
+        pass  # sem secrets.toml acessível: segue para ~/.oci/config
 
     if _tem_secrets:
         # Secrets OCI presentes → usa obrigatoriamente, sem fallback silencioso
