@@ -52,6 +52,38 @@ def _config() -> tuple[object, str, str]:
             "SDK da OCI nao instalado. Rode: pip install oci"
         ) from erro
 
+    # Tenta ler do Streamlit secrets primeiro
+    _tem_secrets = False
+    try:
+        import streamlit as st
+        _tem_secrets = hasattr(st, "secrets") and "OCI_USER" in st.secrets
+    except ImportError:
+        pass  # Streamlit não disponível, usa arquivo
+    except Exception:
+        pass  # sem secrets.toml acessível: segue para ~/.oci/config
+
+    if _tem_secrets:
+        # Secrets OCI presentes → usa obrigatoriamente, sem fallback silencioso
+        try:
+            # Normaliza quebras de linha: literal \n vira quebra real
+            key_content = st.secrets["OCI_KEY_CONTENT"].replace("\\n", "\n")
+            config = {
+                "user": st.secrets["OCI_USER"],
+                "fingerprint": st.secrets["OCI_FINGERPRINT"],
+                "tenancy": st.secrets["OCI_TENANCY"],
+                "region": st.secrets.get("OCI_REGION", "sa-saopaulo-1"),
+                "key_content": key_content,
+            }
+            cliente = oci.object_storage.ObjectStorageClient(config)
+            namespace = st.secrets.get("OCI_NAMESPACE") or cliente.get_namespace().data
+            bucket = st.secrets.get("OCI_BUCKET_NAME", BUCKET_PADRAO)
+            return cliente, namespace, bucket
+        except Exception as erro:
+            raise ErroArmazenamento(
+                f"Falha ao autenticar via Streamlit secrets: {erro}"
+            ) from erro
+
+    # Fallback: arquivo ~/.oci/config
     arquivo = os.path.expanduser(os.environ.get("OCI_CONFIG_FILE", CONFIG_PADRAO))
     perfil = os.environ.get("OCI_PROFILE", "DEFAULT")
     if not Path(arquivo).exists():

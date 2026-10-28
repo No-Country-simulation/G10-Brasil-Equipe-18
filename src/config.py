@@ -17,6 +17,12 @@ TAMANHO_LOTE: int = int(os.getenv("TAMANHO_LOTE", "50"))
 # --- Segurança e Pseudonimização ---
 SAL_PADRAO: str = os.getenv("SAL_PSEUDONIMIZACAO", "communitylab_default_salt")
 
+# --- Modo Demonstração ---
+# Controla se o sistema opera em modo demonstração (oculta erros de credencial)
+# Apenas "1", "true" ou "sim" (case-insensitive) ativam; qualquer outro valor desativa
+_modo_demo_str = os.getenv("MODO_DEMONSTRACAO", "").lower()
+MODO_DEMONSTRACAO: bool = _modo_demo_str in ("1", "true", "sim")
+
 # --- Schemas ---
 VERSAO_SCHEMA_INTERACAO: str = "1.0"
 VERSAO_SCHEMA_ATIVO: str = "1.0"
