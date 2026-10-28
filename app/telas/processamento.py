@@ -1,3 +1,4 @@
+
 import os
 import time
 
@@ -7,6 +8,7 @@ from services import data_service as svc
 from state import ir_para
 from styles import caixa, cabecalho, esc, md, topbar
 
+
 ETAPAS = [
     ("Limpeza dos dados", "Normalização dos campos e remoção de duplicatas.", "limpando os dados"),
     ("Análise de sentimento e tópicos", "Classificação das mensagens e dos temas da comunidade.", "analisando sentimento e tópicos"),
@@ -15,18 +17,45 @@ ETAPAS = [
     ("Geração de ativos", "Criação de rascunhos para revisão humana.", "gerando rascunhos"),
     ("Salvando no OCI", "Armazenamento das histórias, evidências e rascunhos.", "salvando no OCI"),
 ]
+
 VISUAL = {
     "concluida": ("ico-ok", "✓", "Concluída", "s-ok"),
     "andamento": ("ico-run", "◔", "Em andamento", "s-run"),
     "pendente": ("ico-pen", "", "Pendente", "s-pen"),
     "erro": ("ico-err", "!", "Erro", "s-err"),
 }
-# Tempo de cada etapa na simulação (segundos). Dá pra trocar com a variável COMMUNITYLAB_DELAY.
+
 ATRASO = float(os.environ.get("COMMUNITYLAB_DELAY", "0.9"))
 
 
 def _retry():
     st.session_state.proc_status = "retry"
+
+
+def _pacotes_confirmados(pacotes):
+    return (
+        isinstance(pacotes, list)
+        and bool(pacotes)
+        and all(
+            isinstance(p, dict)
+            and p.get("status") == "salvo"
+            and p.get("persistencia") == "real"
+            for p in pacotes
+        )
+    )
+
+
+def _motivo_falha(pacotes):
+    if not isinstance(pacotes, list) or not pacotes:
+        return "Nenhum pacote foi confirmado pelo serviço de armazenamento."
+    motivos = [
+        str(p.get("motivo"))
+        for p in pacotes
+        if isinstance(p, dict)
+        and (p.get("status") != "salvo" or p.get("persistencia") != "real")
+        and p.get("motivo")
+    ]
+    return "; ".join(dict.fromkeys(motivos)) or "Nem todos os pacotes foram confirmados no OCI."
 
 
 def _desenhar(etapas, botoes):
@@ -36,16 +65,29 @@ def _desenhar(etapas, botoes):
     com_erro = "erro" in etapas
     pct = round((concluidas + (0.5 if em_andamento else 0)) / len(etapas) * 100)
     acao = next((ETAPAS[i][2] for i, e in enumerate(etapas) if e == "andamento"), "")
+    pacotes = ss.get("pacotes_oci", [])
+    persistido = etapas[5] == "concluida" and _pacotes_confirmados(pacotes)
+    origem = ss.get("proc_origem_analise", "")
+    demonstrativo = origem == "mock"
+    erro_analise = ss.get("proc_erro_etapa") == "analise"
 
     if com_erro:
-        titulo, sub, selo, tom = "Gravação interrompida", f"{concluidas} de 6 etapas concluídas · aguardando nova tentativa", "Ação necessária", "red"
-    elif concluidas == len(etapas):
-        titulo, sub, selo, tom = "Análise concluída", "6 de 6 etapas concluídas", "Concluído", "green"
+        titulo, sub, selo, tom = (
+            "Processamento interrompido",
+            f"{concluidas} de 6 etapas concluídas · ação necessária",
+            "Ação necessária", "red",
+        )
+    elif persistido and concluidas == len(etapas):
+        titulo, sub, selo, tom = "Processamento concluído", "6 de 6 etapas concluídas", "Concluído", "green"
     else:
-        titulo, sub, selo, tom = "Analisando suas interações", f"{concluidas} de 6 etapas concluídas · {acao}", "Em andamento", "purple"
+        titulo, sub, selo, tom = (
+            "Analisando suas interações",
+            f"{concluidas} de 6 etapas concluídas · {acao}",
+            "Em andamento", "purple",
+        )
 
     md(
-        f'<div style="display:flex;justify-content:space-between;align-items:center;">'
+        '<div style="display:flex;justify-content:space-between;align-items:center;">'
         f'<span><b>Lote {esc(ss.lote_id)}</b> <span class="cl-muted">/ {esc(ss.arquivo["nome"])}</span></span>'
         f'<span class="chip chip-{tom}">{selo}</span></div>'
     )
@@ -53,10 +95,11 @@ def _desenhar(etapas, botoes):
     with esq:
         with st.container(border=True):
             cor = "#B93A32" if com_erro else "#5B3DF5"
+            classe_erro = "erro" if com_erro else ""
             md(
-                f'<div style="display:flex;justify-content:space-between;font-size:20px;font-weight:600;">'
+                '<div style="display:flex;justify-content:space-between;font-size:20px;font-weight:600;">'
                 f'<span>{titulo}</span><span style="color:{cor};">{pct}%</span></div>'
-                f'<div class="cl-progress {"erro" if com_erro else ""}"><div style="width:{pct}%"></div></div>'
+                f'<div class="cl-progress {classe_erro}"><div style="width:{pct}%"></div></div>'
                 f'<div class="cl-muted">{sub}</div>'
             )
             passos = ""
@@ -71,70 +114,157 @@ def _desenhar(etapas, botoes):
     with dir_:
         with st.container(border=True):
             canais = len({i["canal"] for i in ss.interacoes})
-            historias_ok = etapas[2] == "concluida"
-            if etapas[4] == "concluida":
-                situacao = "6 rascunhos gerados · " + ("gravação pendente" if com_erro else "salvos no OCI" if etapas[5] == "concluida" else "gravando")
+            historias_ok = etapas[4] == "concluida"
+            historias = ss.get("historias", []) if historias_ok else []
+            quantidade_ativos = sum(
+                len(h.get("ativos", [])) for h in historias if isinstance(h, dict)
+            )
+            if historias_ok:
+                if persistido:
+                    situacao = f"{quantidade_ativos} rascunhos · salvos no OCI"
+                elif com_erro:
+                    situacao = f"{quantidade_ativos} rascunhos · gravação não confirmada"
+                else:
+                    situacao = f"{quantidade_ativos} rascunhos · aguardando gravação"
             else:
                 situacao = "Ativos ainda não gerados"
+            ambiente = "Demonstração" if demonstrativo else "Análise real" if origem == "gemini" else "Não confirmado"
             md(
-                '<b style="font-size:17px;">Resumo do lote</b><hr style="margin:10px 0;border:none;border-top:1px solid #EEF0F4;">'
+                '<b style="font-size:17px;">Resumo do lote</b>'
+                '<hr style="margin:10px 0;border:none;border-top:1px solid #EEF0F4;">'
                 f'<div class="cl-kv"><span>Interações</span><span>{len(ss.interacoes)}</span></div>'
                 f'<div class="cl-kv"><span>Canais</span><span>{canais}</span></div>'
                 f'<div class="cl-kv"><span>Origem</span><span>{esc(ss.arquivo["origem"])}</span></div>'
-                '<div class="cl-kv"><span>Ambiente</span><span>Demonstração</span></div>'
+                f'<div class="cl-kv"><span>Ambiente</span><span>{ambiente}</span></div>'
                 '<hr style="margin:10px 0;border:none;border-top:1px solid #EEF0F4;">'
-                f'<b>{len(ss.historias) if historias_ok else "–"} histórias identificadas</b><br>'
+                f'<b>{len(historias) if historias_ok else "–"} histórias identificadas</b><br>'
                 f'<span class="cl-muted">{situacao}</span>'
             )
         with st.container(border=True):
             md(
-                '<b>O próximo passo é revisar</b><br><span class="cl-muted">As mensagens originais serão preservadas. '
-                "Os ativos gerados são rascunhos e não serão publicados automaticamente.</span>"
+                '<b>O próximo passo é revisar</b><br><span class="cl-muted">'
+                'As mensagens originais serão preservadas. Os ativos gerados são rascunhos '
+                'e não serão publicados automaticamente.</span>'
             )
 
+    if demonstrativo and etapas[4] == "concluida":
+        caixa(
+            "gray",
+            "<b>Dados demonstrativos.</b><br>A análise real não foi concluída. "
+            "As histórias apresentadas são exemplos e não devem ser tratadas como "
+            "resultados extraídos das interações importadas.",
+        )
+
     if com_erro:
-        caixa("red", "<b>Não foi possível salvar no OCI</b><br>O serviço de armazenamento não respondeu a tempo. "
-                     "As histórias e os rascunhos foram preservados nesta execução. "
-                     "A nova tentativa retoma apenas a gravação, sem duplicar os resultados.")
-        if botoes:
-            st.button("↻ Tentar novamente", on_click=_retry)
-    elif concluidas == len(etapas):
-        caixa("green", "<b>Análise concluída.</b> As histórias e os rascunhos foram salvos. Agora é a vez do seu time revisar.")
+        if erro_analise:
+            caixa("red", "<b>Falha na análise.</b><br>" + esc(ss.get("proc_erro_analise", "Erro desconhecido.")))
+        else:
+            motivo = ss.get("proc_erro_oci", "") or _motivo_falha(pacotes)
+            caixa(
+                "red",
+                "<b>Gravação no OCI não confirmada.</b><br>" + esc(motivo)
+                + "<br>Os resultados permanecem disponíveis nesta sessão. "
+                "Uma nova tentativa não repetirá a análise.",
+            )
+            if botoes:
+                st.button("↻ Tentar novamente", on_click=_retry, key="retry_oci")
+    elif persistido and concluidas == len(etapas):
+        caixa(
+            "green",
+            "<b>Processamento concluído.</b> Os pacotes foram confirmados no OCI. "
+            "Agora o time pode revisar os resultados.",
+        )
         if botoes:
             st.button("Revisar histórias detectadas", type="primary", on_click=ir_para, args=("historias",))
     else:
-        caixa("gray", "<b>Análise em andamento</b><br>A extração usa apenas o conteúdo das mensagens. "
-                      "Ao concluir, você poderá revisar as histórias e os rascunhos gerados.")
-    st.caption("Execução demonstrativa com mensagens fictícias. Nenhum conteúdo será publicado.")
+        caixa(
+            "gray",
+            "<b>Análise em andamento</b><br>A extração usa o conteúdo das mensagens. "
+            "Ao concluir, será possível revisar as histórias e os rascunhos.",
+        )
+    st.caption("Os ativos são rascunhos sujeitos à revisão humana. Nenhum conteúdo será publicado automaticamente.")
 
 
 def render():
     ss = st.session_state
     topbar()
-    cabecalho("Etapa 2 de 4 · Analisar", "Processamento", "Acompanhe a análise das interações e a preparação dos rascunhos para o seu time.")
+    cabecalho(
+        "Etapa 2 de 4 · Analisar", "Processamento",
+        "Acompanhe a análise das interações e a preparação dos rascunhos para o seu time.",
+    )
 
-    if ss.proc_status in ("novo", "retry"):
-        inicio = 0 if ss.proc_status == "novo" else 5
-        etapas = ["concluida"] * inicio + ["pendente"] * (6 - inicio)
-        area = st.empty()
-        terminou = True
-        for i in range(inicio, 6):
+    if ss.proc_status not in ("novo", "retry"):
+        _desenhar(ss.proc_etapas, botoes=True)
+        return
+
+    retry = ss.proc_status == "retry"
+    etapas = ["concluida"] * 5 + ["pendente"] if retry else ["pendente"] * 6
+    area = st.empty()
+
+    if not retry:
+        ss.proc_erro_oci = ""
+        ss.proc_erro_analise = ""
+        ss.proc_erro_etapa = ""
+        ss.proc_origem_analise = ""
+
+        # A primeira etapa é uma preparação visual. A análise real acontece
+        # enquanto as etapas 2 a 5 permanecem em andamento.
+        etapas[0] = "andamento"
+        with area.container():
+            _desenhar(etapas, botoes=False)
+        time.sleep(ATRASO)
+        etapas[0] = "concluida"
+
+        etapas[1] = "andamento"
+        with area.container():
+            _desenhar(etapas, botoes=False)
+        try:
+            historias = svc.analisar(ss.interacoes)
+            origem = svc.ORIGEM_ANALISE
+        except Exception as erro:
+            etapas[1] = "erro"
+            ss.proc_status = "erro"
+            ss.proc_erro_etapa = "analise"
+            ss.proc_erro_analise = str(erro)
+            ss.proc_etapas = etapas
+            with area.container():
+                _desenhar(etapas, botoes=True)
+            return
+
+        # O serviço devolve uma análise completa (ou um fallback demonstrativo).
+        # Não atribuímos conclusão a etapas subsequentes antes desse retorno.
+        ss.historias = historias
+        ss.proc_origem_analise = origem
+        etapas[1] = "concluida"
+        for i in range(2, 5):
             etapas[i] = "andamento"
             with area.container():
                 _desenhar(etapas, botoes=False)
             time.sleep(ATRASO)
-            if i == 5 and ss.get("dados", {}).get("demo_erro_oci"):
-                etapas[i] = "erro"
-                ss.proc_status = "erro"
-                terminou = False
-                break
             etapas[i] = "concluida"
-        if terminou:
+
+    etapas[5] = "andamento"
+    with area.container():
+        _desenhar(etapas, botoes=False)
+
+    try:
+        if ss.get("dados", {}).get("demo_erro_oci"):
+            raise RuntimeError("Falha demonstrativa de gravação no OCI.")
+        pacotes = svc.salvar_no_oci(ss.pacotes_oci, ss.lote_id, ss.historias)
+        ss.pacotes_oci = pacotes
+        if _pacotes_confirmados(pacotes):
+            etapas[5] = "concluida"
             ss.proc_status = "concluido"
-            ss.historias = svc.analisar(ss.interacoes)
-            ss.pacotes_oci = svc.salvar_no_oci(ss.pacotes_oci, ss.lote_id, ss.historias)
-        ss.proc_etapas = etapas
-        with area.container():
-            _desenhar(etapas, botoes=True)
-    else:
-        _desenhar(ss.proc_etapas, botoes=True)
+            ss.proc_erro_oci = ""
+        else:
+            etapas[5] = "erro"
+            ss.proc_status = "erro"
+            ss.proc_erro_oci = _motivo_falha(pacotes)
+    except Exception as erro:
+        etapas[5] = "erro"
+        ss.proc_status = "erro"
+        ss.proc_erro_oci = str(erro)
+
+    ss.proc_etapas = etapas
+    with area.container():
+        _desenhar(etapas, botoes=True)
