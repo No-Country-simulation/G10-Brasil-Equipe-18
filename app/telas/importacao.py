@@ -5,7 +5,7 @@ import streamlit as st
 
 from mocks import mock_data as m
 from services import data_service as svc
-from state import CANAL_TODOS, campo, definir, ir_para, valor
+from state import CANAL_TODOS, campo, definir, ir_para, resetar_lote, valor
 from styles import cabecalho, chip, esc, md, topbar
 
 
@@ -36,6 +36,7 @@ def _estrutura_dados():
 
 def _novo_lote(interacoes, nome, tamanho, origem):
     ss = st.session_state
+    resetar_lote(ss)
     ss.interacoes = interacoes
     ss.arquivo = {"nome": nome, "tamanho": tamanho, "origem": origem}
     ss.proc_status = "novo"
@@ -61,7 +62,7 @@ def _upload():
         md(
             '<div style="border:1px solid #E2E8F0;border-radius:10px;padding:12px 14px;background:#fff;">'
             f'📄 <b>{esc(ss.arquivo["nome"])}</b><br>'
-            f'<span class="cl-muted">{esc(ss.arquivo["tamanho"])} · carregado com sucesso</span></div>'
+            f'<span class="cl-muted">{esc(ss.arquivo["tamanho"])} · arquivo lido</span></div>'
         )
     with dir_:
         _estrutura_dados()
