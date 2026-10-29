@@ -27,7 +27,8 @@ def test_regressao_front_completo():
     """Teste de regressão: percorre todas as telas sem exceção."""
     
     # Inicia o app
-    at = AppTest.from_file("app/main.py", default_timeout=10)
+    RAIZ = Path(__file__).parent.parent
+    at = AppTest.from_file(str(RAIZ / "app" / "main.py"), default_timeout=10)
     at.run()
     
     # Verifica que o app iniciou sem erro
