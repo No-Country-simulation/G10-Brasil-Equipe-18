@@ -2,7 +2,7 @@
 import streamlit as st
 
 from state import campo, definir, historia_por_id, ir_para, valor
-from styles import avatar, cabecalho, chip, destacar, esc, md, topbar
+from styles import avatar, cabecalho, caixa, chip, destacar, esc, md, topbar
 
 
 def _chave(hid, aid, nome_campo):
@@ -156,6 +156,18 @@ def _coluna_conteudo(h):
 def render():
     ss = st.session_state
     
+    if not ss.historias:
+        topbar()
+        cabecalho(
+            "Etapa 3 de 4 · Revisar",
+            "Estúdio de Conteúdo",
+            "Visualize as evidências originais e edite os rascunhos gerados pela IA antes de enviar para curadoria.",
+        )
+        caixa("gray", "<b>Nenhuma história disponível para edição</b><br>"
+                      "Importe e processe um lote para visualizar e editar os rascunhos no Estúdio.")
+        st.button("→ Ir para Importação", type="primary", on_click=ir_para, args=("importacao",))
+        return
+
     # Se não há história selecionada, pega a primeira
     hid = ss.get("historia_atual") or ss.historias[0]["id"]
     h = historia_por_id(hid)

@@ -129,6 +129,14 @@ def _coluna_rascunhos(h, ativo, status):
 
 def render():
     ss = st.session_state
+    if not ss.historias:
+        topbar()
+        cabecalho("Etapa 4 de 4 · Decidir", "Curadoria", "Revise, valide e decida sobre cada rascunho antes de qualquer publicação.")
+        caixa("gray", "<b>Nenhuma história disponível para curadoria</b><br>"
+                      "Importe e processe um lote para revisar e aprovar os rascunhos na Curadoria.")
+        st.button("→ Ir para Importação", type="primary", on_click=ir_para, args=("importacao",))
+        return
+
     hid = ss.historia_atual or ss.historias[0]["id"]
     h = historia_por_id(hid)
     topbar()

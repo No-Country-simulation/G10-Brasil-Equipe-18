@@ -39,6 +39,12 @@ def render():
     cabecalho("Etapa 3 de 4 · Revisar", "Histórias detectadas",
               "Explore os relatos identificados e revise os ativos antes de qualquer publicação.")
     historias = ss.historias
+    if not historias:
+        caixa("gray", "<b>Nenhuma história detectada ainda</b><br>"
+                      "Carregue suas conversas e inicie o processamento na tela de Importação.")
+        st.button("→ Ir para Importação", type="primary", on_click=ir_para, args=("importacao",))
+        return
+
     contagem = resumo_ativos()
     total_ativos = sum(contagem.values())
     categorias = sorted({h["categoria"] for h in historias})
@@ -48,8 +54,17 @@ def render():
     _kpi(c2, "Histórias detectadas", len(historias), f"{len(categorias)} categorias identificadas")
     _kpi(c3, "Ativos gerados", total_ativos, f"{contagem['rascunho']} rascunhos aguardando revisão humana")
 
-    caixa("yellow", "<b>Rascunhos, não publicações</b><br>As mensagens são a fonte; os ativos são sugestões da IA. "
-                    "Valide os fatos e a autorização de uso antes de aprovar. Todos os dados deste lote são fictícios.")
+    if ss.get("analise_status") == "success_mock" or ss.get("analise_origem") == "mock":
+        caixa("yellow", "⚠️ <b>Resultado simulado, a análise real falhou</b><br>"
+                        "As histórias e rascunhos abaixo foram gerados a partir do fallback mock "
+                        "porque a análise real não estava disponível ou falhou.")
+    elif ss.get("analise_status") == "success_real" or ss.get("analise_origem") == "gemini":
+        caixa("green", "✓ <b>Análise real concluída</b><br>"
+                       "As histórias e rascunhos abaixo foram identificados e gerados pela IA (Gemini). "
+                       "A decisão final de publicação é sempre do seu time.")
+    else:
+        caixa("yellow", "<b>Rascunhos, não publicações</b><br>As mensagens são a fonte; os ativos são sugestões da IA. "
+                        "Valide os fatos e a autorização de uso antes de aprovar.")
 
     with st.container(border=True):
         f1, f2, f3 = st.columns([2, 3, 1])
@@ -78,7 +93,10 @@ def render():
             with rel_col:
                 md(f'<div style="text-align:right;"><span class="cl-muted">Relevância</span> '
                    f'<span style="font-size:22px;">{h["relevancia"]}</span> <span class="cl-muted">/ 100</span></div>')
-            md(chip(h["categoria"]) + chip(f'Sentimento {h["sentimento"].lower()}', "green"))
+            # TODO(Jaqueline): Quando o backend fornecer campo de origem individual por história (ex.: h.get("origem_analise")), usar o valor individual.
+            origem_lote = ss.get("analise_origem") or ("gemini" if ss.get("analise_status") == "success_real" else "mock")
+            selo_origem = chip("Origem: Real", "green") if origem_lote == "gemini" else chip("Origem: Simulada", "yellow")
+            md(chip(h["categoria"]) + chip(f'Sentimento {h["sentimento"].lower()}', "green") + selo_origem)
             md(f'<div class="cl-quote"><small>Trecho original · mensagem fictícia</small>“{esc(h["mensagem_original"])}”</div>')
             rodape, botao = st.columns([4, 1])
             with rodape:
