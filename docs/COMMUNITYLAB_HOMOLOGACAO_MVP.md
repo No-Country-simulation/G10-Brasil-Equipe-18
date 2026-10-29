@@ -1,10 +1,9 @@
-
 # CommunityLab — Relatório de Homologação e Aceite do MVP
 
 **Projeto:** CommunityLab — Detector Inteligente de Histórias de Sucesso e Testemunhos
 **Hackathon:** ONE G10 — Equipe 18
 **Documento:** `COMMUNITYLAB_HOMOLOGACAO_MVP.md`
-**Versão:** 0.2 — Registro preliminar de execução (não constitui aceite)
+**Versão:** 0.3 — Consolidação documental dos PRs #26 e #28 (não constitui aceite)
 **Data de preparação:** 26/10/2026
 **Última atualização:** 29/10/2026
 **Referência funcional:** `docs/CATP_TEST_PLAN.md` — CATP v1.1
@@ -17,7 +16,7 @@
 
 > **Regra de evidência:** nenhuma implementação declarada, commit integrado, teste unitário informado ou demonstração simulada constitui, isoladamente, aprovação de um caso de aceitação. A aprovação exige execução, observação e evidências vinculadas ao commit testado.
 
-> **Nota da versão 0.2:** esta atualização incorpora observações preliminares de testes locais realizados em 29/10/2026 e o defeito registrado na Issue #27. Não substitui a execução formal da matriz CATP, não comprova integração real com Gemini ou OCI e não representa aceite do MVP.
+> **Nota da versão 0.3:** consolida os registros de integração e impedimentos de 28/10/2026 (PR #26) com as verificações locais preliminares de 29/10/2026 e a Issue #27 (PR #28). Os testes técnicos informados por integrantes não substituem homologação integrada, não comprovam por si só o fluxo Gemini–Streamlit–OCI e não constituem aceite do MVP.
 
 ---
 
@@ -67,7 +66,15 @@ Os resultados preliminares não autorizam a aprovação automática dos casos CA
 
 A presença desses commits não substitui o registro do SHA efetivamente homologado.
 
-### 2.1 Limites da identificação do ambiente
+### 2.1 Atualização de integrações — 28/10/2026 (incorporada do PR #26)
+
+- **PR #20 — Correção da persistência OCI e do status do processamento:** aprovado por Jaqueline e integrado à `main` (merge `a05ae6b`). Conforme o registro técnico do PR #26, a revisão informou teste de gravação real no bucket OCI, tratamento de falha simulada e reenvio sem repetir etapas de análise. **A homologação integrada permanece pendente.**
+- **PR #21 — Suporte a credenciais OCI via Streamlit Secrets:** desenvolvido por Tissiany, aprovado por Jaqueline e integrado à `main` (merge `2b65357`). O suporte permite configurar credenciais OCI via Streamlit Secrets; a configuração e a execução integrada no ambiente de homologação ainda requerem validação.
+- **Pendência de bucket vazio:** foi relatado comportamento problemático da aplicação com bucket OCI vazio, com correção prevista em PR separado. A integração dessa correção ainda não foi confirmada neste relatório.
+
+**Nota de evidência:** o registro de merges e de testes técnicos não altera automaticamente os resultados CATP nem concede aceite ao MVP. A confirmação deve usar o SHA do ambiente efetivamente testado.
+
+### 2.2 Limites da identificação do ambiente
 
 A branch `docs/homologacao-mvp` foi utilizada para a verificação documental e funcional local.
 
@@ -77,13 +84,9 @@ Isso não comprova, isoladamente, equivalência com a versão atual da branch `m
 
 O commit `9fcb06e` é a referência identificada na sessão local. A homologação formal deverá registrar o SHA completo e confirmar a versão exata do código executado.
 
-### 2.2 Arquivo CSV utilizado
+### 2.3 Arquivo CSV utilizado
 
-Arquivo:
-
-`data/samples/teste_importacao_catp001.csv`
-
-Conteúdo:
+Arquivo: `data/samples/teste_importacao_catp001.csv`
 
 ```csv
 autor,canal,tipo,texto
@@ -111,8 +114,6 @@ membro_002,#duvidas-langgraph,pergunta_tecnica,Como estruturar nós condicionais
 
 ### 3.1 Classificação das observações preliminares
 
-Para evitar conclusões indevidas, esta versão distingue:
-
 **Verificação preliminar satisfatória:** comportamento específico observado, sem aprovação automática do caso CATP completo.
 
 **Falha observada:** comportamento incompatível com o esperado, que deverá ser formalizado ou reproduzido no teste de aceitação.
@@ -125,9 +126,7 @@ Para evitar conclusões indevidas, esta versão distingue:
 
 ### 3.2 Regra para os testes de 29/10/2026
 
-Os testes locais preliminares serão registrados como observações técnicas.
-
-A matriz formal somente receberá o estado **Aprovado** quando houver evidências suficientes e confirmação do ambiente e commit testados.
+Os testes locais preliminares serão registrados como observações técnicas. A matriz formal somente receberá o estado **Aprovado** quando houver evidências suficientes e confirmação do ambiente e commit testados.
 
 O estado **Não executado** não significa ausência absoluta de qualquer verificação anterior.
 
@@ -185,28 +184,17 @@ A matriz abaixo mantém a situação formal de homologação, acrescentando refe
 
 ### 4.2 Observação sobre os resultados demonstrativos
 
-O CSV utilizado possuía os autores:
+O CSV utilizado possuía os autores `membro_001` e `membro_002`.
 
-- `membro_001`
-- `membro_002`
+Após a execução, a aplicação apresentou histórias demonstrativas associadas a Marina Costa, Lucas Almeida e Camila Santos.
 
-Após a execução, a aplicação apresentou histórias demonstrativas associadas a outros nomes, incluindo:
-
-- Marina Costa
-- Lucas Almeida
-- Camila Santos
-
-Essa divergência indica que os resultados exibidos não demonstram análise rastreável das duas interações importadas.
-
-O comportamento deve ser corrigido e submetido a reteste.
+Essa divergência indica que os resultados exibidos não demonstram análise rastreável das duas interações importadas. O comportamento deve ser corrigido e submetido a reteste.
 
 ---
 
 ## 5. Registro dos seis cenários de homologação integrada
 
-A Tissiany informou que executará os **seis arquivos de teste preparados anteriormente**.
-
-Seus nomes, conteúdos e resultados **não foram fornecidos neste relatório**; preencher os identificadores reais antes da execução, sem presumir correspondência entre arquivo e cenário.
+A Tissiany informou que executará os **seis arquivos de teste preparados anteriormente**. Seus nomes, conteúdos e resultados **não foram fornecidos neste relatório**; preencher os identificadores reais antes da execução, sem presumir correspondência entre arquivo e cenário.
 
 | Cenário | Arquivo / versão | Objetivo / CATP cobertos | Esperado | Observado | Execução | Evidências / defeitos |
 |---|---|---|---|---|---|---|
@@ -223,12 +211,12 @@ Uma evidência sem origem localizada não poderá ser validada automaticamente; 
 
 ### 5.1 Execução local preliminar — 29/10/2026
 
-**Identificador:** PRELIM-20261029-01
-**Responsável:** Marcus — Project Manager
-**Ambiente:** Streamlit local
-**Branch:** `docs/homologacao-mvp`
-**Commit de referência:** `9fcb06e`
-**Arquivo:** `data/samples/teste_importacao_catp001.csv`
+**Identificador:** PRELIM-20261029-01  
+**Responsável:** Marcus — Project Manager  
+**Ambiente:** Streamlit local  
+**Branch:** `docs/homologacao-mvp`  
+**Commit de referência:** `9fcb06e`  
+**Arquivo:** `data/samples/teste_importacao_catp001.csv`  
 **Tipo:** Verificação funcional preliminar, não equivalente a cenário HINT formal.
 
 **Passos observados:**
@@ -345,7 +333,7 @@ Para aprovação, cada demonstração deverá utilizar entradas identificadas, a
 
 **Limitação conhecida:** a correção de status de persistência da PR #20 foi testada localmente sem credenciais OCI; a persistência real requer execução integrada com acesso autorizado.
 
-Verificar se a PR #20 foi revisada e integrada antes de usar seu comportamento como referência do MVP.
+**Atualização documental de 28/10:** o PR #26 registra que o PR #20 foi revisado e integrado à `main` (merge `a05ae6b`). Essa informação não comprova, isoladamente, a persistência OCI no ambiente local de 29/10 nem a homologação de ponta a ponta.
 
 ### 8.1 Observação técnica da execução preliminar
 
@@ -379,16 +367,46 @@ O reteste deverá comprovar:
 |---|---|---|---|---|---|---|---|
 | Issue #27 | 29/10/2026 | Inconsistências na análise Gemini, fallback mock, mensagens de conclusão, estado entre lotes e persistência OCI | Urgente | A distribuir tecnicamente pela equipe | GitHub Issue #27 | Aberta | Pendente |
 
-**Referência:**
-https://github.com/No-Country-simulation/G10-Brasil-Equipe-18/issues/27
+**Referência:** https://github.com/No-Country-simulation/G10-Brasil-Equipe-18/issues/27
 
-### 9.1 Detalhamento da Issue #27
+### 9.1 Impedimentos identificados na verificação local — 28/10/2026 (incorporados do PR #26)
+
+**IMP-001 — Gemini não configurado no ambiente local**
+
+- **Evidência registrada:** o terminal indicou ausência da variável `GEMINI_API_KEY` e acionamento do fallback mock naquele ambiente.
+- **Impacto:** análise real por LLM não comprovada naquela execução.
+- **Situação registrada em 28/10:** pendente de configuração segura e reteste. A verificação de 29/10 também observou falha Gemini e fallback, sem comprovar sucesso integrado; a configuração pode diferir entre ambientes.
+
+**IMP-002 — Histórias demonstrativas após importação CSV**
+
+- **Evidência registrada:** foram importadas duas interações (`membro_001` e `membro_002`), mas a interface exibiu três histórias fictícias predefinidas.
+- **Causa observada no código:** fallback para `m.HISTORIAS` quando a análise LLM falha.
+- **Impacto:** CATP-006 e rastreabilidade da análise real não comprovados.
+- **Situação:** pendente de correção e reteste com Gemini funcional; relacionado à Issue #27.
+
+**IMP-003 — Persistência OCI e confirmação visual**
+
+- **Evidência registrada:** o teste local anterior não comprovou gravação real. Posteriormente, o registro de revisão técnica do PR #20 informou gravação em bucket real, tratamento de falhas e retry.
+- **Situação:** correção integrada à `main`; homologação do fluxo no ambiente de referência ainda pendente. O relato técnico do PR #20 não deve ser confundido com comprovação de persistência na sessão local de 29/10.
+
+**IMP-004 — Fluxo integrado de ponta a ponta**
+
+- **Evidência registrada:** importação CSV observada, porém análise executada em mock no teste local.
+- **Impacto:** CATP-015 ainda não comprovado.
+- **Situação:** pendente de execução integrada e registro de evidências.
+
+**IMP-005 — Comportamento com bucket OCI vazio**
+
+- **Evidência registrada:** problema relatado na revisão do PR #20, relacionado ao uso de `svc.listar_pacotes()` em `state.py`.
+- **Situação:** correção prevista em PR separado; integração ainda não confirmada. A frente OCI está em alinhamento com Luciene.
+
+**Nota de homologação:** estes impedimentos preservam o histórico de 28/10 e devem ser reconciliados com a Issue #27 e com os retestes posteriores. Não alteram automaticamente a matriz CATP nem constituem aceite.
+
+### 9.2 Detalhamento da Issue #27
 
 **Defeito 1 — Fallback mock após falha Gemini**
 
-O serviço de análise aciona conteúdo demonstrativo após exceções na chamada Gemini.
-
-O comportamento não deve ser interpretado como análise real das interações.
+O serviço de análise aciona conteúdo demonstrativo após exceções na chamada Gemini. O comportamento não deve ser interpretado como análise real das interações.
 
 **Defeito 2 — Conclusão visual antecipada**
 
@@ -406,7 +424,7 @@ O fluxo de nova importação exige verificação de reinicialização de histór
 
 O CSV com duas interações apresentou três histórias demonstrativas com autores diferentes dos registros importados.
 
-### 9.2 Critérios mínimos de correção
+### 9.3 Critérios mínimos de correção
 
 - Identificar explicitamente a origem real ou demonstrativa dos resultados.
 - Não apresentar sucesso quando a chamada Gemini falhar.
@@ -417,7 +435,7 @@ O CSV com duas interações apresentou três histórias demonstrativas com autor
 - Preservar correspondência entre lote, interações, histórias e evidências.
 - Executar e documentar retestes dos casos CATP afetados.
 
-### 9.3 Responsabilidades técnicas sugeridas
+### 9.4 Responsabilidades técnicas sugeridas
 
 | Frente | Responsável de referência | Encaminhamento |
 |---|---|---|
@@ -427,9 +445,9 @@ O CSV com duas interações apresentou três histórias demonstrativas com autor
 | Testes integrados | Ketlyn Barbosa | Executar retestes e consolidar evidências técnicas |
 | Gestão e aceite | Marcus | Acompanhar defeito, riscos e decisão final |
 
-A distribuição acima é uma proposta de coordenação, não uma confirmação de atribuição ou aceite individual das tarefas.
+A distribuição acima é uma proposta de coordenação, não uma confirmação de atribuição ou aceite individual de todas as tarefas. **Atualização de alinhamento em 29/10:** Luciene informou que o escopo OCI voltou à sua responsabilidade, incluindo persistência e cenário de bucket vazio. As demais atribuições devem ser confirmadas com as integrantes.
 
-### 9.4 Riscos a acompanhar
+### 9.5 Riscos a acompanhar
 
 - Integração LLM real.
 - Credenciais e persistência OCI.
@@ -575,6 +593,8 @@ O aceite somente poderá ser considerado após:
 - Card 23 — Testes Integrados e Demonstração
 - CQF v1.0
 - GitHub Issue #27 — https://github.com/No-Country-simulation/G10-Brasil-Equipe-18/issues/27
+- PR #26 — https://github.com/No-Country-simulation/G10-Brasil-Equipe-18/pull/26 (origem dos registros de 28/10)
+- PR #28 — https://github.com/No-Country-simulation/G10-Brasil-Equipe-18/pull/28 (base da consolidação)
 - Commit local de referência — `9fcb06e`
 - Arquivo preliminar de teste — `data/samples/teste_importacao_catp001.csv`
 - Resultados técnicos e evidências formais a anexar
