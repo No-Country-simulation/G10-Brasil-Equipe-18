@@ -26,19 +26,19 @@ Consolidar o planejamento, a execução, os resultados e as evidências da homol
 
 | Campo | Registro |
 |---|---|
-| Data(s) de execução | A preencher |
-| Executor(es) | A preencher por caso |
-| Ambiente e sistema operacional | A preencher |
-| Aplicação / URL | A preencher |
-| Branch | `main` (confirmar no momento da execução) |
-| Commit exato (SHA) | A preencher — obrigatório |
-| Versão do Streamlit e dependências | A preencher |
-| Provedor LLM / modo de execução | A preencher, sem divulgar segredos |
-| OCI: região, bucket e identificadores não sensíveis | A preencher |
-| Dados de teste / versão dos arquivos | A preencher |
-| Limitações do ambiente | A preencher |
+| Data(s) de execução | 29/10/2026 |
+| Executor(es) | Ketlyn Barbosa (Card 23) |
+| Ambiente e sistema operacional | Linux ketlinux (Arch Linux x86_64, Kernel 7.0.3-arch1-2) |
+| Aplicação / URL | Streamlit local — `http://localhost:8501` (`streamlit run app/main.py`) |
+| Branch | `fix/catp-regressao-path` (base: `main` em `2b65357`) |
+| Commit exato (SHA) | `6a1ffa6d26a0f15bb7a959fa25d58f21040ce31f` (`6a1ffa6`) |
+| Versão do Streamlit e dependências | Streamlit 1.65.0 · Python 3.14.4 · pandas 3.0.3 · pydantic 2.13.5 · jsonschema 4.26.0 |
+| Provedor LLM / modo de execução | Google Gemini API (configurado em `.streamlit/secrets.toml`) com modo fallback/demo integrado |
+| OCI: região, bucket e identificadores não sensíveis | Região: `sa-saopaulo-1` · Bucket: `G10communitylab-ativos` · Namespace: `gryjdcio5fft` · Caminho: `ativos/<lote>/<arquivo>.json` (credenciais disponíveis via `.oci/` e `.streamlit/secrets.toml`) |
+| Dados de teste / versão dos arquivos | `data/samples/cenarios_demo.json` (v1.1) e contratos em `schemas/` |
+| Limitações do ambiente | Ambiente local de desenvolvimento/homologação com acesso ao bucket OCI de homologação e LLM; sem deploy em cluster cloud gerenciado |
 
-**Commits informados pela equipe como incorporados à `main` (a confirmar na execução):** `b38595f`, `e29d1d6`, `095b04d`, `b323fd2`, `7959443`. A presença desses commits não substitui o registro do SHA efetivamente homologado.
+**Commits informados pela equipe como incorporados à `main` (a confirmar na execução):** `b38595f`, `e29d1d6`, `095b04d`, `b323fd2`, `7959443`. Base da main atual em `2b65357`.
 
 ## 3. Estados e critérios de classificação
 
