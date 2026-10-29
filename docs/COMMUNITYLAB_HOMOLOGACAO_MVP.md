@@ -54,9 +54,9 @@ Todos os casos abaixo iniciam como **Não executado** neste relatório, independ
 
 | ID | Funcionalidade / verificação | Resultado esperado (síntese) | Aplicabilidade | Execução | Evidência / defeito |
 |---|---|---|---|---|---|
-| CATP-001 | Importação CSV | Arquivo válido processado | Aplicável | Não executado | — |
-| CATP-002 | Importação JSON | Dados válidos importados | Aplicável | Não executado | — |
-| CATP-003 | Dados inválidos | Erro tratado e informado | Aplicável | Não executado | — |
+| CATP-001 | Importação CSV | Arquivo válido processado | Aplicável | **Aprovado** | `tests/evidences/catp001.png`, `catp001.1.png`, `catp001.2.png`, `catp001.3.png` · `pytest tests/test_catp_grupo_a.py` |
+| CATP-002 | Importação JSON | Dados válidos importados | Aplicável | **Aprovado** | `tests/evidences/catp002.png`, `catp002.1.png` · `pytest tests/test_catp_grupo_a.py` |
+| CATP-003 | Dados inválidos | Erro tratado e informado | Aplicável | **Aprovado** | `tests/evidences/catp003.png`, `catp003.1.png`, `catp003.2.png` · `pytest tests/test_catp_grupo_a.py` |
 | CATP-004 | Sentimentos | Resultado associado à interação original | Aplicável | Não executado | — |
 | CATP-005 | Tópicos | Tópicos identificados e rastreáveis | Aplicável | Não executado | — |
 | CATP-006 | Histórias | Histórias relevantes identificadas sem ficção em resultados vazios | Aplicável | Não executado | — |
@@ -120,6 +120,83 @@ Defeito vinculado / gravidade:
 Reteste e conclusão:
 ```
 
+### Registros individuais de execução realizados
+
+```text
+ID do teste / cenário: CATP-001 (Importação CSV)
+Data e responsável: 29/10/2026 — Ketlyn Barbosa (Card 23)
+Ambiente / branch / SHA: Linux ketlinux / fix/catp-regressao-path / c4229ff
+Arquivo e versão / ID de lote: data/samples/catp001_amostra_valida.csv / Lote DEMO-001
+Pré-condições: App Streamlit rodando localmente (http://localhost:8501) na tela Importação
+Passos realizados:
+  1. Na aba "Upload de arquivo", carregar catp001_amostra_valida.csv (0,7 KB).
+  2. Verificar exibição do card de upload e tabela de prévia com todas as interações.
+  3. Aplicar filtro por canal (#conquistas e #projetos).
+  4. Executar suíte automatizada pytest tests/test_catp_grupo_a.py::test_catp_001_importacao_csv_valido.
+Resultado esperado: Arquivo CSV válido processado corretamente; prévia exibe 6 interações com ID, autor, canal, tipo e texto; filtro por canal exibe subconjunto correspondente preservando integridade referencial dos IDs.
+Resultado observado: Arquivo carregado com sucesso (card 0,7 KB); prévia populada com 6 interações; filtro #conquistas exibiu 1 de 6 interações (ID 1) e #projetos exibiu 2 de 6 interações (IDs 2 e 6); teste automatizado passou em 0.13s.
+Implementação (disponível/parcial/não implementada/não verificada): Disponível
+Aplicabilidade e justificativa: Aplicável (requisito essencial do MVP)
+Execução (aprovado/reprovado/bloqueado/não executado): Aprovado
+Evidências (links, prints, logs sanitizados, IDs):
+  - tests/evidences/catp001.png (Upload do CSV com sucesso)
+  - tests/evidences/catp001.1.png (Prévia completa das 6 interações)
+  - tests/evidences/catp001.2.png (Filtro por canal #conquistas - ID 1)
+  - tests/evidences/catp001.3.png (Filtro por canal #projetos - IDs 2 e 6)
+  - tests/test_catp_grupo_a.py::test_catp_001_importacao_csv_valido PASSED
+Defeito vinculado / gravidade: —
+Reteste e conclusão: Aprovado sem ressalvas em primeira rodada.
+```
+
+```text
+ID do teste / cenário: CATP-002 (Importação JSON)
+Data e responsável: 29/10/2026 — Ketlyn Barbosa (Card 23)
+Ambiente / branch / SHA: Linux ketlinux / fix/catp-regressao-path / c4229ff
+Arquivo e versão / ID de lote: data/samples/catp002_amostra_valida.json / Lote DEMO-001
+Pré-condições: App Streamlit rodando localmente (http://localhost:8501) na tela Importação
+Passos realizados:
+  1. Na tela Importação, acessar a aba "{ } Colar JSON".
+  2. Inserir array de interações JSON válido e verificar validação sintática automática.
+  3. Acionar o botão "Carregar JSON" e conferir a tabela de prévia.
+  4. Executar suíte automatizada pytest tests/test_catp_grupo_a.py::test_catp_002_importacao_json_valido.
+Resultado esperado: Dados válidos importados corretamente; mensagem de sucesso "✓ JSON válido · 6 interações reconhecidas"; botão habilitado e prévia populada com 6 registros.
+Resultado observado: JSON validado com sucesso pela interface; exibida mensagem verde afirmativa; botão "Carregar JSON" habilitado; prévia populada com as 6 interações; teste automatizado passou em 0.13s.
+Implementação (disponível/parcial/não implementada/não verificada): Disponível
+Aplicabilidade e justificativa: Aplicável (formato padrão estruturado do MVP)
+Execução (aprovado/reprovado/bloqueado/não executado): Aprovado
+Evidências (links, prints, logs sanitizados, IDs):
+  - tests/evidences/catp002.png (Aba Colar JSON com validação sintática afirmativa)
+  - tests/evidences/catp002.1.png (Prévia gerada com sucesso a partir do JSON)
+  - tests/test_catp_grupo_a.py::test_catp_002_importacao_json_valido PASSED
+Defeito vinculado / gravidade: —
+Reteste e conclusão: Aprovado sem ressalvas em primeira rodada.
+```
+
+```text
+ID do teste / cenário: CATP-003 (Dados Inválidos)
+Data e responsável: 29/10/2026 — Ketlyn Barbosa (Card 23)
+Ambiente / branch / SHA: Linux ketlinux / fix/catp-regressao-path / c4229ff
+Arquivo e versão / ID de lote: data/samples/catp003_invalido_sem_colunas.csv e data/samples/catp003_json_malformado.json
+Pré-condições: App Streamlit rodando localmente (http://localhost:8501) na tela Importação
+Passos realizados:
+  1. Fazer upload de arquivo CSV sem colunas obrigatórias (catp003_invalido_sem_colunas.csv).
+  2. Fazer upload de arquivo JSON com erro de sintaxe estrutural (catp003_json_malformado.json).
+  3. Na aba "{ } Colar JSON", digitar JSON truncado.
+  4. Executar testes automatizados pytest tests/test_catp_grupo_a.py::test_catp_003_dados_invalidos_*.
+Resultado esperado: Erro tratado e informado ao usuário na interface de forma amigável; sem exceção fatal / tela branca; aplicação continua utilizável.
+Resultado observado: Mensagens de erro claras exibidas na interface: "Interação 1: faltam os campos canal, texto." e "JSON inválido: Expecting ',' delimiter"; na aba de colar JSON, o botão de carregar permaneceu desabilitado; interface permaneceu estável; testes automatizados passaram em 0.13s.
+Implementação (disponível/parcial/não implementada/não verificada): Disponível
+Aplicabilidade e justificativa: Aplicável (tratamento de erro e robustez)
+Execução (aprovado/reprovado/bloqueado/não executado): Aprovado
+Evidências (links, prints, logs sanitizados, IDs):
+  - tests/evidences/catp003.png (Upload de CSV sem colunas obrigatórias com aviso amigável)
+  - tests/evidences/catp003.1.png (Upload de JSON malformado com aviso amigável)
+  - tests/evidences/catp003.2.png (Aba Colar JSON com aviso sintático e botão desabilitado)
+  - tests/test_catp_grupo_a.py::test_catp_003_dados_invalidos_* PASSED
+Defeito vinculado / gravidade: —
+Reteste e conclusão: Aprovado sem ressalvas em primeira rodada.
+```
+
 ## 6. Três demonstrações obrigatórias
 
 | ID | História | Verificações mínimas | Execução | Evidências |
@@ -177,9 +254,9 @@ Reteste e conclusão:
 
 | Indicador | Resultado atual |
 |---|---|
-| Casos CATP aprovados | 0 comprovados neste relatório |
+| Casos CATP aprovados | 3 comprovados neste relatório (CATP-001, CATP-002, CATP-003) |
 | Casos CATP reprovados | 0 registrados |
-| Casos CATP executados com evidência | 0 registrados |
+| Casos CATP executados com evidência | 3 registrados com prints em `tests/evidences/` e testes automatizados |
 | Seis cenários integrados | Aguardando execução e relatório |
 | Três demonstrações obrigatórias | Sem evidência registrada |
 | OCI real | Não verificada neste relatório |
