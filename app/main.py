@@ -2,6 +2,14 @@
 
 Rodar (na raiz do repositório):  streamlit run app/main.py
 """
+import sys
+from pathlib import Path
+
+# Garante a raiz do projeto no sys.path para imports de 'src'
+RAIZ = Path(__file__).resolve().parent.parent
+if str(RAIZ) not in sys.path:
+    sys.path.insert(0, str(RAIZ))
+
 import streamlit as st
 
 from state import MENU, campo, init_state, ir_para, reiniciar

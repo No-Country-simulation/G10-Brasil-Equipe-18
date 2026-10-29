@@ -7,7 +7,15 @@ from mocks import mock_data as m
 from services import data_service as svc
 from state import campo, definir, ir_para, valor
 from styles import caixa, cabecalho, chip, esc, md, topbar
-from src.config import MODO_DEMONSTRACAO
+try:
+    from src.config import MODO_DEMONSTRACAO
+except ModuleNotFoundError:
+    import sys
+    from pathlib import Path
+    _raiz = str(Path(__file__).resolve().parent.parent.parent)
+    if _raiz not in sys.path:
+        sys.path.insert(0, _raiz)
+    from src.config import MODO_DEMONSTRACAO
 
 try:
     _dialogo = st.dialog
