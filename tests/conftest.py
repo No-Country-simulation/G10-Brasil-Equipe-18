@@ -6,6 +6,9 @@ evitando chamadas externas durante testes automatizados.
 
 O arquivo é renomeado para secrets.toml.pytest_backup antes de cada teste de
 regressão e restaurado ao término, sem alteração de conteúdo.
+
+Se secrets.toml.pytest_backup já existir ao início (execução anterior interrompida),
+ele é removido antes de criar o novo backup, evitando FileExistsError.
 """
 import os
 from pathlib import Path
@@ -32,9 +35,13 @@ def ocultar_secrets_reais(request):
     # Garante que GEMINI_API_KEY não vaze por variável de ambiente
     api_key_original = os.environ.pop("GEMINI_API_KEY", None)
 
-    # Oculta o secrets.toml para o Streamlit não encontrá-lo
+    # Oculta o secrets.toml para o Streamlit não encontrá-lo.
+    # Se já existir um backup de execução anterior interrompida, remove-o
+    # antes de criar o novo para evitar FileExistsError.
     ocultou = False
     if SECRETS_PATH.exists():
+        if SECRETS_BACKUP.exists():
+            SECRETS_BACKUP.unlink()
         SECRETS_PATH.rename(SECRETS_BACKUP)
         ocultou = True
 
