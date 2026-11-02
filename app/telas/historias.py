@@ -54,11 +54,13 @@ def render():
     _kpi(c2, "Histórias detectadas", len(historias), f"{len(categorias)} categorias identificadas")
     _kpi(c3, "Ativos gerados", total_ativos, f"{contagem['rascunho']} rascunhos aguardando revisão humana")
 
-    if ss.get("analise_status") == "success_mock" or ss.get("analise_origem") == "mock":
+    origem_analise = ss.get("proc_origem_analise", "")
+    
+    if origem_analise == "mock":
         caixa("yellow", "⚠️ <b>Resultado simulado, a análise real falhou</b><br>"
                         "As histórias e rascunhos abaixo foram gerados a partir do fallback mock "
                         "porque a análise real não estava disponível ou falhou.")
-    elif ss.get("analise_status") == "success_real" or ss.get("analise_origem") == "gemini":
+    elif origem_analise == "gemini":
         caixa("green", "✓ <b>Análise real concluída</b><br>"
                        "As histórias e rascunhos abaixo foram identificados e gerados pela IA (Gemini). "
                        "A decisão final de publicação é sempre do seu time.")
@@ -94,10 +96,19 @@ def render():
                 md(f'<div style="text-align:right;"><span class="cl-muted">Relevância</span> '
                    f'<span style="font-size:22px;">{h["relevancia"]}</span> <span class="cl-muted">/ 100</span></div>')
             # TODO(Jaqueline): Quando o backend fornecer campo de origem individual por história (ex.: h.get("origem_analise")), usar o valor individual.
-            origem_lote = ss.get("analise_origem") or ("gemini" if ss.get("analise_status") == "success_real" else "mock")
-            selo_origem = chip("Origem: Real", "green") if origem_lote == "gemini" else chip("Origem: Simulada", "yellow")
-            md(chip(h["categoria"]) + chip(f'Sentimento {h["sentimento"].lower()}', "green") + selo_origem)
-            md(f'<div class="cl-quote"><small>Trecho original · mensagem fictícia</small>“{esc(h["mensagem_original"])}”</div>')
+            origem_lote = ss.get("proc_origem_analise", "")
+            if origem_lote == "gemini":
+                selo_origem = chip("Origem: Real", "green")
+            elif origem_lote == "mock":
+                selo_origem = chip("Origem: Simulada", "yellow")
+            else:
+                selo_origem = ""
+            chips = chip(h["categoria"]) + chip(f'Sentimento {h["sentimento"].lower()}', "green")
+            if selo_origem:
+                chips += selo_origem
+            md(chips)
+            msg_ficticia = " · mensagem fictícia" if origem_lote == "mock" else ""
+            md(f'<div class="cl-quote"><small>Trecho original{msg_ficticia}</small>"{esc(h["mensagem_original"])}"</div>')
             rodape, botao = st.columns([4, 1])
             with rodape:
                 md(f'<b>{len(h["ativos"])} ativos gerados</b> &nbsp;{_status_da_historia(h)}<br>'

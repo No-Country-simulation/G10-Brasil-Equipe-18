@@ -59,7 +59,8 @@ def _coluna_evidencias(h):
         md(f'<div class="cl-kv"><span>Autor</span><span>{esc(h["autor"])}</span></div>')
         md(f'<div class="cl-kv"><span>Lote</span><span>{esc(ss.lote_id)}</span></div>')
         md(f'<div class="cl-kv"><span>ID da interação</span><span>{id_display}</span></div>')
-        md(chip("Mensagem fictícia"))
+        if ss.get("proc_origem_analise") == "mock":
+            md(chip("Mensagem fictícia"))
         
         st.divider()
         

@@ -23,20 +23,6 @@ MENU = [
 CATEGORIA_TODAS = "Todas as categorias"
 CANAL_TODOS = "Todos os canais"
 
-# Valores válidos de analise_status:
-#   idle           → nenhuma análise iniciada neste lote
-#   processing     → análise em andamento
-#   success_real   → análise concluída pelo Gemini (resultado real)
-#   success_mock   → análise concluída pelo fallback mock (Gemini indisponível)
-#   error          → falha não recuperável (reservado para uso futuro)
-#
-# Valores válidos de oci_status:
-#   idle           → gravação ainda não tentada
-#   saved_real     → gravado no bucket OCI com confirmação real
-#   saved_simulated→ simulado (sem credencial OCI) — não é falha da análise
-#   partial_error  → parte dos pacotes falhou
-#   error          → todos os pacotes falharam
-
 
 def _gerar_lote_id():
     """Gera um ID de lote único para cada importação."""
@@ -56,13 +42,10 @@ def resetar_lote(ss=None):
     ss.proc_status = "novo"        # novo | retry | erro | concluido
     ss.proc_etapas = ["pendente"] * 6
     ss.historia_atual = None
-    # Estado explícito de análise (P1 — Issue #27)
-    ss.analise_status = "idle"     # idle | processing | success_real | success_mock | error
-    ss.analise_origem = ""         # "gemini" | "mock" | ""
-    ss.analise_erro = ""           # mensagem de erro da análise (quando houver)
-    # Estado explícito de persistência OCI (P1 — Issue #27)
-    ss.oci_status = "idle"         # idle | saved_real | saved_simulated | partial_error | error
-    ss.oci_erro = ""               # motivo da falha OCI (quando houver)
+    ss.proc_origem_analise = ""    # "gemini" | "mock" | ""
+    ss.proc_erro_oci = ""          # motivo da falha OCI (quando houver)
+    ss.proc_erro_analise = ""      # mensagem de erro da análise (quando houver)
+    ss.proc_erro_etapa = ""        # etapa onde ocorreu erro
     # Controles de curadoria — limpos para não herdar dados do lote anterior
     ss.validacao_factual = {}
     ss.status_curadoria = {}
