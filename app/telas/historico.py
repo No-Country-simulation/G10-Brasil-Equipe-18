@@ -1,5 +1,6 @@
 """Tela Histórico - Consulta e recuperação de registros persistidos no OCI."""
 import json
+import os
 
 import streamlit as st
 
@@ -7,7 +8,10 @@ from mocks import mock_data as m
 from services import data_service as svc
 from state import campo, definir, ir_para, valor
 from styles import caixa, cabecalho, chip, esc, md, topbar
-from src.config import MODO_DEMONSTRACAO
+
+# Modo demonstração: lê diretamente da variável de ambiente (evita import pesado de src/)
+_modo_demo_str = os.getenv("MODO_DEMONSTRACAO", "").lower()
+MODO_DEMONSTRACAO: bool = _modo_demo_str in ("1", "true", "sim")
 
 try:
     _dialogo = st.dialog
