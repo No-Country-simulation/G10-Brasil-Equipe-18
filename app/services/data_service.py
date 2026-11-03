@@ -307,11 +307,6 @@ def salvar_no_oci(pacotes, lote_id, historias=None):
     Sem conteudo, nada e gravado: o item volta como falha, para nao salvar
     um arquivo apenas com metadados.
     """
-    # Lê MODO_DEMONSTRACAO (evita import pesado de src/)
-    import os
-    _modo_demo_str = os.getenv("MODO_DEMONSTRACAO", "").lower()
-    modo_demonstracao = _modo_demo_str in ("1", "true", "sim")
-    
     if historias is None:
         return [
             {
@@ -357,20 +352,6 @@ def salvar_no_oci(pacotes, lote_id, historias=None):
 
     armazenamento = _storage()
     if armazenamento is None:
-        # Em modo demonstração: simula sucesso quando não há credencial
-        if modo_demonstracao:
-            return [
-                {
-                    **dict(pacote),
-                    "status": "salvo",
-                    "persistencia": "simulada",
-                    "motivo": None,
-                    "data": _data_br(datetime.now(timezone.utc).isoformat(timespec="seconds")),
-                    "tamanho": "12.5 KB",  # fictício
-                }
-                for pacote in pacotes
-            ]
-        # Fora do modo demonstração: falha explícita
         return [
             {
                 **dict(pacote),
