@@ -3,7 +3,7 @@
 **Projeto:** CommunityLab — Detector Inteligente de Histórias de Sucesso e Testemunhos  
 **Hackathon:** ONE G10 — Equipe 18  
 **Documento:** COMMUNITYLAB_HOMOLOGACAO_MVP.md  
-**Versão:** 0.1 — Estrutura de acompanhamento (não constitui aceite)  
+**Versão:** 0.2 — Atualização de integrações e impedimentos (não constitui aceite) 
 **Data de preparação:** 26/10/2026  
 **Referência funcional:** `docs/CATP_TEST_PLAN.md` — CATP v1.1  
 **Referência de gestão:** Card 23 — Testes Integrados e Demonstração  
@@ -39,6 +39,14 @@ Consolidar o planejamento, a execução, os resultados e as evidências da homol
 | Limitações do ambiente | A preencher |
 
 **Commits informados pela equipe como incorporados à `main` (a confirmar na execução):** `b38595f`, `e29d1d6`, `095b04d`, `b323fd2`, `7959443`. A presença desses commits não substitui o registro do SHA efetivamente homologado.
+
+### Atualização de integrações — 28/10/2026
+
+- **PR #20 — Correção da persistência OCI e do status do processamento:** aprovado por Jaqueline e integrado à `main` (merge `a05ae6b`). A revisão técnica registrou teste de gravação real no bucket OCI, tratamento de falha simulada e reenvio sem repetir as etapas de análise. A homologação integrada permanece pendente.
+- **PR #21 — Suporte a credenciais OCI via Streamlit Secrets:** desenvolvido por Tissiany, aprovado por Jaqueline e integrado à `main` (merge `2b65357`). Permite configurar credenciais OCI pelo Streamlit Secrets. A configuração e a execução integrada ainda precisam ser validadas no ambiente de homologação.
+- **Pendência identificada:** comportamento da aplicação quando o bucket OCI está vazio, com correção prevista em PR separado.
+
+**Nota:** a integração dos PRs não representa aprovação automática dos casos CATP nem aceite do MVP.
 
 ## 3. Estados e critérios de classificação
 
@@ -161,6 +169,34 @@ Reteste e conclusão:
 | ID | Data | Descrição | Gravidade | Responsável | Referência | Situação | Reteste |
 |---|---|---|---|---|---|---|---|
 | A preencher | — | — | — | — | — | — | — |
+
+### Impedimentos identificados na verificação local — 28/10/2026
+
+**IMP-001 — Gemini não configurado no ambiente local**
+- Evidência: terminal registrou ausência da chave GEMINI_API_KEY e acionamento do fallback mock.
+- Impacto: análise real por LLM não comprovada nesse ambiente.
+- Situação: pendente de configuração segura e reteste.
+
+**IMP-002 — Histórias demonstrativas após importação CSV**
+- Evidência: foram importadas duas interações (membro_001 e membro_002), mas a interface apresentou três histórias fictícias predefinidas.
+- Causa observada no código: fallback para m.HISTORIAS quando a análise LLM falha.
+- Impacto: CATP-006 e rastreabilidade da análise real não comprovados.
+- Situação: pendente de reteste com Gemini funcional.
+
+**IMP-003 — Persistência OCI e confirmação visual**
+- Evidência: o teste local anterior não comprovou gravação real. Posteriormente, a revisão técnica do PR #20 confirmou gravação em bucket real, tratamento de falhas e retry.
+- Situação: correção integrada à main; homologação no ambiente de referência ainda pendente.
+
+**IMP-004 — Fluxo integrado de ponta a ponta**
+- Evidência: importação CSV observada, porém análise executada em mock no teste local.
+- Impacto: CATP-015 ainda não comprovado.
+- Situação: pendente de execução integrada e registro de evidências.
+
+**IMP-005 — Comportamento com bucket OCI vazio**
+- Evidência: problema relatado na revisão do PR #20, relacionado à utilização de svc.listar_pacotes() em state.py.
+- Situação: correção prevista em PR separado; integração ainda não confirmada.
+
+**Nota de homologação:** os registros acima documentam impedimentos e resultados parciais. Não alteram automaticamente os estados da matriz CATP nem constituem aceite do MVP.
 
 **Riscos a acompanhar:** integração LLM real, credenciais e persistência OCI, rastreabilidade das fontes, controles independentes de curadoria, divergências entre testes unitários e fluxo completo, diferenças entre branch de desenvolvimento e `main`, rotulagem incompleta de dados demonstrativos.
 
