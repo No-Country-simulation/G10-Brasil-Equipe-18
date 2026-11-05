@@ -7,11 +7,6 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "app"))
 
 from state import resetar_lote  # noqa: E402
 
-"""Testes do estado do lote (app/state.py) - Issue #27."""
-from types import SimpleNamespace
-
-from state import resetar_lote
-
 def test_resetar_lote_limpa_estado_do_lote_anterior():
     ss = SimpleNamespace()
     resetar_lote(ss)
