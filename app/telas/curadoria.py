@@ -129,6 +129,14 @@ def _coluna_rascunhos(h, ativo, status):
 
 def render():
     ss = st.session_state
+    if not ss.historias:
+        topbar()
+        cabecalho("Etapa 4 de 4 · Decidir", "Curadoria", "Revise, valide e decida sobre cada rascunho antes de qualquer publicação.")
+        caixa("gray", "<b>Nenhuma história disponível para curadoria</b><br>"
+                      "Importe e processe um lote para revisar e aprovar os rascunhos na Curadoria.")
+        st.button("→ Ir para Importação", type="primary", on_click=ir_para, args=("importacao",))
+        return
+
     hid = ss.historia_atual or ss.historias[0]["id"]
     h = historia_por_id(hid)
     topbar()
@@ -243,8 +251,9 @@ def render():
                f'<div class="cl-kv"><span>Canal</span><span>{esc(h["canal"])}</span></div>'
                f'<div class="cl-kv"><span>Autor</span><span>{esc(h["autor"])}</span></div>'
                f'<div class="cl-kv"><span>Lote</span><span>{esc(ss.lote_id)}</span></div>'
-               f'<div class="cl-kv"><span>ID da interação</span><span>{id_display}</span></div>'
-               + chip("Mensagem fictícia"))
+               f'<div class="cl-kv"><span>ID da interação</span><span>{id_display}</span></div>')
+            if ss.get("proc_origem_analise") == "mock":
+                md(chip("Mensagem fictícia"))
         with st.container(border=True):
             fatos = "".join(f'<div style="margin:8px 0;"><span style="color:#10B981;">✓</span> {esc(f)}<br>'
                             f'<span class="cl-muted" style="margin-left:18px;font-size:12px;">Vem da mensagem original</span></div>'

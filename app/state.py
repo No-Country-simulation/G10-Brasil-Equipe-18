@@ -5,6 +5,7 @@ Obs.: o Streamlit apaga o estado de widgets que não aparecem numa execução
 st.session_state.dados e os widgets só os espelham (ver campo()).
 """
 import copy
+import uuid
 
 import streamlit as st
 
@@ -23,6 +24,39 @@ CATEGORIA_TODAS = "Todas as categorias"
 CANAL_TODOS = "Todos os canais"
 
 
+def _gerar_lote_id():
+    """Gera um ID de lote único para cada importação."""
+    return "LOTE-" + uuid.uuid4().hex[:6].upper()
+
+
+def resetar_lote(ss=None):
+    """Limpa todo o estado ligado ao lote atual e gera um novo lote_id.
+
+    Deve ser chamada a cada nova importação (via _novo_lote em importacao.py)
+    e também pode ser chamada por reiniciar() quando necessário.
+    """
+    if ss is None:
+        ss = st.session_state
+    ss.lote_id = _gerar_lote_id()
+    ss.historias = []
+    ss.proc_status = "novo"        # novo | retry | erro | concluido
+    ss.proc_etapas = ["pendente"] * 6
+    ss.historia_atual = None
+    ss.proc_origem_analise = ""    # "gemini" | "mock" | ""
+    ss.proc_erro_oci = ""          # motivo da falha OCI (quando houver)
+    ss.proc_erro_analise = ""      # mensagem de erro da análise (quando houver)
+    ss.proc_erro_etapa = ""        # etapa onde ocorreu erro
+    # Controles de curadoria — limpos para não herdar dados do lote anterior
+    ss.validacao_factual = {}
+    ss.status_curadoria = {}
+    ss.autorizacao = {}
+    ss.observacoes = {}
+    ss.motivos = {}
+    ss.status_ativos = {}          # legado — manter compatibilidade
+    ss.regen = {}
+    ss.pacotes_oci = []
+
+
 def init_state():
     ss = st.session_state
     if ss.get("_iniciado"):
@@ -32,31 +66,13 @@ def init_state():
     ss.dados = {}
     ss.interacoes = copy.deepcopy(m.INTERACOES)
     ss.arquivo = {"nome": m.ARQUIVO_DEMO, "tamanho": m.ARQUIVO_DEMO_TAMANHO, "origem": "Arquivo JSON"}
-    ss.lote_id = m.LOTE_ID
     ss.ultimo_upload = None
-    ss.historias = svc.analisar(ss.interacoes)
-    ss.proc_status = "novo"  # novo | retry | erro | concluido
-    ss.proc_etapas = ["pendente"] * 6
-    ss.historia_atual = None
-    # Controles da Curadoria (3 dimensões independentes)
-    ss.validacao_factual = {}  # "hist:ativo" -> pendente | validada | insuficiente | contradicao
-    ss.status_curadoria = {}  # "hist:ativo" -> rascunho | ajustes | aprovado | rejeitado
-    ss.autorizacao = {}  # "hist:ativo" -> nao_registrada | registrada
-    ss.observacoes = {}  # "hist:ativo" -> texto de observação
-    ss.motivos = {}  # "hist:ativo" -> texto de motivo de rejeição
-    # Legado (manter compatibilidade)
-    ss.status_ativos = {}  # "hist:ativo" -> rascunho | aprovado | rejeitado (legado)
-    ss.regen = {}
-    ss.pacotes_oci = svc.listar_pacotes()
     ss.toast = None
     ss.mostrar_copia = False
-    for h in ss.historias:
-        for a in h["ativos"]:
-            chave = f"{h['id']}:{a['id']}"
-            ss.status_ativos[chave] = "rascunho"
-            ss.validacao_factual[chave] = "pendente"
-            ss.status_curadoria[chave] = "rascunho"
-            ss.autorizacao[chave] = "nao_registrada"
+    # Inicializa o lote com estado neutro (sem rodar análise no boot — Issue #27)
+    resetar_lote(ss)
+    # Mantém o lote_id demo para a primeira carga
+    ss.lote_id = m.LOTE_ID
 
 
 def reiniciar():
