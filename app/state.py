@@ -4,12 +4,9 @@ Obs.: o Streamlit apaga o estado de widgets que não aparecem numa execução
 (por exemplo ao trocar de tela). Por isso os valores editáveis ficam em
 st.session_state.dados e os widgets só os espelham (ver campo()).
 """
-import copy
-
 import streamlit as st
 
 from mocks import mock_data as m
-from services import data_service as svc
 
 MENU = [
     ("dashboard", "📊  Dashboard"),
@@ -28,14 +25,18 @@ def init_state():
     if ss.get("_iniciado"):
         return
     ss._iniciado = True
-    ss.pagina = "dashboard"
+    ss.pagina = "importacao"
     ss.dados = {}
-    ss.interacoes = copy.deepcopy(m.INTERACOES)
-    ss.arquivo = {"nome": m.ARQUIVO_DEMO, "tamanho": m.ARQUIVO_DEMO_TAMANHO, "origem": "Arquivo JSON"}
+    ss.interacoes = []
+    ss.arquivo = {
+        "nome": "Nenhum arquivo importado",
+        "tamanho": "",
+        "origem": "Aguardando importação",
+    }
     ss.lote_id = m.LOTE_ID
     ss.ultimo_upload = None
-    ss.historias = svc.analisar(ss.interacoes)
-    ss.proc_status = "novo"  # novo | retry | erro | concluido
+    ss.historias = []
+    ss.proc_status = "aguardando_origem"  # fonte ainda não selecionada
     ss.proc_etapas = ["pendente"] * 6
     ss.historia_atual = None
     # Controles da Curadoria (3 dimensões independentes)
@@ -47,16 +48,11 @@ def init_state():
     # Legado (manter compatibilidade)
     ss.status_ativos = {}  # "hist:ativo" -> rascunho | aprovado | rejeitado (legado)
     ss.regen = {}
-    ss.pacotes_oci = svc.listar_pacotes()
+    ss.pacotes_oci = []
     ss.toast = None
     ss.mostrar_copia = False
-    for h in ss.historias:
-        for a in h["ativos"]:
-            chave = f"{h['id']}:{a['id']}"
-            ss.status_ativos[chave] = "rascunho"
-            ss.validacao_factual[chave] = "pendente"
-            ss.status_curadoria[chave] = "rascunho"
-            ss.autorizacao[chave] = "nao_registrada"
+
+
 
 
 def reiniciar():
