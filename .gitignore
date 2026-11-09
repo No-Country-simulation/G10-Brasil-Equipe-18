@@ -39,3 +39,6 @@ __pycache__/
 venv/
 .env
 .streamlit/secrets.toml
+
+# informacoes pessois do projeto
+info_project.md
