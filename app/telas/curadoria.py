@@ -129,6 +129,17 @@ def _coluna_rascunhos(h, ativo, status):
 
 def render():
     ss = st.session_state
+    if not ss.historias:
+        topbar()
+        cabecalho(
+            "Etapa 4 de 4 · Decidir",
+            "Curadoria",
+            "Importe interações para gerar rascunhos e tomar decisões editoriais.",
+        )
+        st.info("Ainda não há histórias para curar. Escolha uma fonte na tela Importação.")
+        st.button("Ir para Importação", on_click=ir_para, args=("importacao",))
+        return
+
     hid = ss.historia_atual or ss.historias[0]["id"]
     h = historia_por_id(hid)
     topbar()

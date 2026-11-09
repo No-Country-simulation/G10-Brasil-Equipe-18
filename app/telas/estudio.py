@@ -155,7 +155,17 @@ def _coluna_conteudo(h):
 
 def render():
     ss = st.session_state
-    
+    if not ss.historias:
+        topbar()
+        cabecalho(
+            "Etapa 3 de 4 · Revisar",
+            "Estúdio de Conteúdo",
+            "Importe interações para analisar evidências e editar rascunhos.",
+        )
+        st.info("Ainda não há histórias. Escolha uma fonte na tela Importação.")
+        st.button("Ir para Importação", on_click=ir_para, args=("importacao",))
+        return
+
     # Se não há história selecionada, pega a primeira
     hid = ss.get("historia_atual") or ss.historias[0]["id"]
     h = historia_por_id(hid)
