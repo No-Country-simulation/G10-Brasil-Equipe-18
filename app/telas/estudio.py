@@ -156,16 +156,14 @@ def _coluna_conteudo(h):
 
 def render():
     ss = st.session_state
-    
     if not ss.historias:
         topbar()
         cabecalho(
             "Etapa 3 de 4 · Revisar",
             "Estúdio de Conteúdo",
-            "Visualize as evidências originais e edite os rascunhos gerados pela IA antes de enviar para curadoria.",
+            "Importe interações para analisar evidências e editar rascunhos.",
         )
-        caixa("gray", "<b>Nenhuma história disponível para edição</b><br>"
-                      "Importe e processe um lote para visualizar e editar os rascunhos no Estúdio.")
+        st.info("Ainda não há histórias. Escolha uma fonte na tela Importação.")
         st.button("→ Ir para Importação", type="primary", on_click=ir_para, args=("importacao",))
         return
 

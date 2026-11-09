@@ -23,8 +23,9 @@ não mudar. Valor fora da lista fechada é recusado com o motivo escrito em
 ULTIMAS_RECUSADAS; valor apenas escrito de outra forma (caixa ou acento) é
 aceito com o ajuste registrado em ULTIMOS_AVISOS — nada é corrigido em silêncio.
 
-A chave é lida de st.secrets["GEMINI_API_KEY"] ou da variável de ambiente
-GEMINI_API_KEY. Nunca fica no código.
+As chaves de `GEMINI_API_KEY`, `COHERE_API_KEY` e `GROQ_API_KEY` são lidas
+pelo `LLMProvider` de `st.secrets` ou das variáveis de ambiente. Nunca ficam no código.
+O prompt de análise é mantido em `prompt_analise.txt`, ao lado deste módulo.
 """
 from __future__ import annotations
 
@@ -32,10 +33,13 @@ import json
 import os
 import re
 import unicodedata
+from pathlib import Path
 
 import requests
 
-MODELO_PADRAO = "gemini-3.5-flash-lite"
+from src.preprocessing import anonimizar_texto, normalizar_texto
+
+MODELO_PADRAO = "gemini-1.5-flash"
 ENDPOINT = "https://generativelanguage.googleapis.com/v1beta/models/{modelo}:generateContent"
 
 # Quantidade maxima de historias por lote analisado.
@@ -67,118 +71,11 @@ ULTIMOS_AVISOS: list = []
 # registrado em vez de a regra ser inventada aqui.
 ULTIMAS_AMBIGUIDADES: list = []
 
-PROMPT = """Você analisa mensagens de uma comunidade online para encontrar histórias com potencial de conteúdo.
-
-Receberá uma lista de interações em JSON, cada uma com "autor", "canal", "tipo" e "texto".
-
-Sua tarefa:
-1. Selecionar até {maximo} interações que contenham uma história real, um problema concreto ou uma conquista verificável.
-2. Para cada uma, classificar sentimento, relevância, tópicos e tipo de insight, conforme as definições abaixo.
-3. Gerar dois ativos: um post para LinkedIn e um card de conquista.
-
-DEFINIÇÕES — use exatamente estes valores
-
-sentimento (tom da mensagem, não o assunto):
-- positivo: satisfação, entusiasmo, elogio, comemoração.
-- neutro: informação ou pergunta sem carga emocional clara.
-- negativo: frustração, dificuldade, crítica, insatisfação.
-
-relevancia (quanto serve como conteúdo):
-- alta: específico e aproveitável — conquista concreta, dúvida recorrente ou dica acionável.
-- media: útil, mas genérico, pontual ou dependente de contexto.
-- baixa: sem conteúdo aproveitável — apoio, cumprimento, ruído.
-
-topicos: um ou dois itens, escolhidos de: carreira, estudos, tecnologia, ferramentas, comunidade, eventos, outro. Use "outro" só quando nenhum outro se aplica. Sem repetir.
-
-tipo_insight:
-- conquista: relato de resultado concreto (vaga, aprovação, projeto concluído).
-- historia: relato de experiência ou percurso, sem resultado marcante.
-- duvida: pergunta ou pedido de ajuda.
-- insight: dica, aprendizado ou prática que outras pessoas podem aplicar.
-- outro: apoio, cumprimento ou comentário sem conteúdo aproveitável.
-Desempates: mais de um tipo na mensagem, use o predominante; entre conquista e historia, use conquista quando houver resultado verificável no texto; dúvida com resposta na mesma mensagem, use o que ocupa a maior parte do texto.
-
-tipo da história (só para quem for virar conteúdo): conquista_profissional, superacao, projeto_destaque.
-Se mais de um tipo servir, escolha um e liste os outros em "tipos_alternativos". Não invente tipo fora dessa lista.
-
-Responda SOMENTE com JSON válido, neste formato exato:
-{{
-  "historias": [
-    {{
-      "id": "hist-001",
-      "indice_interacao": 1,
-      "autor": "nome do autor da interação",
-      "canal": "canal da interação",
-      "sentimento": "positivo | neutro | negativo",
-      "relevancia": "alta | media | baixa",
-      "topicos": ["carreira"],
-      "tipo_insight": "historia | conquista | duvida | insight | outro",
-      "justificativa": "até 500 caracteres explicando a classificação",
-      "confianca": 0.0,
-      "tipo": "conquista_profissional | superacao | projeto_destaque",
-      "tipos_alternativos": ["outro tipo que também serviria, ou lista vazia"],
-      "resumo": "resumo factual, até 1000 caracteres",
-      "resultados": ["impacto concreto alcançado"],
-      "mensagem_original": "texto original, sem alterar",
-      "destaques": ["trechos literais da mensagem"],
-      "fatos": ["fato objetivo extraído, no formato Tema: detalhe"],
-      "ativos": [
-        {{
-          "id": "post_linkedin",
-          "nome": "Post para LinkedIn",
-          "tipo": "texto",
-          "campos": {{"texto": "post de até 120 palavras, português do Brasil, sem emoji, sem hashtag"}}
-        }},
-        {{
-          "id": "card_conquista",
-          "nome": "Card de conquista",
-          "tipo": "card",
-          "campos": {{"titulo": "até 60 caracteres", "frase": "uma frase de até 90 caracteres"}}
-        }}
-      ]
-    }}
-  ]
-}}
-
-Regras obrigatórias:
-- Use apenas informação presente nas interações. Não invente nome, número ou fato.
-- "indice_interacao" é a posição da interação no lote recebido, começando em 1.
-- "destaques" deve conter trechos copiados do texto original, sem reescrever.
-- "confianca" entre 0.0 e 1.0; abaixo de 0.6 o item vai para revisão prioritária.
-- Se nenhuma interação tiver potencial, devolva {{"historias": []}}.
-- Não escreva nada antes ou depois do JSON.
-"""
+PROMPT = Path(__file__).with_name("prompt_analise.txt").read_text(encoding="utf-8")
 
 
 class ErroAnalise(RuntimeError):
     """Falha controlada na análise por LLM."""
-
-
-def _chave() -> str:
-    chave = ""
-    try:
-        import streamlit as st  # import local: o teste roda fora do Streamlit
-
-        chave = st.secrets.get("GEMINI_API_KEY", "")  # type: ignore[union-attr]
-    except Exception:
-        chave = ""
-    chave = chave or os.environ.get("GEMINI_API_KEY", "")
-    if not chave:
-        raise ErroAnalise(
-            "Chave do Gemini ausente. Defina GEMINI_API_KEY em .streamlit/secrets.toml "
-            "ou como variável de ambiente."
-        )
-    return chave.strip()
-
-
-def _modelo() -> str:
-    try:
-        import streamlit as st
-
-        return st.secrets.get("GEMINI_MODEL", MODELO_PADRAO) or MODELO_PADRAO
-    except Exception:
-        return os.environ.get("GEMINI_MODEL", MODELO_PADRAO) or MODELO_PADRAO
-
 
 def _iniciais(nome: str) -> str:
     partes = [p for p in re.split(r"\s+", (nome or "").strip()) if p]
@@ -556,55 +453,83 @@ def _normalizar(historias: list, interacoes: list) -> list:
 
 
 def analisar(interacoes: list, maximo: int = MAXIMO_HISTORIAS, timeout: int = 60) -> list:
-    """Envia as interações ao Gemini e devolve as histórias no contrato do front."""
+    """Envia as interações ao LLMProvider (com fallback automático) e devolve as histórias no contrato do front."""
     if not interacoes:
         raise ErroAnalise("Nenhuma interação para analisar.")
 
-    payload = [
-        {
-            "autor": i.get("autor", ""),
-            "canal": i.get("canal", ""),
-            "tipo": i.get("tipo", "mensagem"),
-            "texto": i.get("texto", ""),
-        }
-        for i in interacoes
-    ]
+    interacoes_preparadas = []
+    for interacao in interacoes:
+        preparada = dict(interacao)
+        texto = normalizar_texto(str(preparada.get("texto") or ""))
+        preparada["texto"], _ = anonimizar_texto(texto)
+        interacoes_preparadas.append(preparada)
 
-    corpo = {
-        "contents": [
+    payload = []
+    for posicao, interacao in enumerate(interacoes_preparadas, start=1):
+        id_interacao = interacao.get("id")
+        if not isinstance(id_interacao, int) or isinstance(id_interacao, bool) or id_interacao < 1:
+            id_interacao = interacao.get("_id_efetivo")
+        if not isinstance(id_interacao, int) or isinstance(id_interacao, bool) or id_interacao < 1:
+            id_interacao = posicao
+        payload.append(
             {
-                "parts": [
-                    {"text": PROMPT.format(maximo=maximo)},
-                    {"text": json.dumps(payload, ensure_ascii=False)},
-                ]
+                "id": id_interacao,
+                "autor": interacao.get("autor", ""),
+                "canal": interacao.get("canal", ""),
+                "tipo": interacao.get("tipo", "mensagem"),
+                "texto": interacao["texto"],
             }
-        ],
-        "generationConfig": {"responseMimeType": "application/json", "temperature": 0.4},
-    }
+        )
 
-    resposta = requests.post(
-        ENDPOINT.format(modelo=_modelo()),
-        params={"key": _chave()},
-        json=corpo,
-        timeout=timeout,
-    )
-
-    if resposta.status_code != 200:
-        raise ErroAnalise(f"Gemini respondeu {resposta.status_code}: {resposta.text[:300]}")
+    from services.llm_provider import LLMProvider, ErroProvedor
+    # Instancia o provedor (ele já lê as chaves e gerencia a ordem e falhas)
+    provider = LLMProvider(timeout=timeout)
 
     try:
-        dados = resposta.json()
-        texto = dados["candidates"][0]["content"]["parts"][0]["text"]
-    except (KeyError, IndexError, ValueError) as erro:
-        raise ErroAnalise(f"Resposta inesperada do Gemini: {erro}") from erro
+        # O prompt do sistema e o payload dos dados
+        prompt_texto = PROMPT.format(maximo=maximo)
+        resultado = provider.gerar(
+            prompt_texto,
+            json.dumps(payload, ensure_ascii=False),
+        )
 
+        # Loga qual provedor venceu/atendeu a requisição com sucesso
+        print(f"[analise] {resultado.provedor} OK (modelo: {resultado.modelo})", flush=True)
+        texto = resultado.texto
+
+    except ErroProvedor as e:
+        raise ErroAnalise(f"Falha em todos os provedores de LLM: {e}") from e
+    except Exception as erro:
+        raise ErroAnalise(f"Erro inesperado na chamada do LLM: {erro}") from erro
+
+    # Desserializa e valida o JSON retornado.
     try:
         conteudo = json.loads(texto)
-    except json.JSONDecodeError as erro:
-        raise ErroAnalise(f"O modelo não devolveu JSON válido: {erro}") from erro
+    except json.JSONDecodeError:
+        # Tenta retirar apenas blocos Markdown; não tenta inventar/corrigir dados.
+        texto_limpo = texto.replace("```json", "").replace("```", "").strip()
+        try:
+            conteudo = json.loads(texto_limpo)
+        except json.JSONDecodeError as erro:
+            finish_reason = resultado.finish_reason or "não informado"
+            diagnostico_limite = ""
+            if str(finish_reason).upper() == "MAX_TOKENS":
+                diagnostico_limite = (
+                    "A resposta foi truncada pelo limite de saída; aumente "
+                    "LLM_MAX_OUTPUT_TOKENS. "
+                )
+            raise ErroAnalise(
+                "JSON inválido do LLM: "
+                f"provedor={resultado.provedor}; modelo={resultado.modelo}; "
+                f"finish_reason={finish_reason}; {diagnostico_limite}"
+                f"resposta_chars={len(texto)}; "
+                f"parser_chars={len(texto_limpo)}; linha={erro.lineno}; "
+                f"coluna={erro.colno}; posição={erro.pos}. "
+                "O conteúdo da resposta não foi registrado por segurança."
+            ) from erro
 
     historias = conteudo.get("historias") if isinstance(conteudo, dict) else conteudo
     if not isinstance(historias, list):
         raise ErroAnalise("JSON do modelo sem a chave 'historias'.")
 
-    return _normalizar(historias, interacoes)
+    return _normalizar(historias, interacoes_preparadas)

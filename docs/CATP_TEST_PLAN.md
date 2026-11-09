@@ -52,7 +52,7 @@ Todos os testes possuem status inicial **Não executado**.
 | CATP-010b | Curadoria editorial | Estados Rascunho, Ajustes, Aprovado e Rejeitado registrados corretamente | Não executado |
 | CATP-010c | Autorização de publicação | Estados Não registrada e Registrada independentes da aprovação editorial | Não executado |
 | CATP-010d | Indicador RG-03 | Liberação para publicação depende de todos os requisitos aplicáveis | Não executado |
-| CATP-011 | Persistência OCI | Resultado armazenado e recuperável, sem duplicidade ao regravar o mesmo lote | Não executado |
+| CATP-011 | Persistência OCI | Resultado armazenado e recuperável, sem duplicidade ao regravar o mesmo lote | Executado |
 | CATP-012 | CQF — Pontuação | Cálculo conforme CQF v1.0, caso integrado ao MVP | Não executado |
 | CATP-013 | CQF — Contradições | Contradição não resolvida impede aprovação, caso a regra esteja integrada | Não executado |
 | CATP-014 | Autorização | Divulgação impedida sem autorização apropriada | Não executado |

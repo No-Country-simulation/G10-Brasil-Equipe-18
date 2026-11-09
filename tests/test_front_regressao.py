@@ -26,8 +26,9 @@ from streamlit.testing.v1 import AppTest
 def test_regressao_front_completo():
     """Teste de regressão: percorre todas as telas sem exceção."""
     
-    # Inicia o app
-    at = AppTest.from_file("app/main.py", default_timeout=10)
+    # Resolve o entrypoint em relação a este arquivo de teste.
+    caminho_app = Path(__file__).resolve().parent.parent / "app" / "main.py"
+    at = AppTest.from_file(caminho_app, default_timeout=10)
     at.run()
     
     # Verifica que o app iniciou sem erro
