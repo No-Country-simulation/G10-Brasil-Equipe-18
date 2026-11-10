@@ -263,6 +263,15 @@ def bucket_atual():
         return ""
 
 
+def pacotes_do_lote(lote_id):
+    """Arquivos que este lote precisa gravar no bucket."""
+    from . import oci_storage  # import local, como em _storage()
+
+    return [
+        {"caminho": oci_storage.caminho_do_lote(lote_id, "pacote-distribuicao.json")},
+        {"caminho": oci_storage.caminho_do_lote(lote_id, "evidencias.json")},
+    ]
+
 def listar_pacotes():
     """Lista os pacotes realmente salvos no bucket.
 
@@ -289,6 +298,7 @@ def listar_pacotes():
             "tamanho": item.get("tamanho"),
             "status": "salvo",
             "persistencia": "real",
+	    "salvo_em": item.get("salvo_em"),
         }
         for item in itens
     ]

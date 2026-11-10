@@ -303,11 +303,7 @@ def render():
     try:
         if ss.get("dados", {}).get("demo_erro_oci"):
             raise RuntimeError("Falha demonstrativa de gravação no OCI.")
-
-        # Verifica se pacotes_oci está inicializado; se não estiver, define uma estrutura padrão
-        if not ss.get("pacotes_oci"):
-            ss.pacotes_oci = [{"caminho": f"lote_{ss.lote_id}.json"}]
-        pacotes = svc.salvar_no_oci(ss.pacotes_oci, ss.lote_id, ss.historias)
+        pacotes = svc.salvar_no_oci(ss.pacotes_oci or svc.pacotes_do_lote(ss.lote_id), ss.lote_id, ss.historias)
         ss.pacotes_oci = pacotes
         if _pacotes_confirmados(pacotes):
             _salvar_cursor_discord_se_confirmado(
