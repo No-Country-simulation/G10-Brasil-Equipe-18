@@ -226,7 +226,7 @@ def analisar(interacoes):
 
     try:
         historias = llm.analisar(interacoes)
-        ORIGEM_ANALISE = "gemini"
+        ORIGEM_ANALISE = llm.ULTIMO_PROVEDOR or "gemini"
         ULTIMO_ERRO = ""
         print(f"[analise] concluída: {len(historias)} histórias", flush=True)
         return historias

@@ -42,6 +42,9 @@ from src.preprocessing import anonimizar_texto, normalizar_texto
 MODELO_PADRAO = "gemini-1.5-flash"
 ENDPOINT = "https://generativelanguage.googleapis.com/v1beta/models/{modelo}:generateContent"
 
+# Provedor que atendeu a última chamada bem-sucedida ("gemini" | "cohere" | "groq").
+ULTIMO_PROVEDOR: str = ""
+
 # Quantidade maxima de historias por lote analisado.
 MAXIMO_HISTORIAS = 3
 
@@ -532,4 +535,5 @@ def analisar(interacoes: list, maximo: int = MAXIMO_HISTORIAS, timeout: int = 60
     if not isinstance(historias, list):
         raise ErroAnalise("JSON do modelo sem a chave 'historias'.")
 
+    ULTIMO_PROVEDOR = resultado.provedor
     return _normalizar(historias, interacoes_preparadas)
