@@ -457,6 +457,7 @@ def _normalizar(historias: list, interacoes: list) -> list:
 
 def analisar(interacoes: list, maximo: int = MAXIMO_HISTORIAS, timeout: int = 60) -> list:
     """Envia as interações ao LLMProvider (com fallback automático) e devolve as histórias no contrato do front."""
+    global ULTIMO_PROVEDOR
     if not interacoes:
         raise ErroAnalise("Nenhuma interação para analisar.")
 
