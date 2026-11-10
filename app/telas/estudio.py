@@ -117,7 +117,8 @@ def _coluna_conteudo(h):
             
             copiavel = f"{titulo}\n\n{descricao}\n\n\"{citacao}\""
         else:  # texto
-            campo(st.text_area, "Texto do case", _chave(hid, aid, "texto"), ativo["campos"]["texto"], height=300)
+            texto_campo = ativo["campos"].get("texto", "")
+            campo(st.text_area, "Texto do case", _chave(hid, aid, "texto"), texto_campo, height=300)
             texto = valor(_chave(hid, aid, "texto"), "")
             st.caption(f"{len(texto)} caracteres")
             copiavel = texto

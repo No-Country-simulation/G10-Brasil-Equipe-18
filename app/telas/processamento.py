@@ -214,6 +214,60 @@ def _desenhar(etapas, botoes):
     st.caption("Os ativos são rascunhos sujeitos à revisão humana. Nenhum conteúdo será publicado automaticamente.")
 
 
+def _continuar_processamento(ss, etapas, area):
+    """Retoma o processamento interrompido (apos rerun do Streamlit).
+
+    Executa as etapas restantes (2 a 5) sem pausas artificiais.
+    """
+    # Etapas 2, 3, 4: marcam como andamento e concluida rapidamente
+    for i in range(2, 5):
+        etapas[i] = "andamento"
+        _persistir_progresso(ss, etapas)
+        if area is not None:
+            with area.container():
+                _desenhar(etapas, botoes=False)
+        etapas[i] = "concluida"
+        _persistir_progresso(ss, etapas)
+        if area is not None:
+            with area.container():
+                _desenhar(etapas, botoes=False)
+
+    # Etapa 5: salvamento no OCI
+    etapas[5] = "andamento"
+    _persistir_progresso(ss, etapas)
+    if area is not None:
+        with area.container():
+            _desenhar(etapas, botoes=False)
+
+    try:
+        pacotes = svc.salvar_no_oci(
+            ss.pacotes_oci or svc.pacotes_do_lote(ss.lote_id), ss.lote_id, ss.historias
+        )
+        ss.pacotes_oci = pacotes
+        if _pacotes_confirmados(pacotes):
+            _salvar_cursor_discord_se_confirmado(
+                pacotes, ss.get("avisos_discord", [])
+            )
+            etapas[5] = "concluida"
+            ss.proc_status = "concluido"
+            ss.proc_erro_oci = ""
+        else:
+            etapas[5] = "erro"
+            ss.proc_status = "erro"
+            ss.proc_erro_oci = _motivo_falha(pacotes)
+    except Exception as erro:
+        etapas[5] = "erro"
+        ss.proc_status = "erro"
+        ss.proc_erro_oci = str(erro)
+
+    ss.proc_etapas = etapas
+    if area is not None:
+        with area.container():
+            _desenhar(etapas, botoes=True)
+    else:
+        _desenhar(etapas, botoes=True)
+
+
 def render():
     ss = st.session_state
     topbar()
@@ -224,6 +278,12 @@ def render():
 
     if ss.proc_status == "processando":
         etapas_salvas = ss.get("proc_etapas", ["pendente"] * len(ETAPAS))
+        # Continua o processamento de onde parou apos eventual rerun do
+        # Streamlit (causado por time.sleep durante as etapas).
+        if etapas_salvas[1] == "concluida" and etapas_salvas[5] != "concluida":
+            _continuar_processamento(ss, etapas_salvas, area=None)
+            return
+        # Ainda na primeira etapa: mostra o progresso e permite recomeçar.
         _desenhar(etapas_salvas, botoes=False)
         analise_concluida = len(etapas_salvas) > 1 and etapas_salvas[1] == "concluida"
         instrucao = (
