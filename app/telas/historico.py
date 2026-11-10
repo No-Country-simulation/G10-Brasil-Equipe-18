@@ -135,6 +135,11 @@ def _tabela(pacotes):
     st.caption(f"{len(pacotes)} objetos · {len(lotes)} lote salvo · {erros} objeto com erro")
 
 
+def lote_mais_recente(pacotes):
+    """Pacote gravado mais recentemente, ou None quando nao ha nenhum."""
+    return max(pacotes, key=lambda p: p.get("salvo_em") or "") if pacotes else None
+
+
 def render():
     ss = st.session_state
     estado = valor("demo_estado_oci", "Normal")
@@ -187,8 +192,8 @@ def render():
     else:
         salvos = [p for p in pacotes if p["status"] == "salvo"]
         lotes = {p["lote"] for p in salvos}
-        ultima = max((p["data"] for p in salvos), default=None)
-        lote_recente = max(salvos, key=lambda p: p.get("data") or "")["lote"] if salvos else None
+        ultima = (lote_mais_recente(salvos) or {}).get("data")
+        lote_recente = (lote_mais_recente(salvos) or {}).get("lote")
         _metricas(svc.bucket_atual() or "indisponível", str(len(lotes)), f"{len(salvos)} objetos no bucket", ultima or "Nenhuma gravação",
                   f"Lote {lote_recente}" if lote_recente else "Aguardando o primeiro lote")
         with st.container(border=True):

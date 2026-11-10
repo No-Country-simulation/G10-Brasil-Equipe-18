@@ -11,7 +11,7 @@ import pytest
 # Adiciona app/ ao path
 sys.path.insert(0, str(Path(__file__).parent.parent / "app"))
 
-from telas.historico import deve_exibir_erro
+from telas.historico import deve_exibir_erro, lote_mais_recente
 
 
 def test_erro_credencial_modo_demo_desligado():
@@ -59,10 +59,22 @@ def test_matriz_completa():
         ("", False, False, "Sem erro + Demo OFF"),
         ("", True, False, "Sem erro + Demo ON"),
     ]
-    
+
     for motivo, modo_demo, esperado, descricao in casos:
         resultado = deve_exibir_erro(motivo, modo_demo)
         assert resultado == esperado, f"Falhou: {descricao} (esperado={esperado}, obtido={resultado})"
+
+
+def test_lote_mais_recente_usa_a_data_real_e_nao_o_texto():
+    """23/10 vem antes de 10/11, mas em texto '23' > '10'."""
+    pacotes = [
+        {"lote": "VAZIO-23-10", "data": "23/10/2026 14:45", "salvo_em": "2026-10-23 14:45:36"},
+        {"lote": "LOTE-21860C", "data": "10/11/2026 15:42", "salvo_em": "2026-11-10 15:42:17"},
+    ]
+
+    recente = lote_mais_recente(pacotes)
+
+    assert recente["lote"] == "LOTE-21860C"
 
 
 if __name__ == "__main__":

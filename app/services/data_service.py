@@ -302,6 +302,7 @@ def listar_pacotes():
             "tamanho": item.get("tamanho"),
             "status": "salvo",
             "persistencia": "real",
+	    "salvo_em": item.get("salvo_em"),
         }
         for item in itens
     ]
