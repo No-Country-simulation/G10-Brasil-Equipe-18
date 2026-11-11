@@ -1,0 +1,11 @@
+services:
+  streamlit-app:
+    build: .
+    container_name: meu-streamlit-app
+    restart: always
+    ports:
+      - "8501:8501"
+    volumes:
+      - .:/app
+    environment:
+      - PYTHONUNBUFFERED=1
