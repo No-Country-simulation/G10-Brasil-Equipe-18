@@ -269,9 +269,9 @@ Verificações preliminares não substituem testes formais.
 
 | ID | Funcionalidade | Execução formal | Evidência ou pendência |
 |---|---|---|---|
-|| CATP-001 | Importação CSV | **Aprovado** | `tests/evidences/catp001.png`, `catp001.1.png`, `catp001.2.png`, `catp001.3.png` · `pytest tests/test_catp_grupo_a.py` · Registro individual na seção 4.3 ||
-|| CATP-002 | Importação JSON | **Aprovado** | `tests/evidences/catp002.png`, `catp002.1.png` · `pytest tests/test_catp_grupo_a.py` · Registro individual na seção 4.3 ||
-|| CATP-003 | Dados inválidos | **Aprovado** | `tests/evidences/catp003.png`, `catp003.1.png`, `catp003.2.png` · `pytest tests/test_catp_grupo_a.py` · Registro individual na seção 4.3 ||
+| CATP-001 | Importação CSV | **Aprovado** | `tests/evidences/catp001.png`, `catp001.1.png`, `catp001.2.png`, `catp001.3.png` · `pytest tests/test_catp_grupo_a.py` · Registro individual na seção 4.3 |
+| CATP-002 | Importação JSON | **Aprovado** | `tests/evidences/catp002.png`, `catp002.1.png` · `pytest tests/test_catp_grupo_a.py` · Registro individual na seção 4.3 |
+| CATP-003 | Dados inválidos | **Aprovado** | `tests/evidences/catp003.png`, `catp003.1.png`, `catp003.2.png` · `pytest tests/test_catp_grupo_a.py` · Registro individual na seção 4.3 |
 | CATP-004 | Sentimentos | Não executado | Rastreabilidade pendente |
 | CATP-005 | Tópicos | Não executado | Rastreabilidade pendente |
 | CATP-006 | Histórias | Não executado | Fallback mock histórico; teste Gemini direto posterior positivo |
@@ -288,7 +288,7 @@ Verificações preliminares não substituem testes formais.
 | CATP-013 | CQF contradições | Não executado | Aplicabilidade a confirmar |
 | CATP-014 | Autorização | Não executado | Bloqueio de divulgação pendente |
 | CATP-015 | Fluxo completo | Não executado | Gemini–Streamlit–OCI não homologado |
-| CATP-016 | Navegação Streamlit | Não executado | Verificação parcial; PR #29 em revisão |
+| CATP-016 | Navegação Streamlit | Não executado | Verificação parcial; PR #37 integrado à main |
 | CATP-017 | Estúdio | Não executado | Pendente |
 | CATP-018 | Regeneração RG-01 | Não executado | Fidelidade factual pendente |
 | CATP-019 | Controles de curadoria | Não executado | Independência dos controles pendente |
