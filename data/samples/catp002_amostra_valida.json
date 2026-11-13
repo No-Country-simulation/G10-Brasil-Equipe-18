@@ -1,0 +1,44 @@
+[
+  {
+    "id": 1,
+    "autor": "Marina Costa",
+    "canal": "#conquistas",
+    "tipo": "mensagem",
+    "texto": "Consegui minha primeira vaga como dev júnior! O portfólio que construí no ONE fez a diferença."
+  },
+  {
+    "id": 2,
+    "autor": "Lucas Almeida",
+    "canal": "#projetos",
+    "tipo": "mensagem",
+    "texto": "Nosso projeto de controle financeiro foi destaque no desafio. Fizemos tudo em equipe!"
+  },
+  {
+    "id": 3,
+    "autor": "Camila Santos",
+    "canal": "#carreira",
+    "tipo": "mensagem",
+    "texto": "Depois de 10 anos no varejo, concluí a formação e comecei minha transição para tecnologia."
+  },
+  {
+    "id": 4,
+    "autor": "Rafael Lima",
+    "canal": "#geral",
+    "tipo": "mensagem",
+    "texto": "Alguém sabe qual é o horário da próxima mentoria?"
+  },
+  {
+    "id": 5,
+    "autor": "Beatriz Nunes",
+    "canal": "#geral",
+    "tipo": "mensagem",
+    "texto": "Bom dia, pessoal! Começando a semana com bastante energia."
+  },
+  {
+    "id": 6,
+    "autor": "Pedro Alves",
+    "canal": "#projetos",
+    "tipo": "mensagem",
+    "texto": "Alguém tem um exemplo de como organizar as pastas do projeto?"
+  }
+]

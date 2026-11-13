@@ -1,4 +1,4 @@
-"""Teste de regressão completo com AppTest (CATP-007).
+"""Teste de regressão completo com AppTest (CATP-016).
 
 Percorre todas as telas do front sem exceção:
 - Importação
@@ -8,6 +8,11 @@ Percorre todas as telas do front sem exceção:
 - Histórico
 
 Sem rede, sem chave de API, delay zero.
+O isolamento de credenciais (secrets.toml e GEMINI_API_KEY) é gerenciado
+pela fixture `ocultar_secrets_reais` em conftest.py, que renomeia
+temporariamente o .streamlit/secrets.toml antes do teste e o restaura ao
+término, evitando chamadas externas ao Gemini/OCI e efeitos colaterais
+sobre outros testes da suíte.
 """
 import os
 import sys
@@ -16,18 +21,25 @@ from pathlib import Path
 # Adiciona app/ ao path para importar módulos
 sys.path.insert(0, str(Path(__file__).parent.parent / "app"))
 
-# Configura ambiente para teste (sem rede, delay zero)
+# Configura delay zero para o teste (sem impacto em outros testes da suíte)
 os.environ["COMMUNITYLAB_DELAY"] = "0"
-os.environ.pop("GEMINI_API_KEY", None)
+# GEMINI_API_KEY NÃO é removida aqui: a remoção e restauração ocorrem
+# exclusivamente dentro da fixture ocultar_secrets_reais (conftest.py),
+# garantindo isolamento sem afetar outros testes em tempo de importação.
 
 from streamlit.testing.v1 import AppTest
 
 
 def test_regressao_front_completo():
     """Teste de regressão: percorre todas as telas sem exceção."""
-    
-    # Inicia o app
-    at = AppTest.from_file("app/main.py", default_timeout=10)
+    # Usa caminho absoluto: AppTest.from_file resolve relativo ao arquivo chamador
+    # (tests/), não à raiz do projeto — sem o Path explícito buscaria tests/app/main.py
+    app_path = str(Path(__file__).parent.parent / "app" / "main.py")
+
+    # O conftest.py (fixture ocultar_secrets_reais) oculta o secrets.toml
+    # e limpa variáveis de ambiente antes deste teste, impedindo chamadas
+    # externas ao Gemini/OCI — sem necessidade de secrets={} aqui.
+    at = AppTest.from_file(app_path, default_timeout=10)
     at.run()
     
     # Verifica que o app iniciou sem erro
