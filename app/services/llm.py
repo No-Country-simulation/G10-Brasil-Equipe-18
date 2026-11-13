@@ -443,15 +443,9 @@ def _normalizar(historias: list, interacoes: list) -> list:
         )
 
     if ULTIMAS_RECUSADAS:
-        print(
-            f"[analise] {len(ULTIMAS_RECUSADAS)} historia(s) recusada(s) pelo contrato",
-            flush=True,
-        )
+        pass
     if ULTIMAS_AMBIGUIDADES:
-        print(
-            f"[analise] {len(ULTIMAS_AMBIGUIDADES)} historia(s) com mais de um tipo possivel",
-            flush=True,
-        )
+        pass
     return saida
 
 
@@ -497,8 +491,6 @@ def analisar(interacoes: list, maximo: int = MAXIMO_HISTORIAS, timeout: int = 60
             json.dumps(payload, ensure_ascii=False),
         )
 
-        # Loga qual provedor venceu/atendeu a requisição com sucesso
-        print(f"[analise] {resultado.provedor} OK (modelo: {resultado.modelo})", flush=True)
         texto = resultado.texto
 
     except ErroProvedor as e:
