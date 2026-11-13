@@ -83,8 +83,7 @@ def _motivo_falha(pacotes):
     ]
 
     resultado_motivo = "; ".join(dict.fromkeys(motivos)) or "Nem todos os pacotes foram confirmados no OCI."
-    print(f"[DEBUG OCI MOTIVOS PROCESSADOS]: {resultado_motivo}", flush=True)
-    return "; ".join(dict.fromkeys(motivos)) or "Nem todos os pacotes foram confirmados no OCI."
+    return resultado_motivo
 
 
 def _desenhar(etapas, botoes):
