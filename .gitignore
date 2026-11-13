@@ -43,3 +43,7 @@ __pycache__/
 venv/
 .env
 .streamlit/secrets.toml
+
+# arquivos de informações
+info_project.md
+tests/test_docker_config.py
