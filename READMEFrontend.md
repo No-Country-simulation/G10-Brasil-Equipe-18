@@ -88,6 +88,8 @@ python -m streamlit run app/main.py
 
 O app abre em `http://localhost:8501`.
 
+Para executar em uma VM Oracle com Docker, consulte o [guia de deploy](docs/DEPLOYMENT_ORACLE_VM.md).
+
 ## Configuração dos provedores de LLM
 
 A análise tenta os provedores nesta ordem: **Gemini → Cohere → Groq**. Se um provedor não tiver chave configurada ou falhar, o próximo é tentado. O app não substitui uma falha por histórias fictícias.
