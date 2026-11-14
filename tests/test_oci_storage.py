@@ -61,8 +61,9 @@ def test_config_usa_secrets_quando_presentes():
                 del sys.modules[mod]
 
 
-def test_config_usa_arquivo_quando_secrets_ausentes():
-    """Caso (b): sem secrets - usa o arquivo de config."""
+def test_config_usa_arquivo_quando_secrets_ausentes(monkeypatch):
+    """Usa o arquivo de credenciais e prioriza OCI_NAMESPACE do ambiente."""
+    monkeypatch.setenv("OCI_NAMESPACE", "namespace_from_env")
     # Mock do OCI SDK
     mock_oci = MagicMock()
     mock_client = MagicMock()
@@ -99,9 +100,10 @@ def test_config_usa_arquivo_quando_secrets_ausentes():
             
             cliente, namespace, bucket = oci_storage._config()
             
-            # Verifica que usou o arquivo
+            # Verifica que usou o arquivo de credenciais e o namespace do ambiente
             assert cliente is not None
-            assert namespace == "namespace_from_file"
+            assert namespace == "namespace_from_env"
+            mock_client.get_namespace.assert_not_called()
             mock_oci.config.from_file.assert_called_once()
     finally:
         for mod in ['streamlit', 'oci', 'oci.object_storage', 'oci.config', 'app.services.oci_storage']:
@@ -192,10 +194,9 @@ def test_normalizacao_key_content_chamando_codigo_real():
                 del sys.modules[mod]
 
 
-def test_config_sem_secrets_toml_cai_no_arquivo():
-    """Caso em que não há secrets.toml acessível: st.secrets levanta
-    StreamlitSecretNotFoundError ao ser consultado. O erro não deve propagar
-    e o fluxo deve seguir para ~/.oci/config."""
+def test_config_sem_secrets_toml_cai_no_arquivo(monkeypatch):
+    """Sem Streamlit secrets, usa o arquivo e OCI_NAMESPACE do ambiente."""
+    monkeypatch.setenv("OCI_NAMESPACE", "namespace_from_env")
     # Mock do OCI SDK
     mock_oci = MagicMock()
     mock_client = MagicMock()
@@ -232,9 +233,10 @@ def test_config_sem_secrets_toml_cai_no_arquivo():
 
             cliente, namespace, bucket = oci_storage._config()
 
-            # Verifica que usou o arquivo e o erro não propagou
+            # Verifica fallback de credenciais e precedência do namespace do ambiente
             assert cliente is not None
-            assert namespace == "namespace_from_file"
+            assert namespace == "namespace_from_env"
+            mock_client.get_namespace.assert_not_called()
             mock_oci.config.from_file.assert_called_once()
     finally:
         for mod in ['streamlit', 'oci', 'oci.object_storage', 'oci.config', 'app.services.oci_storage']:

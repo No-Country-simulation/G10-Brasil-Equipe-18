@@ -247,6 +247,11 @@ def test_maximo_de_historias_fica_nomeado():
     assert llm.MAXIMO_HISTORIAS == 3
 
 
+def test_prompt_carregado_do_arquivo_externo():
+    arquivo_prompt = Path(llm.__file__).with_name("prompt_analise.txt")
+    assert llm.PROMPT == arquivo_prompt.read_text(encoding="utf-8")
+
+
 def test_prompt_tem_as_listas_fechadas_do_guia():
     assert "positivo | neutro | negativo" in llm.PROMPT
     assert "alta | media | baixa" in llm.PROMPT

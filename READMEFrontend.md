@@ -88,20 +88,25 @@ python -m streamlit run app/main.py
 
 O app abre em `http://localhost:8501`.
 
-## Configuração da chave do LLM (Gemini)
+## Configuração dos provedores de LLM
 
-A análise de interações usa o Gemini quando existe uma chave configurada. Sem chave, o app continua funcionando com os dados fictícios.
+A análise tenta os provedores nesta ordem: **Gemini → Cohere → Groq**. Se um provedor não tiver chave configurada ou falhar, o próximo é tentado. O app não substitui uma falha por histórias fictícias.
 
-**Desenvolvimento local:** crie o arquivo `.streamlit/secrets.toml` na raiz do projeto:
+Configure as chaves em `.streamlit/secrets.toml` ou como variáveis de ambiente:
 
 ```toml
-GEMINI_API_KEY = "sua-chave-aqui"
-# opcional: GEMINI_MODEL = "gemini-3.5-flash-lite"
+GEMINI_API_KEY = "sua-chave-gemini"
+GEMINI_MODEL = "gemini-3.6-flash"
+COHERE_API_KEY = "sua-chave-cohere"
+COHERE_MODEL = "cohere.command-r-plus"
+GROQ_API_KEY = "sua-chave-groq"
+GROQ_MODEL = "llama-3.1-8b-instant"
+LLM_MAX_OUTPUT_TOKENS = 8192
 ```
 
-Esse arquivo está no `.gitignore` e não deve ser commitado. A chave sai do Google AI Studio (`aistudio.google.com` → Get API key). Se preferir, use a variável de ambiente `GEMINI_API_KEY` em vez do arquivo.
+O arquivo `.streamlit/secrets.toml` está no `.gitignore` e não deve ser commitado. As credenciais não ficam no código. Se as chamadas aos três provedores falharem, a análise apresenta o erro em vez de exibir histórias fictícias como resultado. O texto do prompt fica em `app/services/prompt_analise.txt`, separado da lógica de integração.
 
-**Streamlit Cloud (app publicado):** abra o app em `share.streamlit.io` → menu `⋮` → **Settings** → **Secrets**, cole o mesmo bloco e clique em **Save**. Se o app não recarregar sozinho, use **Reboot**. O deploy lê a chave desse local, não do repositório — por isso ela nunca vai no Git.
+**Streamlit Cloud (app publicado):** abra o app em `share.streamlit.io` → menu `⋮` → **Settings** → **Secrets**, cole as chaves e os modelos necessários e clique em **Save**. Se o app não recarregar sozinho, use **Reboot**. As chaves devem ser cadastradas nas configurações do app, nunca no repositório.
 
 ## Rastreabilidade de evidências (CATP-007)
 
@@ -261,6 +266,13 @@ Interação (entrada):
 { "autor": "Marina Costa", "canal": "#conquistas", "tipo": "mensagem", "texto": "..." }
 ```
 
+Antes de enviar ao provedor, `llm.analisar()` inclui o ID efetivo e aplica
+`normalizar_texto()` e `anonimizar_texto()` de `src.preprocessing` ao texto.
+Marcadores como `[EMAIL]`, `[TELEFONE]`, `[CPF]` e `[NOME]` são enviados no lugar dos
+valores reconhecidos. O campo `autor` é mantido no formato do front; a ingestão
+do Discord já o pseudonimiza, mas arquivos CSV/JSON ainda podem trazer o nome
+original e precisam de pseudonimização própria para dados reais.
+
 História detectada (saída):
 
 ```json
@@ -286,7 +298,7 @@ História detectada (saída):
 
 Campos novos (aditivos, outubro/2026):
 
-- `citacoes` — cada trecho de prova com o `id_interacao` de origem. O trecho é recortado do texto original, não copiado do modelo; se não existir literalmente no original, é descartado.
+- `citacoes` — cada trecho de prova com o `id_interacao` de origem. O trecho é recortado do texto preparado para análise (com dados pessoais reconhecidos mascarados), não copiado do modelo; se não existir literalmente nessa fonte, é descartado.
 - `interacoes_origem` — lista de ids das interações que sustentam a história.
 - `relevancia_nivel` — faixa derivada da numérica: `alta` (85+), `media` (60 a 84) e `baixa` (abaixo de 60).
 - `destaques` passa a ser derivado das citações validadas, então o destaque em negrito na tela sempre corresponde a texto que existe na mensagem.

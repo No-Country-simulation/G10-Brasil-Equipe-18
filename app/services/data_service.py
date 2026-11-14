@@ -7,7 +7,6 @@ As telas só falam com este arquivo, então a troca não mexe nelas.
 IMPORTANTE para combinar com o back: o formato dos dicionários abaixo é
 PROVISÓRIO. Quem define o contrato oficial é o back.
 """
-import copy
 import csv
 import io
 import json
@@ -148,6 +147,11 @@ def interacoes_de_json(texto):
     return _normalizar(dados)
 
 
+def interacoes_demo_json():
+    """Devolve o JSON demonstrativo para a tela de importação."""
+    return json.dumps(m.INTERACOES, ensure_ascii=False, indent=2)
+
+
 def parse_interacoes(nome_arquivo, conteudo):
     """Lê um arquivo CSV ou JSON enviado no upload."""
     nome = nome_arquivo.lower()
@@ -213,11 +217,7 @@ def _data_br(iso: str) -> str:
 
 
 def analisar(interacoes):
-    """Analisa as interações com o provedor de LLM.
-
-    Se a chave não estiver configurada ou a chamada falhar, devolve o mock
-    (o protótipo continua navegável) e registra o motivo em ULTIMO_ERRO.
-    """
+    """Analisa o lote com o provedor de LLM; falhas não viram histórias fictícias."""
     global ORIGEM_ANALISE, ULTIMO_ERRO
     try:
         from . import llm  # import local: evita custo quando não usado
@@ -226,19 +226,15 @@ def analisar(interacoes):
 
     try:
         historias = llm.analisar(interacoes)
-        # Analise concluida com sucesso: lista vazia tambem e resultado valido
-        # (nenhuma historia elegivel no lote). O fallback mock fica reservado
-        # para falha tecnica: rede, chave ausente ou resposta invalida.
-        ORIGEM_ANALISE = "gemini"
+        ORIGEM_ANALISE = llm.ULTIMO_PROVEDOR or "gemini"
         ULTIMO_ERRO = ""
-        print(f"[analise] gemini OK: {len(historias)} historias", flush=True)
+        print(f"[analise] concluída: {len(historias)} histórias", flush=True)
         return historias
     except Exception as erro:  # rede, chave ausente, JSON inválido
         ULTIMO_ERRO = str(erro)
-        print(f"[analise] FALHOU -> fallback mock: {ULTIMO_ERRO}", flush=True)
-
-    ORIGEM_ANALISE = "mock"
-    return copy.deepcopy(m.HISTORIAS)
+        ORIGEM_ANALISE = "erro"
+        print(f"[analise] FALHOU: {ULTIMO_ERRO}", flush=True)
+        raise RuntimeError(f"Análise real falhou: {erro}") from erro
 
 
 def regenerar(historia, ativo_id, vez):
@@ -267,6 +263,15 @@ def bucket_atual():
         return ""
 
 
+def pacotes_do_lote(lote_id):
+    """Arquivos que este lote precisa gravar no bucket."""
+    from . import oci_storage  # import local, como em _storage()
+
+    return [
+        {"caminho": oci_storage.caminho_do_lote(lote_id, "pacote-distribuicao.json")},
+        {"caminho": oci_storage.caminho_do_lote(lote_id, "evidencias.json")},
+    ]
+
 def listar_pacotes():
     """Lista os pacotes realmente salvos no bucket.
 
@@ -293,6 +298,7 @@ def listar_pacotes():
             "tamanho": item.get("tamanho"),
             "status": "salvo",
             "persistencia": "real",
+	    "salvo_em": item.get("salvo_em"),
         }
         for item in itens
     ]
@@ -463,3 +469,61 @@ def conteudo_pacote(caminho):
     except Exception as erro:
         _registrar_erro_oci(erro)
         return None
+
+
+CAMINHO_CURSOR_DISCORD = "discord/cursor.json"
+MARCADOR_ULTIMO_ID_DISCORD = "__ultimo_id_discord__:"
+
+
+def buscar_mensagens_discord(canal_id=None, after_id=None, limite=50):
+    """Busca mensagens no Discord usando o contrato do serviço de ingestão."""
+    from src.ingestion.discord_load import buscar_mensagens_discord as buscar
+
+    return buscar(limite=limite, canal_id=canal_id, after_id=after_id)
+
+
+def after_id_discord(avisos):
+    """Extrai dos avisos o cursor mais recente devolvido pela ingestão."""
+    for aviso in avisos or []:
+        if isinstance(aviso, str) and aviso.startswith(MARCADOR_ULTIMO_ID_DISCORD):
+            valor = aviso[len(MARCADOR_ULTIMO_ID_DISCORD):]
+            return valor or None
+    return None
+
+
+def carregar_cursor_discord():
+    """Lê o último ID do Discord salvo no OCI; None se ainda não existir."""
+    armazenamento = _storage()
+    if armazenamento is None:
+        raise RuntimeError(ULTIMO_ERRO_OCI or "OCI indisponível.")
+    try:
+        cursor = armazenamento.ler_objeto(CAMINHO_CURSOR_DISCORD)
+    except Exception as erro:
+        _registrar_erro_oci(erro)
+        raise RuntimeError(str(erro)) from erro
+
+    if cursor is None:
+        return None
+    if not isinstance(cursor, dict):
+        raise RuntimeError("O cursor do Discord no OCI está em formato inválido.")
+
+    after_id = cursor.get("after_id")
+    return str(after_id) if after_id else None
+
+
+def salvar_cursor_discord(after_id):
+    """Salva o último ID importado em discord/cursor.json."""
+    if not after_id:
+        raise ValueError("after_id é obrigatório para salvar o cursor do Discord.")
+
+    armazenamento = _storage()
+    if armazenamento is None:
+        raise RuntimeError(ULTIMO_ERRO_OCI or "OCI indisponível.")
+    try:
+        return armazenamento.salvar_objeto(
+            CAMINHO_CURSOR_DISCORD,
+            {"after_id": str(after_id)},
+        )
+    except Exception as erro:
+        _registrar_erro_oci(erro)
+        raise RuntimeError(str(erro)) from erro

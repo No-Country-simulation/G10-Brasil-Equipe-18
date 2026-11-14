@@ -32,6 +32,19 @@ def _retry():
     st.session_state.proc_status = "retry"
 
 
+def _retomar_processamento():
+    ss = st.session_state
+    etapas = ss.get("proc_etapas", [])
+    analise_concluida = len(etapas) > 1 and etapas[1] == "concluida"
+    ss.proc_status = "retry" if analise_concluida else "novo"
+
+
+def _persistir_progresso(ss, etapas, status=None):
+    ss.proc_etapas = list(etapas)
+    if status is not None:
+        ss.proc_status = status
+
+
 def _pacotes_confirmados(pacotes):
     return (
         isinstance(pacotes, list)
@@ -45,6 +58,19 @@ def _pacotes_confirmados(pacotes):
     )
 
 
+def _salvar_cursor_discord_se_confirmado(pacotes, avisos):
+    """Avança o cursor apenas depois da confirmação de todos os pacotes OCI."""
+    if not _pacotes_confirmados(pacotes):
+        return False
+
+    after_id = svc.after_id_discord(avisos)
+    if not after_id:
+        return False
+
+    svc.salvar_cursor_discord(after_id)
+    return True
+
+
 def _motivo_falha(pacotes):
     if not isinstance(pacotes, list) or not pacotes:
         return "Nenhum pacote foi confirmado pelo serviço de armazenamento."
@@ -55,7 +81,9 @@ def _motivo_falha(pacotes):
         and (p.get("status") != "salvo" or p.get("persistencia") != "real")
         and p.get("motivo")
     ]
-    return "; ".join(dict.fromkeys(motivos)) or "Nem todos os pacotes foram confirmados no OCI."
+
+    resultado_motivo = "; ".join(dict.fromkeys(motivos)) or "Nem todos os pacotes foram confirmados no OCI."
+    return resultado_motivo
 
 
 def _desenhar(etapas, botoes):
@@ -185,6 +213,60 @@ def _desenhar(etapas, botoes):
     st.caption("Os ativos são rascunhos sujeitos à revisão humana. Nenhum conteúdo será publicado automaticamente.")
 
 
+def _continuar_processamento(ss, etapas, area):
+    """Retoma o processamento interrompido (apos rerun do Streamlit).
+
+    Executa as etapas restantes (2 a 5) sem pausas artificiais.
+    """
+    # Etapas 2, 3, 4: marcam como andamento e concluida rapidamente
+    for i in range(2, 5):
+        etapas[i] = "andamento"
+        _persistir_progresso(ss, etapas)
+        if area is not None:
+            with area.container():
+                _desenhar(etapas, botoes=False)
+        etapas[i] = "concluida"
+        _persistir_progresso(ss, etapas)
+        if area is not None:
+            with area.container():
+                _desenhar(etapas, botoes=False)
+
+    # Etapa 5: salvamento no OCI
+    etapas[5] = "andamento"
+    _persistir_progresso(ss, etapas)
+    if area is not None:
+        with area.container():
+            _desenhar(etapas, botoes=False)
+
+    try:
+        pacotes = svc.salvar_no_oci(
+            ss.pacotes_oci or svc.pacotes_do_lote(ss.lote_id), ss.lote_id, ss.historias
+        )
+        ss.pacotes_oci = pacotes
+        if _pacotes_confirmados(pacotes):
+            _salvar_cursor_discord_se_confirmado(
+                pacotes, ss.get("avisos_discord", [])
+            )
+            etapas[5] = "concluida"
+            ss.proc_status = "concluido"
+            ss.proc_erro_oci = ""
+        else:
+            etapas[5] = "erro"
+            ss.proc_status = "erro"
+            ss.proc_erro_oci = _motivo_falha(pacotes)
+    except Exception as erro:
+        etapas[5] = "erro"
+        ss.proc_status = "erro"
+        ss.proc_erro_oci = str(erro)
+
+    ss.proc_etapas = etapas
+    if area is not None:
+        with area.container():
+            _desenhar(etapas, botoes=True)
+    else:
+        _desenhar(etapas, botoes=True)
+
+
 def render():
     ss = st.session_state
     topbar()
@@ -193,12 +275,36 @@ def render():
         "Acompanhe a análise das interações e a preparação dos rascunhos para o seu time.",
     )
 
+    if ss.proc_status == "processando":
+        etapas_salvas = ss.get("proc_etapas", ["pendente"] * len(ETAPAS))
+        # Continua o processamento de onde parou apos eventual rerun do
+        # Streamlit (causado por time.sleep durante as etapas).
+        if etapas_salvas[1] == "concluida" and etapas_salvas[5] != "concluida":
+            _continuar_processamento(ss, etapas_salvas, area=None)
+            return
+        # Ainda na primeira etapa: mostra o progresso e permite recomeçar.
+        _desenhar(etapas_salvas, botoes=False)
+        analise_concluida = len(etapas_salvas) > 1 and etapas_salvas[1] == "concluida"
+        instrucao = (
+            "A análise já terminou; tente novamente a gravação."
+            if analise_concluida
+            else "A análise foi interrompida antes de terminar. Recomece para continuar."
+        )
+        caixa("gray", "<b>Processamento interrompido.</b><br>" + instrucao)
+        st.button(
+            "↻ Tentar novamente" if analise_concluida else "↻ Recomeçar análise",
+            on_click=_retomar_processamento,
+            key="retomar_processamento",
+        )
+        return
+
     if ss.proc_status not in ("novo", "retry"):
         _desenhar(ss.proc_etapas, botoes=True)
         return
 
     retry = ss.proc_status == "retry"
     etapas = ["concluida"] * 5 + ["pendente"] if retry else ["pendente"] * 6
+    _persistir_progresso(ss, etapas, status="processando")
     area = st.empty()
 
     if not retry:
@@ -210,12 +316,14 @@ def render():
         # A primeira etapa é uma preparação visual. A análise real acontece
         # enquanto as etapas 2 a 5 permanecem em andamento.
         etapas[0] = "andamento"
+        _persistir_progresso(ss, etapas)
         with area.container():
             _desenhar(etapas, botoes=False)
         time.sleep(ATRASO)
         etapas[0] = "concluida"
 
         etapas[1] = "andamento"
+        _persistir_progresso(ss, etapas)
         with area.container():
             _desenhar(etapas, botoes=False)
         try:
@@ -226,7 +334,7 @@ def render():
             ss.proc_status = "erro"
             ss.proc_erro_etapa = "analise"
             ss.proc_erro_analise = str(erro)
-            ss.proc_etapas = etapas
+            _persistir_progresso(ss, etapas)
             with area.container():
                 _desenhar(etapas, botoes=True)
             return
@@ -236,26 +344,35 @@ def render():
         ss.historias = historias
         ss.proc_origem_analise = origem
         etapas[1] = "concluida"
+        _persistir_progresso(ss, etapas)
         for i in range(2, 5):
             etapas[i] = "andamento"
+            _persistir_progresso(ss, etapas)
             with area.container():
                 _desenhar(etapas, botoes=False)
             time.sleep(ATRASO)
             etapas[i] = "concluida"
+            _persistir_progresso(ss, etapas)
 
     etapas[5] = "andamento"
+    _persistir_progresso(ss, etapas)
     with area.container():
         _desenhar(etapas, botoes=False)
 
     try:
         if ss.get("dados", {}).get("demo_erro_oci"):
             raise RuntimeError("Falha demonstrativa de gravação no OCI.")
-        pacotes = svc.salvar_no_oci(ss.pacotes_oci, ss.lote_id, ss.historias)
+        pacotes = svc.salvar_no_oci(ss.pacotes_oci or svc.pacotes_do_lote(ss.lote_id), ss.lote_id, ss.historias)
         ss.pacotes_oci = pacotes
         if _pacotes_confirmados(pacotes):
+            _salvar_cursor_discord_se_confirmado(
+                pacotes,
+                ss.get("avisos_discord", []),
+            )
             etapas[5] = "concluida"
             ss.proc_status = "concluido"
             ss.proc_erro_oci = ""
+
         else:
             etapas[5] = "erro"
             ss.proc_status = "erro"
