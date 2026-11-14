@@ -31,6 +31,10 @@ htmlcov/
 .env.*
 !.env.example
 
+#oci arquivos e credenciais
+.oci
+
+
 # Logs
 *.log
 __pycache__/
@@ -40,5 +44,5 @@ venv/
 .env
 .streamlit/secrets.toml
 
-# informacoes pessois do projeto
+# Arquivos de informações do projeto
 info_project.md
