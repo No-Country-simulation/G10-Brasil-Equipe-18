@@ -116,12 +116,23 @@ def _coluna_conteudo(h):
             st.caption(f"{total} caracteres no total")
             
             copiavel = f"{titulo}\n\n{descricao}\n\n\"{citacao}\""
-        else:  # texto
+        elif ativo["tipo"] == "card":
+            campos_card = ativo.get("campos") or {}
+            campo(st.text_input, "Título", _chave(hid, aid, "titulo"), campos_card.get("titulo", ""))
+            campo(st.text_input, "Frase de destaque", _chave(hid, aid, "frase"), campos_card.get("frase", ""))
+            titulo = valor(_chave(hid, aid, "titulo"), "")
+            frase = valor(_chave(hid, aid, "frase"), "")
+            st.caption(f"{len(titulo) + len(frase)} caracteres no total")
+            copiavel = f"{titulo}\n{frase}"
+        elif ativo["tipo"] == "texto":
             texto_campo = ativo["campos"].get("texto", "")
             campo(st.text_area, "Texto do case", _chave(hid, aid, "texto"), texto_campo, height=300)
             texto = valor(_chave(hid, aid, "texto"), "")
             st.caption(f"{len(texto)} caracteres")
             copiavel = texto
+        else:
+            st.warning(f"Tipo de ativo não suportado no Estúdio: {ativo['tipo']}")
+            copiavel = ""
         
         st.divider()
         
