@@ -131,9 +131,12 @@ def render():
     ss = st.session_state
     if not ss.historias:
         topbar()
-        cabecalho("Etapa 4 de 4 · Decidir", "Curadoria", "Revise, valide e decida sobre cada rascunho antes de qualquer publicação.")
-        caixa("gray", "<b>Nenhuma história disponível para curadoria</b><br>"
-                      "Importe e processe um lote para revisar e aprovar os rascunhos na Curadoria.")
+        cabecalho(
+            "Etapa 4 de 4 · Decidir",
+            "Curadoria",
+            "Importe interações para gerar rascunhos e tomar decisões editoriais.",
+        )
+        st.info("Ainda não há histórias para curar. Escolha uma fonte na tela Importação.")
         st.button("→ Ir para Importação", type="primary", on_click=ir_para, args=("importacao",))
         return
 

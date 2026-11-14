@@ -10,7 +10,6 @@ import uuid
 import streamlit as st
 
 from mocks import mock_data as m
-from services import data_service as svc
 
 MENU = [
     ("dashboard", "📊  Dashboard"),
@@ -62,17 +61,32 @@ def init_state():
     if ss.get("_iniciado"):
         return
     ss._iniciado = True
-    ss.pagina = "dashboard"
+    ss.pagina = "importacao"
     ss.dados = {}
-    ss.interacoes = copy.deepcopy(m.INTERACOES)
-    ss.arquivo = {"nome": m.ARQUIVO_DEMO, "tamanho": m.ARQUIVO_DEMO_TAMANHO, "origem": "Arquivo JSON"}
+    ss.interacoes = []
+    ss.arquivo = {
+        "nome": "Nenhum arquivo importado",
+        "tamanho": "",
+        "origem": "Aguardando importação",
+    }
+    ss.lote_id = m.LOTE_ID
     ss.ultimo_upload = None
+    ss.historias = []
+    ss.proc_status = "aguardando_origem"  # fonte ainda não selecionada
+    ss.proc_etapas = ["pendente"] * 6
+    ss.historia_atual = None
+    # Controles da Curadoria (3 dimensões independentes)
+    ss.validacao_factual = {}  # "hist:ativo" -> pendente | validada | insuficiente | contradicao
+    ss.status_curadoria = {}  # "hist:ativo" -> rascunho | ajustes | aprovado | rejeitado
+    ss.autorizacao = {}  # "hist:ativo" -> nao_registrada | registrada
+    ss.observacoes = {}  # "hist:ativo" -> texto de observação
+    ss.motivos = {}  # "hist:ativo" -> texto de motivo de rejeição
+    # Legado (manter compatibilidade)
+    ss.status_ativos = {}  # "hist:ativo" -> rascunho | aprovado | rejeitado (legado)
+    ss.regen = {}
+    ss.pacotes_oci = []
     ss.toast = None
     ss.mostrar_copia = False
-    # Inicializa o lote com estado neutro (sem rodar análise no boot — Issue #27)
-    resetar_lote(ss)
-    # Mantém o lote_id demo para a primeira carga
-    ss.lote_id = m.LOTE_ID
 
 
 def reiniciar():

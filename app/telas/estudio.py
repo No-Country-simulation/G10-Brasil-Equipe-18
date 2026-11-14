@@ -117,7 +117,8 @@ def _coluna_conteudo(h):
             
             copiavel = f"{titulo}\n\n{descricao}\n\n\"{citacao}\""
         else:  # texto
-            campo(st.text_area, "Texto do case", _chave(hid, aid, "texto"), ativo["campos"]["texto"], height=300)
+            texto_campo = ativo["campos"].get("texto", "")
+            campo(st.text_area, "Texto do case", _chave(hid, aid, "texto"), texto_campo, height=300)
             texto = valor(_chave(hid, aid, "texto"), "")
             st.caption(f"{len(texto)} caracteres")
             copiavel = texto
@@ -156,16 +157,14 @@ def _coluna_conteudo(h):
 
 def render():
     ss = st.session_state
-    
     if not ss.historias:
         topbar()
         cabecalho(
             "Etapa 3 de 4 · Revisar",
             "Estúdio de Conteúdo",
-            "Visualize as evidências originais e edite os rascunhos gerados pela IA antes de enviar para curadoria.",
+            "Importe interações para analisar evidências e editar rascunhos.",
         )
-        caixa("gray", "<b>Nenhuma história disponível para edição</b><br>"
-                      "Importe e processe um lote para visualizar e editar os rascunhos no Estúdio.")
+        st.info("Ainda não há histórias. Escolha uma fonte na tela Importação.")
         st.button("→ Ir para Importação", type="primary", on_click=ir_para, args=("importacao",))
         return
 

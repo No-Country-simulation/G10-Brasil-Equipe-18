@@ -56,13 +56,20 @@ def render():
 
     origem_analise = ss.get("proc_origem_analise", "")
     
+    provedores_nomes = {
+        "gemini": "Gemini",
+        "cohere": "Cohere",
+        "groq": "Groq",
+    }
+    provedor_nome = provedores_nomes.get(origem_analise, origem_analise.title() if origem_analise else "")
+
     if origem_analise == "mock":
         caixa("yellow", "⚠️ <b>Resultado simulado, a análise real falhou</b><br>"
                         "As histórias e rascunhos abaixo foram gerados a partir do fallback mock "
                         "porque a análise real não estava disponível ou falhou.")
-    elif origem_analise == "gemini":
-        caixa("green", "✓ <b>Análise real concluída</b><br>"
-                       "As histórias e rascunhos abaixo foram identificados e gerados pela IA (Gemini). "
+    elif origem_analise in provedores_nomes:
+        caixa("green", f"✓ <b>Análise real concluída</b><br>"
+                       f"As histórias e rascunhos abaixo foram identificados e gerados pela IA ({provedor_nome}). "
                        "A decisão final de publicação é sempre do seu time.")
     else:
         caixa("yellow", "<b>Rascunhos, não publicações</b><br>As mensagens são a fonte; os ativos são sugestões da IA. "

@@ -44,5 +44,5 @@ venv/
 .env
 .streamlit/secrets.toml
 
-# arquivos de informações
+# Arquivos de informações do projeto
 info_project.md
