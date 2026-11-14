@@ -150,7 +150,7 @@ requirements-front.txt     # dependências do front-end
 app/                       # Streamlit, telas, estado, serviços e mocks
 src/                       # módulos do pipeline, conforme PRs integrados
 docs/
-  CATP_TEST_PLAN.md        # critérios e cenários de aceitação
+CATP_TEST_PLAN.md          # critérios e cenários de aceitação
 ```
 
 A estrutura pode evoluir conforme os Pull Requests forem integrados. Para executar o front-end, consultar **`READMEFrontend.md`** e **`COMO_RODAR.md`**, quando disponíveis na branch utilizada. Não incluir chaves de API nem arquivos `.env` reais em commits.
