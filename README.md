@@ -36,7 +36,8 @@ Demonstrar um fluxo que permita:
 5. Revisar fatos, conteúdo editorial e autorização de divulgação separadamente.
 6. Persistir e recuperar pacotes no OCI Object Storage, quando a integração estiver validada.
 7. Demonstrar pelo menos três casos de uso com dados fictícios ou autorizados.
-Fora do escopo inicial: captura direta obrigatória de Discord/Slack, publicação automática, monitoramento em tempo real e dashboards avançados.
+
+**Escopo e integrações:** A importação por CSV/JSON permanece como fluxo-base do MVP. O PR #35 incorporou componentes de integração com Discord e provedores de LLM Cohere e Groq. Essas integrações ainda não foram homologadas em execução real com credenciais válidas. Publicação automática, monitoramento em tempo real e dashboards avançados permanecem fora do escopo inicial.
 
 ---
 
@@ -55,7 +56,14 @@ Três cenários demonstrativos	Conquista profissional, projeto de destaque e sup
 
 Referências: PR #4 · PR #35 · [Plano CATP v1.1](docs/CATP_TEST_PLAN.md).
 
-Defeito conhecido a verificar: o Estúdio apresentou incompatibilidade com saída do tipo card que contém titulo e frase, mas não texto. A correção e o teste de regressão com DEMO-001 ainda exigem confirmação; evitar declarar o defeito resolvido sem evidência.
+**Correção do Estúdio:** O PR #41 implementa o tratamento explícito do ativo `card`, com campos `titulo` e `frase`, além de testes de regressão. A autora relatou 162 testes aprovados e validação manual com Gemini real. O PR permanece em revisão; a correção não deve ser considerada integrada ou homologada até a conclusão das verificações aplicáveis.
+
+**Pendências funcionais prioritárias:**
+
+- **Estúdio → Curadoria:** as edições realizadas no Estúdio não são transferidas para a Curadoria, que apresenta os valores originais.
+- **Regenerar:** o botão pode produzir `KeyError: 'variacoes'` em ativos gerados pelo Gemini real, quando o campo `variacoes` não está presente.
+
+Esses defeitos foram identificados durante a validação funcional e permanecem pendentes de correção e testes de regressão. Ambos afetam a confiabilidade da demonstração do MVP.
 
 ---
 
@@ -221,6 +229,8 @@ Luciene Godoy	Agent Engineer
 - [ ] Consolidar resultados, defeitos e limitações no relatório final de testes.
 - [ ] Revisar diagrama e comandos de instalação contra o código efetivamente integrado.
 - [ ] Obter revisão técnica da equipe e aprovação final do Project Manager.
+- [ ] Corrigir e testar a transferência das edições do Estúdio para a Curadoria.
+- [ ] Corrigir e testar o comportamento do botão Regenerar com respostas reais do Gemini.
 
 ---
 
