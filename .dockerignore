@@ -1,0 +1,22 @@
+.git/
+.github/
+.venv/
+venv/
+ENV/
+env/
+__pycache__/
+**/__pycache__/
+*.py[cod]
+.pytest_cache/
+.coverage
+htmlcov/
+
+.env
+.env.*
+.oci/
+*.pem
+.streamlit/secrets.toml
+
+# Conteúdo que não é necessário para executar o aplicativo
+tests/
+docs/

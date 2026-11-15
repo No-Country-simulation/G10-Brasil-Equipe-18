@@ -1,0 +1,39 @@
+services:
+  communitylab:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: communitylab:local
+    restart: unless-stopped
+    init: true
+    user: "${APP_UID:-1000}:${APP_GID:-1000}"
+    ports:
+      - "${STREAMLIT_BIND_ADDRESS:-127.0.0.1}:${STREAMLIT_HOST_PORT:-8501}:8501"
+    environment:
+      HOME: /tmp
+      PYTHONUNBUFFERED: "1"
+      PYTHONDONTWRITEBYTECODE: "1"
+      COMMUNITYLAB_DELAY: "${COMMUNITYLAB_DELAY:-0}"
+      STREAMLIT_SERVER_HEADLESS: "true"
+      STREAMLIT_SERVER_ADDRESS: "0.0.0.0"
+      STREAMLIT_SERVER_PORT: "8501"
+      STREAMLIT_BROWSER_GATHER_USAGE_STATS: "false"
+      GEMINI_API_KEY: "${GEMINI_API_KEY:-}"
+      GEMINI_MODEL: "${GEMINI_MODEL:-gemini-3.6-flash}"
+      COHERE_API_KEY: "${COHERE_API_KEY:-}"
+      COHERE_MODEL: "${COHERE_MODEL:-cohere.command-r-plus}"
+      GROQ_API_KEY: "${GROQ_API_KEY:-}"
+      GROQ_MODEL: "${GROQ_MODEL:-llama-3.1-8b-instant}"
+      DISCORD_TOKEN: "${DISCORD_TOKEN:-}"
+      CANAL_ID: "${CANAL_ID:-}"
+      OCI_CONFIG_FILE: /run/oci/config
+      OCI_PROFILE: "${OCI_PROFILE:-DEFAULT}"
+      OCI_BUCKET_NAME: "${OCI_BUCKET_NAME:-G10communitylab-ativos}"
+      OCI_NAMESPACE: "${OCI_NAMESPACE:-}"
+    volumes:
+      - type: bind
+        source: "${OCI_CONFIG_DIR:-./.oci}"
+        target: /run/oci
+        read_only: true
+        bind:
+          create_host_path: true
