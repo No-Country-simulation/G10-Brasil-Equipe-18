@@ -238,10 +238,13 @@ def analisar(interacoes):
 
 
 def regenerar(historia, ativo_id, vez):
-    """TODO(back): pedir um novo rascunho. Aqui alterna entre variações fictícias."""
+    """TODO(back): pedir um novo rascunho. Aqui alterna entre as variações já fornecidas; sem variações, devolve {} e nada muda."""
     for ativo in historia["ativos"]:
         if ativo["id"] == ativo_id:
-            opcoes = [ativo["campos"]] + ativo["variacoes"]
+            variacoes = ativo.get("variacoes") or []
+            if not variacoes:
+                return {}
+            opcoes = [ativo["campos"]] + variacoes
             return dict(opcoes[vez % len(opcoes)])
     return {}
 
