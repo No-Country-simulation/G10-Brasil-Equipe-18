@@ -1,4 +1,13 @@
+# CommunityLab — Relatório de Homologação e Aceite do MVP
 
+**Projeto:** CommunityLab — Detector Inteligente de Histórias de Sucesso e Testemunhos  
+**Hackathon:** ONE G10 — Equipe 18  
+**Documento:** `COMMUNITYLAB_HOMOLOGACAO_MVP.md`  
+**Versão:** 0.5 — Resultados e evidências da rodada de 17/11/2026  
+**Data de preparação:** 26/10/2026  
+**Última atualização:** 17/11/2026  
+**Referência funcional:** `docs/CATP_TEST_PLAN.md` — CATP v1.1  
+**Referência de gestão:** Card 23 — Testes Integrados e Demonstração  
 **Responsável funcional e consolidação:** Marcus — Project Manager  
 **Responsável principal pelos testes integrados:** Ketlyn Barbosa  
 **Apoio técnico:** Tissiany Delmiro, Jaqueline de Lira e Luciene Godoy  
