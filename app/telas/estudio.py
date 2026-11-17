@@ -29,6 +29,15 @@ def _alternar_copia():
 
 def _enviar_curadoria(hid):
     ss = st.session_state
+    # Leva as edições do Estúdio ("e:") para as chaves da Curadoria ("c:").
+    # Só copia o que foi aberto no Estúdio; o resto fica com o texto original.
+    h = historia_por_id(hid)
+    for ativo in (h or {}).get("ativos", []):
+        aid = ativo["id"]
+        for nome_campo in (ativo.get("campos") or {}):
+            origem = _chave(hid, aid, nome_campo)
+            if origem in ss.dados:
+                definir(f"c:{hid}:{aid}:{nome_campo}", ss.dados[origem])
     ss.historia_atual = hid
     ss.mostrar_copia = False
     ss.toast = "Enviado para curadoria. Revise e aprove ou rejeite."
