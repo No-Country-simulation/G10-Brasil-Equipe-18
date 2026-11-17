@@ -786,7 +786,7 @@ A responsabilidade principal pela persistência OCI foi retificada por Jaqueline
 | DEC-001 | CATP-012 — CQF Score 0–100 | Proposta de transferência para fase posterior | Pendente |
 | DEC-002 | Aviso global, KPIs e origem dos dados | Escopo e prioridade a confirmar | Pendente |
 | DEC-003 | Fallback mock | Exigir identificação clara de conteúdo demonstrativo | Correção pendente |
-| DEC-004 | Sucesso OCI | Exigir confirmação real de persistência | Validação pendente |
+| DEC-004 | Sucesso OCI | Gravação e recuperação dos JSONs verificadas na rodada de 17/11/2026 (CATP-015) | Homologação formal pendente até identificar o commit implantado na rodada |
 | DEC-005 | Estado entre lotes | Reinicializar histórias e curadoria | Correção pendente |
 | DEC-006 | Tratamento de falhas Gemini | Testar tentativas e recuperação | Correção pendente |
 
@@ -821,12 +821,14 @@ Posteriormente, Jaqueline informou teste direto bem-sucedido na `main`, com trê
 
 Essa evidência demonstra avanço técnico, mas não comprova o funcionamento integrado de Streamlit, Gemini e OCI.
 
+Na rodada de 17/11/2026 com Streamlit e Cohere, foram verificadas a gravação no OCI e a recuperação de `pacote-distribuicao.json` e `evidencias.json` pelo Histórico (CATP-015). A homologação formal dessa execução depende da identificação do commit implantado na rodada.
+
 Persistem pendências relativas a:
 
 - Recuperação de falhas do Gemini.
 - Reinicialização entre lotes.
 - Tratamento do bucket vazio.
-- Persistência e recuperação real.
+- Comprovação da persistência e da recuperação das decisões da Curadoria (CATP-022).
 - Execução dos testes CATP.
 - Consolidação das evidências.
 
