@@ -83,7 +83,7 @@ def _regenerar(hid, aid):
     n = ss.regen.get(f"{hid}:{aid}", 0) + 1
     novo = svc.regenerar(h, aid, n)
     if not novo:
-        ss.toast = "Novo rascunho gerado. Revise antes de aprovar."
+        ss.toast = "Sem novas variações para este rascunho. O conteúdo atual foi mantido."
         return
     ss.regen[f"{hid}:{aid}"] = n
     for nome_campo, texto in novo.items():

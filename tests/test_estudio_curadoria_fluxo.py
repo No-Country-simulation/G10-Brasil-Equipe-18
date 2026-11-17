@@ -61,6 +61,10 @@ def _valores(widgets):
     return [w.value for w in widgets]
 
 
+def _toasts(at):
+    return [t.value for t in at.toast]
+
+
 def _campo(widgets, label):
     achados = [w for w in widgets if w.label == label]
     assert len(achados) == 1, f"Campo '{label}' não encontrado (ou repetido)"
@@ -120,6 +124,9 @@ def test_regenerar_no_estudio_sem_variacoes_nao_quebra_e_mantem_o_texto():
     valores = _valores(at.text_input)
     assert ATIVO_CARD["campos"]["titulo"] in valores
     assert ATIVO_CARD["campos"]["frase"] in valores
+    toasts = _toasts(at)
+    assert any("Sem novas variações" in t for t in toasts), f"Avisos: {toasts}"
+    assert not any("Novo rascunho gerado" in t for t in toasts), f"Avisos: {toasts}"
 
 
 def test_regenerar_na_curadoria_sem_variacoes_nao_quebra_e_mantem_o_texto():
@@ -131,3 +138,19 @@ def test_regenerar_na_curadoria_sem_variacoes_nao_quebra_e_mantem_o_texto():
 
     assert not at.exception, f"Regenerar quebrou na Curadoria: {at.exception}"
     assert ATIVO_POST["campos"]["texto"] in _valores(at.text_area)
+    toasts = _toasts(at)
+    assert any("Sem novas variações" in t for t in toasts), f"Avisos: {toasts}"
+    assert not any("Novo rascunho gerado" in t for t in toasts), f"Avisos: {toasts}"
+
+def test_segundo_envio_leva_a_nova_edicao_para_a_curadoria():
+    at = _abrir("estudio", [ATIVO_POST])
+    _campo(at.text_area, "Texto do case").input("Primeira edição").run()
+    _enviar_para_curadoria(at)
+    assert "Primeira edição" in _valores(at.text_area)
+
+    at.sidebar.button(key="nav_estudio").click().run()
+    _campo(at.text_area, "Texto do case").input("Segunda edição").run()
+    _enviar_para_curadoria(at)
+
+    valores = _valores(at.text_area)
+    assert "Segunda edição" in valores, f"Curadoria mostrou: {valores}"
