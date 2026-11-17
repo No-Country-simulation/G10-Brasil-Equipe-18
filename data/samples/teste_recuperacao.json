@@ -1,0 +1,24 @@
+{
+  "origem_comunidade": "Discord_Grupo_ONE_G10",
+  "periodo_referencia": "Semana_04",
+  "interacoes": [
+    {
+      "autor": "Ana Ribeiro",
+      "canal": "#conquistas-e-vagas",
+      "tipo": "depoimento",
+      "texto": "Depois de seis meses estudando de madrugada, consegui minha primeira vaga como analista de dados júnior. Foi a primeira vez que alguém me contratou na área de tecnologia. Comecei ganhando menos do que eu esperava, mas com plano de carreira assinado."
+    },
+    {
+      "autor": "Bruno Sales",
+      "canal": "#projetos",
+      "tipo": "depoimento",
+      "texto": "Terminei o projeto de um painel de vendas para a loja do meu tio. Eram quatro planilhas diferentes que ninguém conseguia cruzar. Entreguei em três semanas e agora ele consulta tudo em uma tela só, todos os dias de manhã."
+    },
+    {
+      "autor": "Carla Nunes",
+      "canal": "#superacao",
+      "tipo": "depoimento",
+      "texto": "Fiquei oito meses sem emprego e cheguei a pensar em desistir da transição de carreira. Voltei a estudar em grupo, refiz três projetos do zero e ontem recebi a confirmação de uma vaga temporária de seis meses. É temporária, mas é na área."
+    }
+  ]
+}

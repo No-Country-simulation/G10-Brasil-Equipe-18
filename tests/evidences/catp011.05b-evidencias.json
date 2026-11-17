@@ -1,0 +1,31 @@
+{
+  "versao_schema": "1.0",
+  "lote": "LOTE-20261116T155237Z-99E03A71D260451281C0D97B316A83ED",
+  "gerado_em": "2026-11-16T23:57:20+00:00",
+  "evidencias": [
+    {
+      "id_interacao": 1,
+      "texto": "Depois de seis meses estudando de madrugada, consegui minha primeira vaga como analista de dados júnior."
+    },
+    {
+      "id_interacao": 1,
+      "texto": "com plano de carreira assinado."
+    },
+    {
+      "id_interacao": 2,
+      "texto": "Terminei o projeto de um painel de vendas para a loja do meu tio."
+    },
+    {
+      "id_interacao": 2,
+      "texto": "agora ele consulta tudo em uma tela só, todos os dias de manhã."
+    },
+    {
+      "id_interacao": 3,
+      "texto": "Fiquei oito meses sem emprego e cheguei a pensar em desistir da transição de carreira."
+    },
+    {
+      "id_interacao": 3,
+      "texto": "ontem recebi a confirmação de uma vaga temporária de seis meses."
+    }
+  ]
+}

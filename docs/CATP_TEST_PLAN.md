@@ -4,7 +4,7 @@
 **Projeto:** CommunityLab — Hackathon ONE G10  
 **Equipe:** 18  
 **Responsável funcional:** Marcus — Project Manager  
-**Status:** Planejamento revisado — testes ainda não executados
+**Status:** Planejamento revisado — CATP-011 executado e aprovado em 16/11/2026; os demais casos não executados
 
 ## 1. Objetivo
 
@@ -52,7 +52,7 @@ Todos os testes possuem status inicial **Não executado**.
 | CATP-010b | Curadoria editorial | Estados Rascunho, Ajustes, Aprovado e Rejeitado registrados corretamente | Não executado |
 | CATP-010c | Autorização de publicação | Estados Não registrada e Registrada independentes da aprovação editorial | Não executado |
 | CATP-010d | Indicador RG-03 | Liberação para publicação depende de todos os requisitos aplicáveis | Não executado |
-| CATP-011 | Persistência OCI | Resultado armazenado e recuperável, sem duplicidade ao regravar o mesmo lote | Executado |
+| CATP-011 | Persistência OCI | Resultado armazenado e recuperável, sem duplicidade ao regravar o mesmo lote | Aprovado |
 | CATP-012 | CQF — Pontuação | Cálculo conforme CQF v1.0, caso integrado ao MVP | Não executado |
 | CATP-013 | CQF — Contradições | Contradição não resolvida impede aprovação, caso a regra esteja integrada | Não executado |
 | CATP-014 | Autorização | Divulgação impedida sem autorização apropriada | Não executado |
@@ -149,6 +149,28 @@ O CATP-010 somente será considerado aprovado quando seus quatro subcasos aplic�
 - A operação deve preservar a identidade lógica do lote.
 
 **Evidências necessárias:** ID do lote, chave do objeto, registros das duas operações e comparação da listagem do bucket.
+
+#### 3.3.1. Registro de execução — CATP-011
+
+| Campo | Registro |
+|---|---|
+| Identificador do teste | CATP-011 — Persistência e idempotência OCI |
+| Data de execução | 16/11/2026, gravação às 12h56 (BRT) e repetição às 20h57 (BRT) |
+| Responsável pela execução | Jaqueline (AI Engineer) |
+| Ambiente utilizado | App local Streamlit em `http://localhost:8501` (Windows); bucket `G10communitylab-ativos`, região `sa-saopaulo-1`, prefixo `ativos/`; credencial OCI em `~/.oci/config`; análise real pelo Gemini (chave em `.streamlit/secrets.toml`) |
+| Branch, versão e commit testados | `main`, commit `d08e839` (merge do PR #40), sem branch de trabalho |
+| Dados de entrada | `data/samples/teste_recuperacao.json` — 3 interações (Ana Ribeiro, Bruno Sales, Carla Nunes), canais distintos |
+| Pré-condições | Credencial OCI válida; chave do Gemini configurada; lote inexistente no bucket antes da execução |
+| Resultado esperado | Objeto armazenado e recuperável; reprocessamento do mesmo lote sem duplicidade; contagem de lotes estável; identidade lógica do lote preservada |
+| Resultado observado | Lote `LOTE-20261116T155237Z-99E03A71D260451281C0D97B316A83ED`: 2 objetos (`pacote-distribuicao.json`, 10.251 B; `evidencias.json`, 919 B), com `origem_analise: "gemini"`, 3 histórias e 6 evidências lidas de volta do bucket. Primeira gravação: 21 → 23 objetos em `ativos/` e 11 → 12 lotes. Repetição com o mesmo lote e os mesmos dados: 23 objetos e 12 lotes antes e depois, lote com 2 objetos, histórias e evidências idênticas, `gerado_em` alterado de `15:56:06` para `23:57:20` (+00:00), comprovando nova escrita sem duplicidade |
+| Status de implementação | Disponível |
+| Aplicabilidade ao escopo aprovado | Aplicável |
+| Status de execução | **Aprovado** |
+| Evidências de execução | `tests/evidences/catp011.01-importacao-previa.jpg`, `catp011.02-processamento-analise-real.jpg`, `catp011.03-historico-lista.jpg`, `catp011.04-historico-json-evidencias.jpg`, `catp011.05-pacote-distribuicao.json` e `catp011.05b-evidencias.json` (objetos baixados do bucket, 10.251 B e 919 B), `catp011.06-curadoria-rastreabilidade.jpg`, `catp011.07-idempotencia.txt`, `catp011.08-historico-idempotencia.jpg` |
+| Defeito identificado | Nenhum impeditivo para este caso. Observações registradas: (a) `_data_br` (`app/services/data_service.py`) exibe o horário em UTC no Histórico, por isso a tela mostra 23:57 para uma gravação de 20h57 — defeito aberto, sem impacto na persistência; (b) a `mensagem_original` do pacote traz `[NOME]` no lugar de palavras comuns, por falha no fallback de `src/preprocessing/anonimizacao.py` (módulo de outra frente) — não invalida a persistência |
+| Resultado do reteste | Não aplicável — aprovado em primeira execução |
+
+**Nota de escopo:** este registro é o status de execução do caso de teste. A consolidação dos resultados e a decisão de aceite do MVP permanecem com o responsável funcional, e o relatório de homologação segue com o status vigente até deliberação do PM.
 
 ### 3.4. Regras de negócio e testes de interface
 
