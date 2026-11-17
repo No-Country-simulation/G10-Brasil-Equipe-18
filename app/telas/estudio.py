@@ -14,8 +14,12 @@ def _regenerar(hid, aid):
     ss = st.session_state
     h = historia_por_id(hid)
     n = ss.regen.get(f"{hid}:{aid}", 0) + 1
+    novo = svc.regenerar(h, aid, n)
+    if not novo:
+        ss.toast = "Sem novas variações para este rascunho. O conteúdo atual foi mantido."
+        return
     ss.regen[f"{hid}:{aid}"] = n
-    for nome_campo, texto in svc.regenerar(h, aid, n).items():
+    for nome_campo, texto in novo.items():
         definir(_chave(hid, aid, nome_campo), texto)
     # Resetar validação factual para "pendente" ao regenerar (requisito do review)
     chave = f"{hid}:{aid}"
