@@ -1,23 +1,24 @@
+## CommunityLab — Relatório de Homologação e Aceite do MVP
 
-# CommunityLab — Relatório de Homologação e Aceite do MVP
+Projeto: CommunityLab — Detector Inteligente de Histórias de Sucesso e Testemunhos
+Hackathon: ONE G10 — Equipe 18
+Documento: COMMUNITYLAB_HOMOLOGACAO_MVP.md
+Versão: 0.5 — Resultados e evidências da rodada de 17/11/2026
+Data de preparação: 26/10/2026
+Última atualização: 17/11/2026
+Referência funcional: docs/CATP_TEST_PLAN.md — CATP v1.1
+Referência de gestão: Card 23 — Testes Integrados e Demonstração
+Responsável funcional e consolidação: Marcus — Project Manager
+Responsável principal pelos testes integrados: Ketlyn Barbosa
+Apoio técnico: Tissiany Delmiro, Jaqueline de Lira e Luciene Godoy  
 
-**Projeto:** CommunityLab — Detector Inteligente de Histórias de Sucesso e Testemunhos  
-**Hackathon:** ONE G10 — Equipe 18  
-**Documento:** `COMMUNITYLAB_HOMOLOGACAO_MVP.md`  
-**Versão:** 0.4 — Consolidação dos PRs #26 e #28 e esclarecimentos da Issue #27  
-**Data de preparação:** 26/10/2026  
-**Última atualização:** 29/10/2026  
-**Referência funcional:** `docs/CATP_TEST_PLAN.md` — CATP v1.1  
-**Referência de gestão:** Card 23 — Testes Integrados e Demonstração  
-**Responsável funcional e consolidação:** Marcus — Project Manager  
-**Responsável principal pelos testes integrados:** Ketlyn Barbosa  
-**Apoio técnico:** Tissiany Delmiro, Jaqueline de Lira e Luciene Godoy  
+---
 
-**STATUS GERAL: HOMOLOGAÇÃO PENDENTE — SEM ACEITE DO MVP**
+## STATUS GERAL: HOMOLOGAÇÃO PENDENTE — SEM ACEITE DO MVP
 
-> **Regra de evidência:** nenhuma implementação declarada, integração de commit, teste unitário informado ou demonstração simulada constitui, isoladamente, aprovação de um caso de aceitação. A aprovação exige execução, observação e evidências vinculadas ao código efetivamente testado.
+Regra de evidência: nenhuma implementação declarada, integração de commit, teste unitário informado ou demonstração simulada constitui, isoladamente, aprovação de um caso de aceitação. A aprovação exige execução, observação e evidências vinculadas ao código efetivamente testado.
 
-> **Nota da versão 0.4:** esta atualização preserva os registros históricos dos PRs #26 e #28, distingue a sessão Streamlit associada ao commit `9fcb06e` do teste direto posterior do Gemini, incorpora os esclarecimentos técnicos da Jaqueline na Issue #27 e corrige a atribuição da responsabilidade OCI. Não constitui aceite do MVP.
+Nota da versão 0.4: esta atualização preserva os registros históricos dos PRs #26 e #28, distingue a sessão Streamlit associada ao commit 9fcb06e do teste direto posterior do Gemini, incorpora os esclarecimentos técnicos da Jaqueline na Issue #27 e corrige a atribuição da responsabilidade OCI. Não constitui aceite do MVP.
 
 ---
 
@@ -26,7 +27,6 @@
 Consolidar o planejamento, a execução, os resultados e as evidências da homologação integrada do MVP CommunityLab.
 
 O escopo compreende:
-
 - Importação de arquivos CSV e JSON.
 - Preparação e processamento das interações.
 - Análise por inteligência artificial.
@@ -41,10 +41,9 @@ O escopo compreende:
 - Tratamento de falhas e consistência entre lotes.
 - Demonstração integrada do MVP.
 
-### 1.1 Critérios essenciais
+1.1 Critérios essenciais
 
 A homologação deve comprovar:
-
 1. Fidelidade às informações de origem.
 2. Identificação de evidências literais e IDs.
 3. Ausência de fatos inventados.
@@ -55,15 +54,13 @@ A homologação deve comprovar:
 8. Persistência e recuperação real na OCI.
 9. Tratamento adequado de erros.
 10. Ausência de defeitos críticos impeditivos.
-
 Posts para LinkedIn são complementares. O painel analítico é opcional conforme o Card 23.
 
-A pontuação CQF 0–100, prevista no CATP-012, permanece **pendente de decisão formal de escopo**.
+A pontuação CQF 0–100, prevista no CATP-012, permanece pendente de decisão formal de escopo.
 
-### 1.2 Objetivo da atualização de 29/10/2026
+1.2 Objetivo da atualização de 29/10/2026
 
 Preservar a distinção entre:
-
 - Funcionalidade visualmente apresentada.
 - Funcionalidade efetivamente executada.
 - Análise real pelo Gemini.
@@ -79,60 +76,50 @@ Os resultados preliminares não autorizam aprovação automática dos casos CATP
 
 ## 2. Identificação do ambiente de homologação
 
-### 2.1 Sessão local preliminar — Streamlit
+2.1 Sessão local preliminar — Streamlit
 
-| Campo | Registro |
-|---|---|
-| Identificador | PRELIM-20261029-01 |
-| Data | 29/10/2026 |
-| Executor | Marcus — Project Manager |
-| Ambiente | Windows, VS Code, Python `.venv` |
-| Aplicação | Streamlit local |
-| URL | `http://localhost:8501` |
-| Branch | `docs/homologacao-mvp` |
-| Commit de referência | `9fcb06e` |
-| SHA completo | A confirmar na execução formal |
-| Arquivo utilizado | `data/samples/teste_importacao_catp001.csv` |
-| Resultado | Verificação preliminar; homologação não concluída |
-| Defeito relacionado | Issue #27 |
+Campo	Registro
+Identificador	PRELIM-20261029-01
+Data	29/10/2026
+Executor	Marcus — Project Manager
+Ambiente	Windows, VS Code, Python .venv
+Aplicação	Streamlit local
+URL	http://localhost:8501
+Branch	docs/homologacao-mvp
+Commit de referência	9fcb06e
+SHA completo	A confirmar na execução formal
+Arquivo utilizado	data/samples/teste_importacao_catp001.csv
+Resultado	Verificação preliminar; homologação não concluída
+Defeito relacionado	Issue #27
 
-**Esclarecimento importante:** conforme análise posterior da Jaqueline, o commit `9fcb06e`, de 26/10/2026, antecede os merges dos PRs #20 e #21.
+Esclarecimento importante: conforme análise posterior da Jaqueline, o commit 9fcb06e, de 26/10/2026, antecede os merges dos PRs #20 e #21.
 
-Naquele código, `app/telas/processamento.py` ainda não continha os elementos `persistencia` e `_pacotes_confirmados`, posteriormente presentes na `main`.
+Naquele código, app/telas/processamento.py ainda não continha os elementos persistencia e _pacotes_confirmados, posteriormente presentes na main.
 
-Portanto, os comportamentos observados nessa sessão devem ser tratados como **evidência histórica daquele código**, sem generalização automática para a versão posterior da `main`.
+Portanto, os comportamentos observados nessa sessão devem ser tratados como evidência histórica daquele código, sem generalização automática para a versão posterior da main.
 
-### 2.2 Integrações registradas em 28/10/2026
+2.2 Integrações registradas em 28/10/2026
 
-**PR #20 — Persistência OCI e status do processamento**
-
-- Integração registrada na `main`.
-- Merge de referência: `a05ae6b`.
+PR #20 — Persistência OCI e status do processamento
+- Integração registrada na main.
+- Merge de referência: a05ae6b.
 - Revisão técnica informou testes de gravação real, falha simulada e reenvio.
 - A evidência técnica relatada não substitui homologação integrada.
-
-**PR #21 — Credenciais OCI via Streamlit Secrets**
-
+PR #21 — Credenciais OCI via Streamlit Secrets
 - Desenvolvido por Tissiany.
-- Integração registrada na `main`.
-- Merge de referência: `2b65357`.
+- Integração registrada na main.
+- Merge de referência: 2b65357.
 - Permite configuração de credenciais OCI via Streamlit Secrets.
 - A configuração e a execução integrada ainda precisam ser comprovadas no ambiente de homologação.
+Pendência: comportamento com bucket OCI vazio, cuja correção ainda não foi confirmada.
 
-**Pendência:** comportamento com bucket OCI vazio, cuja correção ainda não foi confirmada.
+2.3 Arquivo CSV utilizado
 
-### 2.3 Arquivo CSV utilizado
-
-Arquivo: `data/samples/teste_importacao_catp001.csv`
-
-```csv
+Arquivo: data/samples/teste_importacao_catp001.csv
 autor,canal,tipo,texto
 membro_001,#conquistas-e-vagas,depoimento,Conquistei minha primeira vaga na área de IA!
 membro_002,#duvidas-langgraph,pergunta_tecnica,Como estruturar nós condicionais no LangGraph?
-```
-
 Observações da sessão histórica:
-
 - Duas interações disponíveis.
 - Dois canais distintos.
 - Prévia das interações apresentada.
@@ -140,33 +127,28 @@ Observações da sessão histórica:
 - Fallback mock acionado.
 - Histórias demonstrativas exibidas com autores diferentes dos registros importados.
 - Persistência real não comprovada.
-
-### 2.4 Teste direto posterior do Gemini — 29/10/2026
-
+2.4 Teste direto posterior do Gemini — 29/10/2026
 Conforme comentário técnico de Jaqueline de Lira na Issue #27:
+Campo	Registro
+Data	29/10/2026
+Horário informado	12h45
+Executora	Jaqueline de Lira
+Referência de código	main, com 2b65357 citado na análise
+Tipo	Script local de teste direto do serviço
+Modelo	gemini-3.5-flash-lite
+Arquivo	data/samples/teste_recuperacao.json
+Entradas	3 interações
+Histórias geradas	3
+Autores	Ana Ribeiro, Bruno Sales e Carla Nunes
+Correspondência com entradas	Informada como correta
+Fallback mock	Não acionado nessa execução
+Tempo aproximado	21,9 segundos
+Streamlit	Não testado nessa execução
+Persistência OCI	Não testada nessa execução
 
-| Campo | Registro |
-|---|---|
-| Data | 29/10/2026 |
-| Horário informado | 12h45 |
-| Executora | Jaqueline de Lira |
-| Referência de código | `main`, com `2b65357` citado na análise |
-| Tipo | Script local de teste direto do serviço |
-| Modelo | `gemini-3.5-flash-lite` |
-| Arquivo | `data/samples/teste_recuperacao.json` |
-| Entradas | 3 interações |
-| Histórias geradas | 3 |
-| Autores | Ana Ribeiro, Bruno Sales e Carla Nunes |
-| Correspondência com entradas | Informada como correta |
-| Fallback mock | Não acionado nessa execução |
-| Tempo aproximado | 21,9 segundos |
-| Streamlit | Não testado nessa execução |
-| Persistência OCI | Não testada nessa execução |
-
-**Conclusão técnica:** o teste direto constitui evidência positiva de funcionamento do Gemini naquele ambiente e naquela execução.
+Conclusão técnica: o teste direto constitui evidência positiva de funcionamento do Gemini naquele ambiente e naquela execução.
 
 Não comprova:
-
 - Execução integrada pelo Streamlit.
 - Persistência OCI.
 - Recuperação dos objetos.
@@ -174,9 +156,9 @@ Não comprova:
 - Reinicialização de estado entre lotes.
 - Homologação do MVP.
 
-### 2.5 Diagnósticos adicionais informados na Issue #27
+2.5 Diagnósticos adicionais informados na Issue #27
 
-**Gemini e tratamento de falhas**
+Gemini e tratamento de falhas
 
 O caminho utilizado pela aplicação ainda não possuía mecanismo comprovado de novas tentativas ou modelo secundário.
 
@@ -184,22 +166,18 @@ Falhas 503/timeout podiam levar diretamente ao fallback mock.
 
 A implementação de tentativas adicionais, segundo modelo e controle de tempo foi proposta, mas não há confirmação de conclusão nesta versão.
 
-**Estado entre lotes**
+Estado entre lotes
 
-Jaqueline informou que `_novo_lote` reinicializa:
-
+Jaqueline informou que _novo_lote reinicializa:
 - Interações.
 - Arquivo.
-- `proc_status`.
-
+- proc_status.
 Entretanto, não reinicializa adequadamente:
-
 - Histórias.
 - Curadoria.
-
 A correção e o reteste permanecem pendentes.
 
-**OCI e bucket vazio**
+OCI e bucket vazio
 
 O catálogo depende da listagem de pacotes no bucket.
 
@@ -207,7 +185,7 @@ Com o bucket vazio, pode ocorrer erro mesmo quando existem histórias disponíve
 
 O problema foi diagnosticado, mas sua correção não foi confirmada.
 
-**Responsabilidade OCI**
+Responsabilidade OCI
 
 Jaqueline retificou a atribuição anterior e informou que a frente de persistência OCI voltou à sua responsabilidade.
 
@@ -217,30 +195,25 @@ A colaboração com Luciene deve ser alinhada entre as integrantes.
 
 ## 3. Estados e critérios de classificação
 
-### 3.1 Implementação
-
+3.1 Implementação
 - Disponível.
 - Parcial.
 - Não implementada.
 - Não verificada.
 
-### 3.2 Aplicabilidade
-
+3.2 Aplicabilidade
 - Aplicável.
 - Não aplicável, com justificativa e decisão formal.
 - Pendente de decisão.
 
-### 3.3 Execução
-
+3.3 Execução
 - Não executado.
 - Aprovado.
 - Reprovado.
 - Bloqueado.
 
-### 3.4 Evidências
-
+3.4 Evidências
 São aceitas evidências como:
-
 - Capturas de tela.
 - Logs sanitizados.
 - Arquivos de saída.
@@ -250,94 +223,84 @@ São aceitas evidências como:
 - Links para commits e PRs.
 - Registros de execução com ambiente identificado.
 
-### 3.5 Regra de aprovação
-
+3.5 Regra de aprovação
 Um caso somente poderá ser aprovado quando:
-
 1. O ambiente estiver identificado.
 2. O commit testado estiver registrado.
 3. A entrada utilizada estiver documentada.
 4. O resultado esperado estiver definido.
 5. O resultado observado corresponder ao esperado.
 6. As evidências forem suficientes e rastreáveis.
-
 Verificações preliminares não substituem testes formais.
 
 ---
 
 ## 4. Matriz mestre de aceitação — CATP v1.1
 
-| ID | Funcionalidade | Execução formal | Evidência ou pendência |
-|---|---|---|---|
-| CATP-001 | Importação CSV | **Aprovado** | `tests/evidences/catp001.png`, `catp001.1.png`, `catp001.2.png`, `catp001.3.png` · `pytest tests/test_catp_grupo_a.py` · Registro individual na seção 4.3 |
-| CATP-002 | Importação JSON | **Aprovado** | `tests/evidences/catp002.png`, `catp002.1.png` · `pytest tests/test_catp_grupo_a.py` · Registro individual na seção 4.3 |
-| CATP-003 | Dados inválidos | **Aprovado** | `tests/evidences/catp003.png`, `catp003.1.png`, `catp003.2.png` · `pytest tests/test_catp_grupo_a.py` · Registro individual na seção 4.3 |
-| CATP-004 | Sentimentos | Não executado | Rastreabilidade pendente |
-| CATP-005 | Tópicos | Não executado | Rastreabilidade pendente |
-| CATP-006 | Histórias | Não executado | Fallback mock histórico; teste Gemini direto posterior positivo |
-| CATP-007 | Rastreabilidade | Não executado | Divergência histórica; autores preservados no teste direto posterior |
-| CATP-008 | Depoimentos | Não executado | Pendente |
-| CATP-009 | Cases | Não executado | Pendente |
-| CATP-010 | Curadoria humana | Não executado | Quatro subcasos pendentes |
-| CATP-010a | Validação factual | Não executado | Pendente |
-| CATP-010b | Curadoria editorial | Não executado | Pendente |
-| CATP-010c | Autorização | Não executado | Independência dos controles pendente |
-| CATP-010d | Indicador RG-03 | Não executado | Pendente |
-| CATP-011 | OCI e idempotência | Não executado | Persistência integrada não comprovada |
-| CATP-012 | CQF Score 0–100 | Não executado | Aplicabilidade pendente de decisão |
-| CATP-013 | CQF contradições | Não executado | Aplicabilidade a confirmar |
-| CATP-014 | Autorização | Não executado | Bloqueio de divulgação pendente |
-| CATP-015 | Fluxo completo | Não executado | Gemini–Streamlit–OCI não homologado |
-| CATP-016 | Navegação Streamlit | Não executado | Verificação parcial; PR #37 integrado à main |
-| CATP-017 | Estúdio | Não executado | Pendente |
-| CATP-018 | Regeneração RG-01 | Não executado | Fidelidade factual pendente |
-| CATP-019 | Controles de curadoria | Não executado | Independência dos controles pendente |
-| CATP-020 | Contradição RG-02 | Não executado | Bloqueio de aprovação pendente |
-| CATP-021 | Indicador RG-03 | Não executado | Pendente |
-| CATP-022 | Ajustes editoriais | Não executado | Pendente |
-| CATP-023 | Modo demonstração | Não executado | Identificação explícita de mock pendente |
+ID	Funcionalidade	Situação	Evidência ou pendência
+CATP-001	Importação CSV	Aprovado	tests/evidences/catp001.png, catp001.1.png, catp001.2.png, catp001.3.png · pytest tests/test_catp_grupo_a.py · Registro individual na seção 4.3
+CATP-002	Importação JSON	Aprovado	tests/evidences/catp002.png, catp002.1.png · pytest tests/test_catp_grupo_a.py · Registro individual na seção 4.3
+CATP-003	Dados inválidos	Aprovado	tests/evidences/catp003.png, catp003.1.png, catp003.2.png · pytest tests/test_catp_grupo_a.py · Registro individual na seção 4.3
+CATP-004	Sentimentos	Verificado no lote 701–703	Sentimento positivo em 701 e 702; 703 sem classificação no pacote.
+CATP-005	Tópicos	Verificado no lote 701–703	701: tecnologia e ferramentas; 702: estudos e tecnologia. Sem resultado para 703 no pacote.
+CATP-006	Histórias	Verificado nos lotes testados	A análise real detectou as histórias de 601, 701 e 702; 602 e 703 ficaram fora das histórias.
+CATP-007	Rastreabilidade	Verificado para as citações	Citações literais com IDs de origem no Estúdio e nos JSONs recuperados. Fontes por ativo seguem sem validação.
+CATP-008	Depoimentos	Bloqueado no fluxo testado	O pacote contém post e card; testemunho estruturado ausente.
+CATP-009	Cases	Bloqueado no fluxo testado	O pacote contém post e card; case de sucesso ausente.
+CATP-010	Curadoria humana	Verificação parcial	Estados exercitados na Curadoria; ver subcasos e CATP-022.
+CATP-010a	Validação factual	Verificado na interface	Pendente, Validada, Evidências insuficientes e Contradição exercitados.
+CATP-010b	Curadoria editorial	Verificação parcial	Rascunho, Aprovado e Ajustes solicitados observados; rejeição não verificada nesta rodada.
+CATP-010c	Autorização	Verificado na interface	Marcar autorização manteve o rascunho; aprovação editorial sem autorização manteve a publicação bloqueada.
+CATP-010d	Indicador RG-03	Verificado no rascunho fictício	Indicador apareceu com Validada, Aprovado e autorização registrada.
+CATP-011	OCI e idempotência	Gravação e recuperação verificadas	OCI publicado: recuperação dos dois JSONs. Idempotência na main d08e839 documentada no PR #43.
+CATP-012	CQF Score 0–100	Não executado	Aplicabilidade pendente de decisão
+CATP-013	CQF contradições	Não executado	Aplicabilidade a confirmar
+CATP-014	Autorização	Não executado	Bloqueio de divulgação pendente
+CATP-015	Fluxo completo	Fluxo demonstrado para o lote 601–602	Análise Cohere, gravação e recuperação no OCI e passagem à Curadoria verificadas; commit publicado não identificado.
+CATP-016	Navegação Streamlit	Não executado	Verificação parcial; PR #37 integrado à main
+CATP-017	Estúdio	Não executado	Pendente
+CATP-018	Regeneração RG-01	Reprovado na execução publicada	Regenerar o post da interação 702 causou KeyError: 'variacoes'; fidelidade da nova versão sem avaliação.
+CATP-019	Controles de curadoria	Não executado	Independência dos controles pendente
+CATP-020	Contradição RG-02	Bloqueio verificado na interface	A contradição marcada manualmente no card da interação 702 desabilitou Aprovar.
+CATP-021	Indicador RG-03	Verificado no rascunho fictício	A interface bloqueou a liberação sem autorização e exibiu RG-03 com os três requisitos.
+CATP-022	Ajustes editoriais	Verificação parcial	Solicitação e parecer exibidos na sessão; o JSON recuperado em nova sessão não contém a decisão nem o parecer.
+CATP-023	Modo demonstração	Verificação parcial	Dados fictícios identificados na importação e em Histórias; a análise foi real com Cohere. Resultado simulado ainda sem verificação.
 
-**Nota:** CATP-010 é agregador e depende dos quatro subcasos aplicáveis.
+Nota: CATP-010 é agregador e depende dos quatro subcasos aplicáveis.
 
 A matriz contém 23 casos principais e quatro subcasos adicionais.
 
-### 4.1 Síntese das verificações preliminares
+4.1 Síntese das verificações preliminares
 
-| Caso | Observação | Conclusão |
-|---|---|---|
-| CATP-001 | Importação CSV automatizada com suíte pytest | Aprovado — 100% dos critérios de aceitação |
-| CATP-002 | Importação JSON automatizada com suíte pytest | Aprovado — 100% dos critérios de aceitação |
-| CATP-003 | Dados inválidos automatizada com suíte pytest | Aprovado — 100% dos critérios de aceitação |
-| CATP-006 | Mock após falha Gemini no teste histórico | Requer reteste na versão atual |
-| CATP-007 | Autores divergentes no teste histórico | Rastreabilidade integrada pendente |
-| CATP-011 | Salvamento visual sem confirmação OCI | Não verificado |
-| CATP-015 | Conclusão visual apesar da falha histórica | Requer reteste |
-| CATP-016 | Navegação parcialmente observada | Verificação parcial |
-| CATP-023 | Mock apresentado no fluxo histórico | Requer reteste |
+Caso	Observação	Conclusão
+CATP-001	Importação CSV automatizada com suíte pytest	Aprovado — 100% dos critérios de aceitação
+CATP-002	Importação JSON automatizada com suíte pytest	Aprovado — 100% dos critérios de aceitação
+CATP-003	Dados inválidos automatizada com suíte pytest	Aprovado — 100% dos critérios de aceitação
+CATP-006	Mock após falha Gemini no teste histórico	Requer reteste na versão atual
+CATP-007	Autores divergentes no teste histórico	Rastreabilidade integrada pendente
+CATP-011	Salvamento visual sem confirmação OCI	Não verificado
+CATP-015	Conclusão visual apesar da falha histórica	Requer reteste
+CATP-016	Navegação parcialmente observada	Verificação parcial
+CATP-023	Mock apresentado no fluxo histórico	Requer reteste
 
 O teste direto posterior do Gemini demonstra funcionamento específico do serviço, mas não altera automaticamente os estados formais da matriz.
 
-### 4.2 Resultados demonstrativos históricos
+4.2 Resultados demonstrativos históricos
 
-O CSV continha os autores `membro_001` e `membro_002`.
+O CSV continha os autores membro_001 e membro_002.
 
 A sessão histórica apresentou histórias associadas a:
-
 - Marina Costa.
 - Lucas Almeida.
 - Camila Santos.
-
 Esses autores não correspondiam às entradas utilizadas.
 
-A observação permanece registrada como evidência histórica do commit `9fcb06e`.
+A observação permanece registrada como evidência histórica do commit 9fcb06e.
 
-**Não se conclui que a mesma divergência ocorra na `main` posterior.**
+Não se conclui que a mesma divergência ocorra na main posterior.
 
----
+4.3 Registros individuais de execução — CATP Grupo A (testes automatizados)
 
-### 4.3 Registros individuais de execução — CATP Grupo A (testes automatizados)
-
-```text
 ID do teste / cenário: CATP-001 (Importação CSV)
 Data e responsável: 29/10/2026 — Ketlyn Barbosa (Card 23)
 Ambiente / branch / SHA: Linux ketlinux / fix/catp-regressao-path / c4229ff
@@ -361,14 +324,12 @@ Evidências (links, prints, logs sanitizados, IDs):
   - tests/test_catp_grupo_a.py::test_catp_001_importacao_csv_valido PASSED
 Defeito vinculado / gravidade: —
 Reteste e conclusão: Aprovado sem ressalvas em primeira rodada.
-```
-
-```text
 ID do teste / cenário: CATP-002 (Importação JSON)
 Data e responsável: 29/10/2026 — Ketlyn Barbosa (Card 23)
 Ambiente / branch / SHA: Linux ketlinux / fix/catp-regressao-path / c4229ff
 Arquivo e versão / ID de lote: data/samples/catp002_amostra_valida.json / Lote DEMO-001
 Pré-condições: App Streamlit rodando localmente (http://localhost:8501) na tela Importação
+
 Passos realizados:
   1. Na tela Importação, acessar a aba "{ } Colar JSON".
   2. Inserir array de interações JSON válido e verificar validação sintática automática.
@@ -379,15 +340,13 @@ Resultado observado: JSON validado com sucesso pela interface; exibida mensagem 
 Implementação: Disponível
 Aplicabilidade e justificativa: Aplicável (formato padrão estruturado do MVP)
 Execução: Aprovado
+
 Evidências (links, prints, logs sanitizados, IDs):
   - tests/evidences/catp002.png (Aba Colar JSON com validação sintática afirmativa)
   - tests/evidences/catp002.1.png (Prévia gerada com sucesso a partir do JSON)
   - tests/test_catp_grupo_a.py::test_catp_002_importacao_json_valido PASSED
 Defeito vinculado / gravidade: —
 Reteste e conclusão: Aprovado sem ressalvas em primeira rodada.
-```
-
-```text
 ID do teste / cenário: CATP-003 (Dados Inválidos)
 Data e responsável: 29/10/2026 — Ketlyn Barbosa (Card 23)
 Ambiente / branch / SHA: Linux ketlinux / fix/catp-regressao-path / c4229ff
@@ -410,27 +369,39 @@ Evidências (links, prints, logs sanitizados, IDs):
   - tests/test_catp_grupo_a.py::test_catp_003_dados_invalidos_* PASSED
 Defeito vinculado / gravidade: —
 Reteste e conclusão: Aprovado sem ressalvas em primeira rodada.
-```
+
+4.4 Rodada integrada de 17/11/2026
+
+Execução manual com dados fictícios no Streamlit publicado. A origem cohere foi confirmada nos pacotes recuperados. O commit implantado não foi identificado, portanto as verificações desse ambiente são limitadas aos lotes e controles observados. O Card 23 registra a aprovação do CATP-015 para o lote fictício 601–602; a homologação formal da versão publicada segue sujeita aos critérios da seção 3.5.
+- LOTE-20261117T173331Z-BC6EE5A85EB24D258C969798DE4FEEEF: primeira vaga de analista júnior (601) e pergunta sobre reunião (602). Uma história, dois rascunhos e três citações literais da interação 601. Pacote de distribuição e evidências gravados no OCI e recuperados no Histórico. Na Curadoria, o post foi aprovado com autorização desmarcada, com publicação bloqueada. Ao reunir os três requisitos, a interface exibiu o indicador RG-03.
+- LOTE-20261117T181652Z-2FF459F0B642433D8240005C22DB3539: projeto em Power BI (701), superação com SQL (702) e aviso de reunião (703). Duas histórias e quatro rascunhos. O JSON apresenta tópicos, sentimentos e referências às duas fontes. Na 702, Evidências insuficientes e a Contradição marcada manualmente bloquearam Aprovar. A solicitação de ajustes exibiu o parecer na sessão.
+- Na execução local anterior, a branch do PR #44, no commit 42660dc, registrou 41 testes aprovados e análise real com Gemini sobre o caso 601–602. A gravação local foi bloqueada pela configuração OCI ausente. Esse resultado local não identifica a versão publicada.
+- Evidências de execução, capturas e JSONs recuperados estão no Card 23.
+Defeitos reproduzidos na versão publicada:
+- A anonimização substituiu “Foi”, “Desenvolvi”, “Power” de “Power BI” e “Depois” por [NOME]. O PR #44 cobre especificamente “Foi”.
+- Na interação 702, o conteúdo afirma que o projeto foi concluído. A fonte confirma que a participante conseguiu montar a consulta necessária para concluí-lo.
+- Regenerar o Post para LinkedIn da interação 702 exibiu KeyError: 'variacoes'. O erro também está registrado no PR #41.
+- O Histórico exibiu o pacote original sem o parecer e o status de ajustes. A recuperação das decisões de Curadoria permanece sem comprovação.
+- Os lotes testados geraram Post para LinkedIn e Card de conquista. A fidelidade e a curadoria de testemunho estruturado e case de sucesso permanecem sem validação.
+
+---
 
 ## 5. Registro dos seis cenários de homologação integrada
 
 A equipe informou a existência de seis arquivos de teste preparados para execução.
 
 Os nomes, conteúdos e resultados completos ainda precisam ser formalmente associados aos cenários.
+Cenário	Arquivo	Objetivo	Execução	Evidência
+HINT-01	A preencher	A mapear	Não executado	Pendente
+HINT-02	A preencher	A mapear	Não executado	Pendente
+HINT-03	A preencher	A mapear	Não executado	Pendente
+HINT-04	A preencher	A mapear	Não executado	Pendente
+HINT-05	A preencher	A mapear	Não executado	Pendente
+HINT-06	A preencher	A mapear	Não executado	Pendente
 
-| Cenário | Arquivo | Objetivo | Execução | Evidência |
-|---|---|---|---|---|
-| HINT-01 | A preencher | A mapear | Não executado | Pendente |
-| HINT-02 | A preencher | A mapear | Não executado | Pendente |
-| HINT-03 | A preencher | A mapear | Não executado | Pendente |
-| HINT-04 | A preencher | A mapear | Não executado | Pendente |
-| HINT-05 | A preencher | A mapear | Não executado | Pendente |
-| HINT-06 | A preencher | A mapear | Não executado | Pendente |
-
-### 5.1 Casos negativos obrigatórios
+5.1 Casos negativos obrigatórios
 
 Verificar, quando aplicável:
-
 - Citação inexistente.
 - ID duplicado.
 - ID inválido.
@@ -442,19 +413,17 @@ Verificar, quando aplicável:
 - Falha de persistência.
 - Bucket OCI vazio.
 - Novo lote após processamento anterior.
+Quando não for possível conferir a origem de uma evidência, utilizar a indicação neutra “Conferência indisponível”, conforme orientação técnica registrada.
 
-Quando não for possível conferir a origem de uma evidência, utilizar a indicação neutra **“Conferência indisponível”**, conforme orientação técnica registrada.
+5.2 Execução local preliminar — PRELIM-20261029-01
 
-### 5.2 Execução local preliminar — PRELIM-20261029-01
+Responsável: Marcus — Project Manager
+Ambiente: Streamlit local
+Commit de referência: 9fcb06e
+Arquivo: data/samples/teste_importacao_catp001.csv
+Tipo: Verificação funcional preliminar.
 
-**Responsável:** Marcus — Project Manager  
-**Ambiente:** Streamlit local  
-**Commit de referência:** `9fcb06e`  
-**Arquivo:** `data/samples/teste_importacao_catp001.csv`  
-**Tipo:** Verificação funcional preliminar.
-
-**Passos observados:**
-
+Passos observados:
 1. Disponibilização de CSV com duas interações.
 2. Visualização da prévia.
 3. Acionamento da importação e do processamento.
@@ -462,23 +431,20 @@ Quando não for possível conferir a origem de uma evidência, utilizar a indica
 5. Apresentação de histórias e ativos.
 6. Inspeção das mensagens do terminal.
 
-**Resultado observado:**
-
+Resultado observado:
 - Prévia apresentada.
 - Falha Gemini observada.
 - Fallback mock acionado.
 - Histórias demonstrativas sem correspondência com os autores do CSV.
 - Indicação visual de conclusão sem comprovação de persistência real.
+Conclusão: fluxo integrado não homologado nessa sessão.
 
-**Conclusão:** fluxo integrado não homologado nessa sessão.
+Limitação: os resultados correspondem ao código histórico identificado e não comprovam o comportamento da main posterior.
 
-**Limitação:** os resultados correspondem ao código histórico identificado e não comprovam o comportamento da `main` posterior.
+Defeito relacionado: Issue #27.
 
-**Defeito relacionado:** Issue #27.
+5.3 Registro individual para testes formais
 
-### 5.3 Registro individual para testes formais
-
-```text
 ID do teste / cenário:
 Data:
 Responsável:
@@ -501,22 +467,19 @@ Gravidade:
 Responsável pelo tratamento:
 Reteste:
 Conclusão:
-```
 
 ---
 
 ## 6. Três demonstrações obrigatórias
 
-| ID | História | Verificações mínimas | Execução |
-|---|---|---|---|
-| DEMO-01 | Conquista profissional | Entrada, análise, evidências, depoimento, case, curadoria e OCI | Não executado |
-| DEMO-02 | Projeto de destaque | Participação, resultados comprovados, dois ativos, curadoria e OCI | Não executado |
-| DEMO-03 | Superação | Fidelidade aos fatos, dois ativos, curadoria e OCI | Não executado |
+ID	História	Verificações mínimas	Execução
+DEMO-01	Conquista profissional	Entrada, análise, evidências, depoimento, case, curadoria e OCI	Detecção demonstrada; aceite pendente dos dois formatos principais
+DEMO-02	Projeto de destaque	Participação, resultados comprovados, dois ativos, curadoria e OCI	Detecção demonstrada; aceite pendente dos dois formatos principais
+DEMO-03	Superação	Fidelidade aos fatos, dois ativos, curadoria e OCI	Detecção demonstrada; aceite pendente dos dois formatos principais
 
-### 6.1 Condições de aprovação
+6.1 Condições de aprovação
 
 Cada demonstração deverá:
-
 1. Utilizar entradas identificadas.
 2. Preservar autores e fontes.
 3. Apresentar evidências verificáveis.
@@ -525,9 +488,7 @@ Cada demonstração deverá:
 6. Permitir curadoria humana.
 7. Comprovar persistência e recuperação real.
 8. Não inventar informações.
-
-### 6.2 Restrição da sessão preliminar
-
+6.2 Restrição da sessão preliminar
 As três histórias demonstrativas apresentadas após a importação do CSV de duas interações não constituem comprovação das três demonstrações obrigatórias.
 
 Da mesma forma, as três histórias geradas no teste direto posterior do Gemini não comprovam, isoladamente, os fluxos completos de demonstração.
@@ -536,35 +497,31 @@ Da mesma forma, as três histórias geradas no teste direto posterior do Gemini 
 
 ## 7. Controles transversais de qualidade e curadoria
 
-### 7.1 RG-01 — Fidelidade factual
+7.1 RG-01 — Fidelidade factual
 
 A regeneração não poderá alterar:
-
 - Nomes.
 - Números.
 - Resultados.
 - Fatos.
 - Evidências.
-
 Alterações somente poderão ocorrer quando sustentadas pelas fontes.
 
-### 7.2 RG-02 — Contradições
+7.2 RG-02 — Contradições
 
 Contradições não resolvidas devem impedir a aprovação quando o controle for aplicável.
 
 A regra deve ser testada na lógica e na interface.
 
-### 7.3 RG-03 — Liberação para publicação
+7.3 RG-03 — Liberação para publicação
 
 A liberação deve depender de:
-
 1. Validação factual.
 2. Aprovação editorial.
 3. Autorização apropriada.
-
 Esses controles são independentes.
 
-### 7.4 Rastreabilidade
+7.4 Rastreabilidade
 
 - Citações literais.
 - IDs de origem verificáveis.
@@ -572,62 +529,60 @@ Esses controles são independentes.
 - Ausência de atribuição indevida.
 - Separação entre resultados reais e demonstrativos.
 
-### 7.5 Riscos adicionais
+7.5 Riscos adicionais
 
-**Fallback mock:** conteúdo demonstrativo não pode ser apresentado como análise real.
+Fallback mock: conteúdo demonstrativo não pode ser apresentado como análise real.
 
-**Estado entre lotes:** uma nova importação deve reinicializar histórias, curadoria e referências do lote anterior.
+Estado entre lotes: uma nova importação deve reinicializar histórias, curadoria e referências do lote anterior.
 
-**Mensagens de sucesso:** progresso visual não substitui confirmação real de processamento e armazenamento.
+Mensagens de sucesso: progresso visual não substitui confirmação real de processamento e armazenamento.
 
-**Tratamento de falhas:** erros precisam ser identificáveis e permitir diagnóstico.
+Tratamento de falhas: erros precisam ser identificáveis e permitir diagnóstico.
 
-**Teste isolado:** resultado positivo do serviço Gemini não equivale a aprovação do pipeline completo.
+Teste isolado: resultado positivo do serviço Gemini não equivale a aprovação do pipeline completo.
 
 ---
 
 ## 8. Comprovação da OCI Object Storage
 
-| Controle | Evidência necessária | Situação |
-|---|---|---|
-| Conectividade | Região e bucket configurados | Não verificado |
-| Gravação | Chave de objeto e confirmação real | Não verificado |
-| Recuperação | Objeto recuperado com integridade | Não verificado |
-| Idempotência | Ausência de duplicidade indevida | Não verificado |
-| Histórias e ativos | Conteúdo efetivamente persistido | Não verificado |
-| Curadoria | Decisões persistidas e recuperadas | Não verificado |
-| Falha controlada | Erro não apresentado como sucesso | Não verificado |
-| Bucket vazio | Tratamento correto do catálogo | Não verificado |
-| Segurança | Logs sem credenciais e segredos | Não verificado |
+Controle	Evidência necessária	Situação
+Conectividade	Região e bucket configurados	Não verificado
+Gravação	Chave de objeto e confirmação real	Não verificado
+Recuperação	Objeto recuperado com integridade	Não verificado
+Idempotência	Ausência de duplicidade indevida	Não verificado
+Histórias e ativos	Conteúdo efetivamente persistido	Não verificado
+Curadoria	Decisões persistidas e recuperadas	Não verificado
+Falha controlada	Erro não apresentado como sucesso	Não verificado
+Bucket vazio	Tratamento correto do catálogo	Não verificado
+Segurança	Logs sem credenciais e segredos	Não verificado
 
-### 8.1 Histórico técnico
+8.1 Histórico técnico
 
-O PR #20 registrou correções de persistência e status do processamento, posteriormente integradas à `main`.
+O PR #20 registrou correções de persistência e status do processamento, posteriormente integradas à main.
 
 A revisão técnica relatou testes de gravação real.
 
 Entretanto, essas informações não comprovam a execução integrada do fluxo completo no ambiente de homologação.
 
-### 8.2 Diagnóstico do bucket vazio
+8.2 Diagnóstico do bucket vazio
 
-Segundo Jaqueline, o catálogo de arquivos depende de `listar_pacotes`.
+Segundo Jaqueline, o catálogo de arquivos depende de listar_pacotes.
 
 Quando o bucket está vazio, a aplicação pode apresentar erro mesmo havendo histórias disponíveis.
 
-**Situação:** diagnóstico registrado; correção e reteste ainda não comprovados.
+Situação: diagnóstico registrado; correção e reteste ainda não comprovados.
 
-### 8.3 Responsabilidade técnica
+8.3 Responsabilidade técnica
 
-**Responsável de referência pela frente OCI:** Jaqueline de Lira.
+Responsável de referência pela frente OCI: Jaqueline de Lira.
 
 A atribuição foi esclarecida em comentário posterior na Issue #27.
 
 Luciene Godoy poderá colaborar nas atividades de integração e orquestração, conforme alinhamento entre as integrantes.
 
-### 8.4 Critérios para reteste OCI
+8.4 Critérios para reteste OCI
 
 O reteste deverá comprovar:
-
 1. Credenciais válidas em ambiente autorizado.
 2. Bucket e região corretos.
 3. Gravação real.
@@ -640,85 +595,81 @@ O reteste deverá comprovar:
 10. Comportamento com bucket vazio.
 11. Mensagens de interface consistentes.
 12. Ausência de exposição de credenciais.
-
-**Status:** pendente de execução integrada e evidências.
+Status: pendente de execução integrada e evidências.
 
 ---
 
 ## 9. Defeitos, riscos e impedimentos
 
-### 9.1 Issue #27
+9.1 Issue #27
 
-**Título:** Corrigir inconsistências na análise Gemini, fallback mock e persistência OCI.
+Título: Corrigir inconsistências na análise Gemini, fallback mock e persistência OCI.
 
-**Data:** 29/10/2026  
-**Prioridade:** Urgente  
-**Situação:** Aberta  
-**Reteste:** Pendente
+Data: 29/10/2026
+Prioridade: Urgente
+Situação: Aberta
+Reteste: Pendente
 
-**Referência:** https://github.com/No-Country-simulation/G10-Brasil-Equipe-18/issues/27
+Referência: https://github.com/No-Country-simulation/G10-Brasil-Equipe-18/issues/27
 
-### 9.2 Impedimentos históricos incorporados do PR #26
+---
 
-#### IMP-001 — Gemini não configurado no ambiente local
+9.2 Impedimentos históricos incorporados do PR #26
 
-O terminal indicou ausência de `GEMINI_API_KEY` em uma execução anterior, com fallback mock.
+IMP-001 — Gemini não configurado no ambiente local
+O terminal indicou ausência de GEMINI_API_KEY em uma execução anterior, com fallback mock.
 
-**Situação:** impedimento histórico; o teste direto posterior confirmou execução real do Gemini em outro contexto, sem comprovar a configuração integrada do Streamlit.
-
-#### IMP-002 — Histórias demonstrativas após importação CSV
-
+Situação: impedimento histórico; o teste direto posterior confirmou execução real do Gemini em outro contexto, sem comprovar a configuração integrada do Streamlit.
+IMP-002 — Histórias demonstrativas após importação CSV
 Duas interações foram importadas, mas três histórias fictícias foram apresentadas.
 
-**Situação:** observação histórica associada ao commit `9fcb06e`. Requer reteste na versão atual.
-
-#### IMP-003 — Persistência OCI e confirmação visual
-
+Situação: observação histórica associada ao commit 9fcb06e. Requer reteste na versão atual.
+IMP-003 — Persistência OCI e confirmação visual
 A sessão local não comprovou gravação real.
 
 O PR #20 registrou correções e testes técnicos posteriormente.
 
-**Situação:** integração informada; homologação do fluxo completo pendente.
-
-#### IMP-004 — Fluxo integrado de ponta a ponta
-
+Situação: integração informada; homologação do fluxo completo pendente.
+IMP-004 — Fluxo integrado de ponta a ponta
 Importação CSV observada, porém análise real e persistência não comprovadas na sessão.
 
-**Situação:** pendente de reteste integrado.
-
-#### IMP-005 — Bucket OCI vazio
-
+Situação: pendente de reteste integrado.
+IMP-005 — Bucket OCI vazio
 Problema relatado no catálogo de pacotes.
 
-**Situação:** correção ainda não confirmada. Responsabilidade técnica de referência: Jaqueline.
+Situação: correção ainda não confirmada. Responsabilidade técnica de referência: Jaqueline.
 
-### 9.3 Diagnóstico atualizado da Issue #27
+---
 
-**Defeito 1 — Tratamento de falhas Gemini**
+9.3 Diagnóstico atualizado da Issue #27
+
+Defeito 1 — Tratamento de falhas Gemini
 
 Falhas 503/timeout podem acionar fallback mock sem tentativas adicionais ou modelo secundário.
 
-**Defeito 2 — Mensagens de conclusão**
+Defeito 2 — Mensagens de conclusão
 
 O fluxo precisa distinguir conclusão visual de processamento efetivamente confirmado.
 
-**Defeito 3 — Persistência OCI**
+Defeito 3 — Persistência OCI
 
 A gravação e recuperação precisam ser comprovadas antes de informar sucesso.
 
-**Defeito 4 — Estado entre lotes**
+Defeito 4 — Estado entre lotes
 
-Histórias e curadoria não são adequadamente reinicializadas em `_novo_lote`, conforme análise técnica da Jaqueline.
+Histórias e curadoria não são adequadamente reinicializadas em _novo_lote, conforme análise técnica da Jaqueline.
 
-**Defeito 5 — Correspondência entre entrada e saída**
+Defeito 5 — Correspondência entre entrada e saída
 
 A divergência foi observada na sessão histórica. O teste direto posterior do Gemini apresentou correspondência correta dos autores.
 
-**Defeito 6 — Bucket vazio**
+Defeito 6 — Bucket vazio
 
 O catálogo pode falhar quando não existem objetos no bucket.
 
-### 9.4 Critérios mínimos de correção
+---
+
+9.4 Critérios mínimos de correção
 
 - Identificar explicitamente resultados reais e demonstrativos.
 - Não informar análise real concluída quando a chamada Gemini falhar.
@@ -732,22 +683,25 @@ O catálogo pode falhar quando não existem objetos no bucket.
 - Documentar retestes com commit e ambiente.
 - Registrar evidências suficientes para avaliação dos CATP.
 
-### 9.5 Responsabilidades técnicas de referência
+---
 
-| Frente | Responsável | Encaminhamento |
-|---|---|---|
-| Interface Streamlit | Tissiany Delmiro | Mensagens, navegação e estado |
-| Gemini e análise LLM | Jaqueline de Lira | Falhas, tentativas, fallback e rastreabilidade |
-| Persistência OCI | Jaqueline de Lira | Bucket vazio, gravação e recuperação |
-| Apoio de integração e orquestração | Luciene Godoy | Colaboração conforme alinhamento |
-| Testes integrados | Ketlyn Barbosa | Execução e evidências |
-| Gestão e aceite | Marcus | Acompanhamento e decisão formal |
+9.5 Responsabilidades técnicas de referência
 
-**Nota:** as atribuições representam referências de acompanhamento. A distribuição detalhada de tarefas deverá ser confirmada com as integrantes.
+Frente	Responsável	Encaminhamento
+Interface Streamlit	Tissiany Delmiro	Mensagens, navegação e estado
+Gemini e análise LLM	Jaqueline de Lira	Falhas, tentativas, fallback e rastreabilidade
+Persistência OCI	Jaqueline de Lira	Bucket vazio, gravação e recuperação
+Apoio de integração e orquestração	Luciene Godoy	Colaboração conforme alinhamento
+Testes integrados	Ketlyn Barbosa	Execução e evidências
+Gestão e aceite	Marcus	Acompanhamento e decisão formal
+
+Nota: as atribuições representam referências de acompanhamento. A distribuição detalhada de tarefas deverá ser confirmada com as integrantes.
 
 A responsabilidade principal pela persistência OCI foi retificada por Jaqueline na Issue #27.
 
-### 9.6 Riscos a acompanhar
+---
+
+9.6 Riscos a acompanhar
 
 - Instabilidade do provedor LLM.
 - Uso indevido de fallback mock.
@@ -765,21 +719,21 @@ A responsabilidade principal pela persistência OCI foi retificada por Jaqueline
 
 ## 10. Registro de decisões de escopo
 
-| ID | Tema | Situação | Decisão |
-|---|---|---|---|
-| DEC-001 | CATP-012 — CQF Score 0–100 | Proposta de transferência para fase posterior | Pendente |
-| DEC-002 | Aviso global, KPIs e origem dos dados | Escopo e prioridade a confirmar | Pendente |
-| DEC-003 | Fallback mock | Exigir identificação clara de conteúdo demonstrativo | Correção pendente |
-| DEC-004 | Sucesso OCI | Exigir confirmação real de persistência | Validação pendente |
-| DEC-005 | Estado entre lotes | Reinicializar histórias e curadoria | Correção pendente |
-| DEC-006 | Tratamento de falhas Gemini | Testar tentativas e recuperação | Correção pendente |
+ID	Tema	Situação	Decisão
+DEC-001	CATP-012 — CQF Score 0–100	Proposta de transferência para fase posterior	Pendente
+DEC-002	Aviso global, KPIs e origem dos dados	Escopo e prioridade a confirmar	Pendente
+DEC-003	Fallback mock	Exigir identificação clara de conteúdo demonstrativo	Correção pendente
+DEC-004	Sucesso OCI	Exigir confirmação real de persistência	Validação pendente
+DEC-005	Estado entre lotes	Reinicializar histórias e curadoria	Correção pendente
+DEC-006	Tratamento de falhas Gemini	Testar tentativas e recuperação	Correção pendente
 
-### 10.1 Regra para decisões pendentes
+---
+
+10.1 Regra para decisões pendentes
 
 Nenhum requisito poderá ser considerado aprovado ou excluído sem decisão formal.
 
 Para transferência de escopo, registrar:
-
 - Justificativa.
 - Responsável.
 - Data.
@@ -787,44 +741,27 @@ Para transferência de escopo, registrar:
 - Evidência.
 - Fase de destino.
 
-O CATP-012 permanece **Não executado**, com aplicabilidade **Pendente de decisão**.
+O CATP-012 permanece Não executado, com aplicabilidade Pendente de decisão.
 
 ---
 
 ## 11. Resumo executivo de homologação
 
-| Indicador | Resultado atual |
-|---|---|
-| Casos CATP formalmente aprovados | 0 comprovados neste relatório |
-| Casos CATP formalmente reprovados | 0 registrados |
-| Casos com execução formal e evidência completa | 0 registrados |
-| Verificações locais preliminares | Registradas em 29/10/2026 |
-| Importação CSV | Prévia de duas interações verificada |
-| Gemini real | Teste direto positivo informado por Jaqueline |
-| Gemini integrado ao Streamlit | Não homologado |
-| Fallback mock | Observado na sessão histórica |
-| Rastreabilidade | Positiva no teste direto; integração pendente |
-| Persistência OCI | Não homologada |
-| Bucket vazio | Correção não confirmada |
-| Estado entre lotes | Correção pendente |
-| Seis cenários integrados | Aguardando execução formal |
-| Três demonstrações obrigatórias | Sem evidência formal completa |
-| Issue #27 | Aberta |
-| CATP-012 | Decisão de escopo pendente |
-| Aceite do MVP | Não concedido |
+A rodada de 17/11/2026 demonstrou análise real com Cohere, detecção nos três tipos de relato, rastreabilidade de citações, gravação e recuperação no OCI e o controle RG-03 na Curadoria. Os CATP-001 a 003 permanecem aprovados conforme a seção 4.3. Os resultados e os limites da nova execução estão nas seções 4 e 4.4.
 
-> Os indicadores refletem as evidências formalmente registradas neste documento. Não significam que a equipe jamais tenha realizado outros testes técnicos.
+O aceite do MVP permanece pendente. Os formatos de testemunho estruturado e case de sucesso não apareceram no fluxo publicado testado. A regeneração falhou e a recuperação das decisões de Curadoria continua sem comprovação. A versão implantada precisa ser identificada para a homologação formal.
 
-### 11.1 Avaliação do Project Manager
+---
 
-A sessão histórica associada ao commit `9fcb06e` identificou problemas de confiabilidade na apresentação de resultados após falhas do Gemini.
+11.1 Avaliação do Project Manager
 
-Posteriormente, Jaqueline informou teste direto bem-sucedido na `main`, com três histórias reais e autores correspondentes às entradas.
+A sessão histórica associada ao commit 9fcb06e identificou problemas de confiabilidade na apresentação de resultados após falhas do Gemini.
+
+Posteriormente, Jaqueline informou teste direto bem-sucedido na main, com três histórias reais e autores correspondentes às entradas.
 
 Essa evidência demonstra avanço técnico, mas não comprova o funcionamento integrado de Streamlit, Gemini e OCI.
 
 Persistem pendências relativas a:
-
 - Recuperação de falhas do Gemini.
 - Reinicialização entre lotes.
 - Tratamento do bucket vazio.
@@ -832,7 +769,7 @@ Persistem pendências relativas a:
 - Execução dos testes CATP.
 - Consolidação das evidências.
 
-**Recomendação:** manter o aceite do MVP pendente até a conclusão das correções e da homologação formal.
+Recomendação: manter o aceite do MVP pendente até a conclusão das correções e da homologação formal.
 
 ---
 
@@ -863,7 +800,9 @@ Persistem pendências relativas a:
 - [ ] Emitir parecer técnico conclusivo.
 - [ ] Obter decisão expressa de aceite.
 
-### 12.1 Atividades preliminares realizadas
+---
+
+12.1 Atividades preliminares realizadas
 
 - [x] Inspecionar o fluxo local de importação CSV.
 - [x] Registrar a prévia das interações.
@@ -883,52 +822,56 @@ Persistem pendências relativas a:
 - [ ] Atualizar a matriz CATP após execução.
 - [ ] Emitir parecer conclusivo.
 - [ ] Deliberar sobre o aceite.
-
-**Importante:** as atividades preliminares concluídas não representam aprovação dos requisitos de aceitação.
-
----
+Importante: as atividades preliminares concluídas não representam aprovação dos requisitos de aceitação.
 
 ## 13. Parecer técnico e decisão final
 
-### 13.1 Parecer técnico preliminar — 29/10/2026
+---
 
-A sessão Streamlit associada ao commit histórico `9fcb06e` apresentou falhas de análise real, acionamento de fallback mock e histórias demonstrativas sem correspondência com as entradas utilizadas.
+13.1 Parecer técnico preliminar — 29/10/2026
+
+A sessão Streamlit associada ao commit histórico 9fcb06e apresentou falhas de análise real, acionamento de fallback mock e histórias demonstrativas sem correspondência com as entradas utilizadas.
 
 A análise posterior de Jaqueline esclareceu que esse commit antecedia integrações relevantes dos PRs #20 e #21.
 
-Em teste direto posterior na `main`, Jaqueline informou geração real de três histórias pelo Gemini, com autores preservados e sem fallback mock.
+Em teste direto posterior na main, Jaqueline informou geração real de três histórias pelo Gemini, com autores preservados e sem fallback mock.
 
 Esse teste não incluiu a interface Streamlit nem a persistência OCI.
 
 Também foram identificadas pendências relacionadas a tentativas de recuperação de falhas, estado entre lotes e comportamento com bucket OCI vazio.
 
-Portanto, **não existem evidências suficientes neste relatório para homologar o pipeline integrado completo**.
+Portanto, não existem evidências suficientes neste relatório para homologar o pipeline integrado completo.
 
-### 13.2 Parecer técnico conclusivo
+---
 
-**PENDENTE.**
+13.2 Parecer técnico conclusivo
+
+PENDENTE.
 
 Inserir após:
-
 - Conclusão das correções.
 - Execução formal dos testes.
 - Registro dos resultados.
 - Consolidação das evidências.
 - Avaliação dos defeitos remanescentes.
 
-### 13.3 Decisão do Project Manager
+---
 
-**PENDENTE — NÃO HÁ APROVAÇÃO ANTECIPADA DO MVP.**
+13.3 Decisão do Project Manager
 
-**Data do aceite ou rejeição:** A preencher.
+PENDENTE — NÃO HÁ APROVAÇÃO ANTECIPADA DO MVP.
 
-**Commit/versão objeto da decisão:** A preencher.
+Data do aceite ou rejeição: A preencher.
 
-**Evidências consultadas:** A consolidar.
+Commit/versão objeto da decisão: A preencher.
 
-**Justificativa e ressalvas:** A preencher.
+Evidências consultadas: A consolidar.
 
-### 13.4 Condições para emissão do aceite
+Justificativa e ressalvas: A preencher.
+
+---
+
+13.4 Condições para emissão do aceite
 
 O aceite somente poderá ser considerado após:
 
@@ -946,13 +889,11 @@ O aceite somente poderá ser considerado após:
 12. Parecer técnico fundamentado.
 13. Decisão expressa do Project Manager.
 
-**SITUAÇÃO FINAL DA VERSÃO 0.4: HOMOLOGAÇÃO PENDENTE — SEM ACEITE DO MVP.**
+SITUAÇÃO FINAL DA VERSÃO 0.4: HOMOLOGAÇÃO PENDENTE — SEM ACEITE DO MVP.
 
----
+Referências
 
-## Referências
-
-- CATP v1.1 — `docs/CATP_TEST_PLAN.md`
+- CATP v1.1 — docs/CATP_TEST_PLAN.md
 - Card 23 — Testes Integrados e Demonstração
 - CQF v1.0
 - Issue #27 — https://github.com/No-Country-simulation/G10-Brasil-Equipe-18/issues/27
@@ -961,13 +902,10 @@ O aceite somente poderá ser considerado após:
 - PR #26 — https://github.com/No-Country-simulation/G10-Brasil-Equipe-18/pull/26
 - PR #28 — https://github.com/No-Country-simulation/G10-Brasil-Equipe-18/pull/28
 - PR #29 — https://github.com/No-Country-simulation/G10-Brasil-Equipe-18/pull/29
-- Commit histórico da sessão Streamlit — `9fcb06e`
-- Referência posterior de integração na `main` — `2b65357`
-- Arquivo CSV preliminar — `data/samples/teste_importacao_catp001.csv`
-- Arquivo JSON do teste direto — `data/samples/teste_recuperacao.json`
+- Commit histórico da sessão Streamlit — 9fcb06e
+- Referência posterior de integração na main — 2b65357
+- Arquivo CSV preliminar — data/samples/teste_importacao_catp001.csv
+- Arquivo JSON do teste direto — data/samples/teste_recuperacao.json
 - Comentário técnico de Jaqueline — https://github.com/No-Country-simulation/G10-Brasil-Equipe-18/issues/27#issuecomment-6501535223
 - Retificação de responsabilidade OCI — https://github.com/No-Country-simulation/G10-Brasil-Equipe-18/issues/27#issuecomment-6503962505
-
----
-
-**Nota final:** este documento é um instrumento de gestão da homologação. Não altera o CATP aprovado, não substitui testes de aceitação e não concede aprovação automática ao MVP.
+Nota final: este documento é um instrumento de gestão da homologação. Não altera o CATP aprovado, não substitui testes de aceitação e não concede aprovação automática ao MVP
