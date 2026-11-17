@@ -1,13 +1,4 @@
-# CommunityLab — Relatório de Homologação e Aceite do MVP
 
-**Projeto:** CommunityLab — Detector Inteligente de Histórias de Sucesso e Testemunhos  
-**Hackathon:** ONE G10 — Equipe 18  
-**Documento:** `COMMUNITYLAB_HOMOLOGACAO_MVP.md`  
-**Versão:** 0.5 — Resultados e evidências da rodada de 17/11/2026  
-**Data de preparação:** 26/10/2026  
-**Última atualização:** 17/11/2026  
-**Referência funcional:** `docs/CATP_TEST_PLAN.md` — CATP v1.1  
-**Referência de gestão:** Card 23 — Testes Integrados e Demonstração  
 **Responsável funcional e consolidação:** Marcus — Project Manager  
 **Responsável principal pelos testes integrados:** Ketlyn Barbosa  
 **Apoio técnico:** Tissiany Delmiro, Jaqueline de Lira e Luciene Godoy  
@@ -289,7 +280,7 @@ Verificações preliminares não substituem testes formais.
 | CATP-015 | Fluxo completo | **Fluxo demonstrado para o lote 601–602** | Análise Cohere, gravação e recuperação no OCI e passagem à Curadoria verificadas; commit publicado não identificado. |
 | CATP-016 | Navegação Streamlit | Não executado | Verificação parcial; PR #37 integrado à main |
 | CATP-017 | Estúdio | Não executado | Pendente |
-| CATP-018 | Regeneração RG-01 | **Reprovado na execução publicada** | Regenerar o post da interação 702 causou `KeyError: 'variacoes'`; fidelidade da nova versão sem avaliação. |
+| CATP-018 | Regeneração RG-01 | **Reteste aprovado para o cenário sem variações** | Falha inicial com `KeyError: 'variacoes'`. Após o PR #41, o Estúdio e a Curadoria mantiveram o Post para LinkedIn da interação 702 e exibiram o aviso esperado. A fidelidade de uma nova versão segue sem avaliação. |
 | CATP-019 | Controles de curadoria | Não executado | Independência dos controles pendente |
 | CATP-020 | Contradição RG-02 | **Bloqueio verificado na interface** | A contradição marcada manualmente no card da interação 702 desabilitou Aprovar. |
 | CATP-021 | Indicador RG-03 | **Verificado no rascunho fictício** | A interface bloqueou a liberação sem autorização e exibiu RG-03 com os três requisitos. |
@@ -427,6 +418,14 @@ Defeitos reproduzidos na versão publicada:
 - Regenerar o Post para LinkedIn da interação 702 exibiu `KeyError: 'variacoes'`. O erro também está registrado no [PR #41](https://github.com/No-Country-simulation/G10-Brasil-Equipe-18/pull/41).
 - O Histórico exibiu o pacote original sem o parecer e o status de ajustes. A recuperação das decisões de Curadoria permanece sem comprovação.
 - Os lotes testados geraram Post para LinkedIn e Card de conquista. A fidelidade e a curadoria de testemunho estruturado e case de sucesso permanecem sem validação.
+
+**Reteste do CATP-018 — 17/11/2026, após o PR #41**
+
+Na VM publicada, o botão **Regenerar** foi testado no **Post para LinkedIn** da interação **702**, no Estúdio de Conteúdo e na Curadoria. Nas duas telas, o erro original ficou ausente, o rascunho foi mantido e apareceu o aviso “Sem novas variações para este rascunho. O conteúdo atual foi mantido.”
+
+**Resultado do reteste** — Aprovado para o cenário sem variações. A geração e a fidelidade de uma nova versão seguem pendentes de validação.
+
+**Lote do reteste** — `LOTE-20261117T222338Z-09DC965276FB4DF396B59004078FC0AF`. **Referência de acompanhamento** — [Card 23](https://trello.com/c/dwxU4dBD).
 
 ## 5. Registro dos seis cenários de homologação integrada
 
@@ -811,7 +810,7 @@ O CATP-012 permanece **Não executado**, com aplicabilidade **Pendente de decis�
 
 A rodada de 17/11/2026 demonstrou análise real com Cohere, detecção nos três tipos de relato, rastreabilidade de citações, gravação e recuperação no OCI e o controle RG-03 na Curadoria. Os CATP-001 a 003 permanecem aprovados conforme a seção 4.3. Os resultados e os limites da nova execução estão nas seções 4 e 4.4.
 
-O aceite do MVP permanece pendente. Os formatos de testemunho estruturado e case de sucesso não apareceram no fluxo publicado testado. A regeneração falhou e a recuperação das decisões de Curadoria continua sem comprovação. A versão implantada precisa ser identificada para a homologação formal.
+O aceite do MVP permanece pendente. Os formatos de testemunho estruturado e case de sucesso não apareceram no fluxo publicado testado. Após o PR #41, o reteste da regeneração passou no Estúdio e na Curadoria para o cenário sem variações. A geração e a fidelidade de uma nova versão seguem pendentes de validação, assim como a recuperação das decisões da Curadoria. A versão implantada precisa ser identificada para a homologação formal.
 
 ### 11.1 Avaliação do Project Manager
 
