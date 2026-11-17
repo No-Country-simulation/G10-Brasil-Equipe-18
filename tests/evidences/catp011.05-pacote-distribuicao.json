@@ -1,0 +1,237 @@
+{
+  "versao_schema": "1.0",
+  "lote": "LOTE-20261116T155237Z-99E03A71D260451281C0D97B316A83ED",
+  "gerado_em": "2026-11-16T23:57:20+00:00",
+  "origem_analise": "gemini",
+  "historias": [
+    {
+      "id": "hist-001",
+      "autor": "Ana Ribeiro",
+      "iniciais": "AR",
+      "canal": "#conquistas-e-vagas",
+      "origem": "Mensagem da comunidade",
+      "categoria": "Conquista profissional",
+      "sentimento": "positivo",
+      "relevancia": 90,
+      "relevancia_nivel": "alta",
+      "mensagem_original": "Depois de seis meses estudando de madrugada, consegui minha primeira vaga como analista de dados júnior. [NOME] a primeira vez que alguém me contratou na área de tecnologia. [NOME] ganhando menos do que eu esperava, mas com plano de carreira assinado.",
+      "citacoes": [
+        {
+          "texto": "Depois de seis meses estudando de madrugada, consegui minha primeira vaga como analista de dados júnior.",
+          "id_interacao": 1
+        },
+        {
+          "texto": "com plano de carreira assinado.",
+          "id_interacao": 1
+        }
+      ],
+      "interacoes_origem": [
+        1
+      ],
+      "destaques": [
+        "Depois de seis meses estudando de madrugada, consegui minha primeira vaga como analista de dados júnior.",
+        "com plano de carreira assinado."
+      ],
+      "fatos": [
+        "Estudo: seis meses de estudo no período da madrugada",
+        "Cargo: analista de dados júnior",
+        "Contratação: primeira oportunidade na área de tecnologia com plano de carreira assinado"
+      ],
+      "ativos": [
+        {
+          "id": "post_linkedin",
+          "nome": "Post para LinkedIn",
+          "tipo": "texto",
+          "campos": {
+            "texto": "Ana Ribeiro dedicou seis meses de estudos de madrugada para alcançar a primeira oportunidade como analista de dados júnior. Mesmo diante dos desafios de iniciar em um novo setor e aceitar uma remuneração inicial menor do que a esperada, o objetivo foi alcançado com a assinatura de um plano de carreira na área de tecnologia. Essa conquista demonstra a importância do compromisso contínuo e do foco no desenvolvimento profissional para ingressar em uma nova área."
+          }
+        },
+        {
+          "id": "card_conquista",
+          "nome": "Card de conquista",
+          "tipo": "card",
+          "campos": {
+            "titulo": "Primeira vaga em dados",
+            "frase": "Seis meses de estudo e contratação na área de tecnologia."
+          }
+        }
+      ],
+      "tipo_insight": "conquista",
+      "topicos": [
+        "carreira",
+        "estudos"
+      ],
+      "justificativa": "A usuária relata a conquista da sua primeira vaga como analista de dados júnior após seis meses estudando de madrugada, com contratação formalizada por plano de carreira.",
+      "confianca": 0.95,
+      "tipo": "conquista_profissional",
+      "tipos_alternativos": [
+        "superacao"
+      ],
+      "resumo": "Ana Ribeiro conquistou sua primeira vaga como analista de dados júnior na área de tecnologia após seis meses estudando de madrugada, garantindo a contratação com plano de carreira assinado.",
+      "resultados": [
+        "Conquista da primeira vaga como analista de dados júnior na área de tecnologia",
+        "Assinatura de plano de carreira profissional"
+      ]
+    },
+    {
+      "id": "hist-002",
+      "autor": "Bruno Sales",
+      "iniciais": "BS",
+      "canal": "#projetos",
+      "origem": "Mensagem da comunidade",
+      "categoria": "Projeto de destaque",
+      "sentimento": "positivo",
+      "relevancia": 90,
+      "relevancia_nivel": "alta",
+      "mensagem_original": "Terminei o projeto de um painel de vendas para a loja do meu tio. [NOME] quatro planilhas diferentes que ninguém conseguia cruzar. [NOME] em três semanas e agora ele consulta tudo em uma tela só, todos os dias de manhã.",
+      "citacoes": [
+        {
+          "texto": "Terminei o projeto de um painel de vendas para a loja do meu tio.",
+          "id_interacao": 2
+        },
+        {
+          "texto": "agora ele consulta tudo em uma tela só, todos os dias de manhã.",
+          "id_interacao": 2
+        }
+      ],
+      "interacoes_origem": [
+        2
+      ],
+      "destaques": [
+        "Terminei o projeto de um painel de vendas para a loja do meu tio.",
+        "agora ele consulta tudo em uma tela só, todos os dias de manhã."
+      ],
+      "fatos": [
+        "Projeto: painel de vendas para loja comercial",
+        "Prazo: desenvolvimento em três semanas",
+        "Resultado: unificação do cruzamento de quatro planilhas em tela única de uso diário"
+      ],
+      "ativos": [
+        {
+          "id": "post_linkedin",
+          "nome": "Post para LinkedIn",
+          "tipo": "texto",
+          "campos": {
+            "texto": "Bruno Sales desenvolveu um painel de vendas para a loja do seu tio, resolvendo o desafio de cruzar informações contidas em quatro planilhas distintas. Em apenas três semanas de trabalho, a solução centralizou os dados em uma única tela, facilitando a rotina do negócio com consultas diárias logo pela manhã. A iniciativa exemplifica como a aplicação prática de tecnologia pode transformar processos e resolver problemas reais do dia a dia."
+          }
+        },
+        {
+          "id": "card_conquista",
+          "nome": "Card de conquista",
+          "tipo": "card",
+          "campos": {
+            "titulo": "Painel de vendas simplificado",
+            "frase": "Unificação de quatro planilhas em uma única tela de consulta."
+          }
+        }
+      ],
+      "tipo_insight": "conquista",
+      "topicos": [
+        "tecnologia",
+        "ferramentas"
+      ],
+      "justificativa": "O usuário relata a entrega de um painel de vendas desenvolvido em três semanas para a loja de seu tio, resolvendo o problema de unificação de dados de quatro planilhas.",
+      "confianca": 0.95,
+      "tipo": "projeto_destaque",
+      "tipos_alternativos": [],
+      "resumo": "Bruno Sales desenvolveu em três semanas um painel de vendas para a loja de seu tio, unificando quatro planilhas que antes não eram cruzadas em uma única tela de consulta diária.",
+      "resultados": [
+        "Centralização e cruzamento de dados de quatro planilhas em um painel único utilizado diariamente"
+      ]
+    },
+    {
+      "id": "hist-003",
+      "autor": "Carla Nunes",
+      "iniciais": "CN",
+      "canal": "#superacao",
+      "origem": "Mensagem da comunidade",
+      "categoria": "Superação",
+      "sentimento": "positivo",
+      "relevancia": 90,
+      "relevancia_nivel": "alta",
+      "mensagem_original": "Fiquei oito meses sem emprego e cheguei a pensar em desistir da transição de carreira. [NOME] a estudar em grupo, refiz três projetos do zero e ontem recebi a confirmação de uma vaga temporária de seis meses. É temporária, mas é na área.",
+      "citacoes": [
+        {
+          "texto": "Fiquei oito meses sem emprego e cheguei a pensar em desistir da transição de carreira.",
+          "id_interacao": 3
+        },
+        {
+          "texto": "ontem recebi a confirmação de uma vaga temporária de seis meses.",
+          "id_interacao": 3
+        }
+      ],
+      "interacoes_origem": [
+        3
+      ],
+      "destaques": [
+        "Fiquei oito meses sem emprego e cheguei a pensar em desistir da transição de carreira.",
+        "ontem recebi a confirmação de uma vaga temporária de seis meses."
+      ],
+      "fatos": [
+        "Desemprego: período de oito meses sem colocação no mercado",
+        "Estratégia: estudo em grupo e reconstrução do zero de três projetos",
+        "Resultado: aprovação em vaga temporária de seis meses na área"
+      ],
+      "ativos": [
+        {
+          "id": "post_linkedin",
+          "nome": "Post para LinkedIn",
+          "tipo": "texto",
+          "campos": {
+            "texto": "Após oito meses sem emprego e prestes a desistir da transição de carreira, Carla Nunes reformulou sua estratégia. Ela passou a estudar em grupo, refez três projetos do zero e garantiu a aprovação para uma vaga temporária de seis meses na sua nova área de atuação. O resultado comprova o valor da persistência, da colaboração e da prática constante para superar momentos de incerteza no mercado de trabalho."
+          }
+        },
+        {
+          "id": "card_conquista",
+          "nome": "Card de conquista",
+          "tipo": "card",
+          "campos": {
+            "titulo": "Conquista na transição de carreira",
+            "frase": "Vaga na área alcançada após estudos em grupo e novos projetos."
+          }
+        }
+      ],
+      "tipo_insight": "conquista",
+      "topicos": [
+        "carreira",
+        "estudos"
+      ],
+      "justificativa": "A usuária relata superação de um período de oito meses sem emprego na transição de carreira, obtendo uma vaga temporária de seis meses após estudar em grupo e refazer projetos.",
+      "confianca": 0.95,
+      "tipo": "superacao",
+      "tipos_alternativos": [
+        "conquista_profissional"
+      ],
+      "resumo": "Após passar oito meses desempregada e considerar desistir da transição de carreira, Carla Nunes começou a estudar em grupo, refez três projetos do zero e conquistou uma vaga temporária de seis meses na área desejada.",
+      "resultados": [
+        "Aprovação em vaga de seis meses na área de transição de carreira"
+      ]
+    }
+  ],
+  "evidencias": [
+    {
+      "id_interacao": 1,
+      "texto": "Depois de seis meses estudando de madrugada, consegui minha primeira vaga como analista de dados júnior."
+    },
+    {
+      "id_interacao": 1,
+      "texto": "com plano de carreira assinado."
+    },
+    {
+      "id_interacao": 2,
+      "texto": "Terminei o projeto de um painel de vendas para a loja do meu tio."
+    },
+    {
+      "id_interacao": 2,
+      "texto": "agora ele consulta tudo em uma tela só, todos os dias de manhã."
+    },
+    {
+      "id_interacao": 3,
+      "texto": "Fiquei oito meses sem emprego e cheguei a pensar em desistir da transição de carreira."
+    },
+    {
+      "id_interacao": 3,
+      "texto": "ontem recebi a confirmação de uma vaga temporária de seis meses."
+    }
+  ]
+}
