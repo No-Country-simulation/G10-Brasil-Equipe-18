@@ -137,6 +137,7 @@ def anonimizar_texto(texto: str) -> Tuple[str, Dict[str, int]]:
                 i > 0 
                 and palavra_limpa 
                 and palavra_limpa[0].isupper() 
+                and not (palavra_limpa.lower() == "foi" and palavras[i - 1].endswith((".", "!", "?")))
                 and palavra_limpa.lower() not in EXCECOES_TECNICAS
                 and not palavra_limpa.isupper()
             ):
