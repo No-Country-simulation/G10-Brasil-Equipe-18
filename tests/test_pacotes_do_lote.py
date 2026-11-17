@@ -1,7 +1,7 @@
 """O lote novo precisa montar o manifesto do que vai gravar no OCI (Issue #27, item 3).
 
-Hoje estes testes falham: a lista de pacotes a gravar nasce vazia e nada a repoe.
-Depois da correcao, os dois passam.
+Cobre a correcao aplicada: `pacotes_do_lote` devolve os dois arquivos do lote
+(pacote e evidencias) e a lista e reposta a cada importacao, em vez de nascer vazia.
 """
 import sys
 from pathlib import Path
