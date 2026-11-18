@@ -76,6 +76,38 @@ def test_historia_valida_entra_com_os_campos_do_contrato():
     assert llm.ULTIMAS_RECUSADAS == []
 
 
+def test_normalizar_vincula_duas_historias_as_interacoes_corretas():
+    textos = [
+        "Concluí o módulo de APIs e apliquei no projeto.",
+        "Organizei meus estudos com as dicas da comunidade.",
+    ]
+    interacoes = [
+        {"id": 501, "autor": "Pessoa Exemplo", "canal": "#tecnologia", "texto": textos[0]},
+        {"id": 502, "autor": "Pessoa Exemplo", "canal": "#estudos", "texto": textos[1]},
+    ]
+    historias = [
+        historia(
+            id="hist-001",
+            indice_interacao=1,
+            mensagem_original="eco incorreto do modelo 1",
+            destaques=["módulo de APIs"],
+        ),
+        historia(
+            id="hist-002",
+            indice_interacao=2,
+            mensagem_original="eco incorreto do modelo 2",
+            destaques=["dicas da comunidade"],
+        ),
+    ]
+
+    resultado = llm._normalizar(historias, interacoes)
+
+    assert len(resultado) == 2
+    assert [item["mensagem_original"] for item in resultado] == textos
+    assert [item["interacoes_origem"] for item in resultado] == [[501], [502]]
+    assert [item["citacoes"][0]["id_interacao"] for item in resultado] == [501, 502]
+
+
 def test_categoria_e_nota_derivadas_para_a_tela():
     item = llm._normalizar([historia()], INTERACOES)[0]
 
