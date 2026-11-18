@@ -1,0 +1,16 @@
+[
+  {
+    "id": 1,
+    "autor": "membro_001",
+    "canal": "conquistas",
+    "tipo": "mensagem",
+    "texto": "Depois de concluir o curso de análise de dados e montar dois projetos para meu portfólio, consegui minha primeira vaga como analista júnior."
+  },
+  {
+    "id": 2,
+    "autor": "membro_002",
+    "canal": "projetos",
+    "tipo": "mensagem",
+    "texto": "Desenvolvi um painel de vendas em Power BI e apresentei o projeto na reunião da comunidade."
+  }
+]

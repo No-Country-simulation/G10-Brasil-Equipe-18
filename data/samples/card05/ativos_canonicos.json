@@ -1,0 +1,26 @@
+[
+  {
+    "versao_schema": "1.0",
+    "id_ativo": "ativo_001",
+    "tipo": "testemunho_estruturado",
+    "titulo": "Primeira vaga como analista júnior",
+    "texto": "Participante relata a conclusão de um curso de análise de dados, a construção de dois projetos para o portfólio e a conquista da primeira vaga como analista júnior.\n\n\"consegui minha primeira vaga como analista júnior\"",
+    "interacoes_origem": [
+      1
+    ],
+    "status_revisao": "pendente",
+    "criado_em": "2026-11-18T19:00:00Z"
+  },
+  {
+    "versao_schema": "1.0",
+    "id_ativo": "ativo_002",
+    "tipo": "case_sucesso",
+    "titulo": "Painel de vendas apresentado à comunidade",
+    "texto": "Um participante desenvolveu um painel de vendas em Power BI e apresentou o projeto em uma reunião da comunidade. O relato comprova o desenvolvimento e a apresentação. Não informa métricas de uso ou resultados comerciais.",
+    "interacoes_origem": [
+      2
+    ],
+    "status_revisao": "pendente",
+    "criado_em": "2026-11-18T19:00:00Z"
+  }
+]
