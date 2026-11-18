@@ -14,6 +14,11 @@ EXCECOES_TECNICAS = {
     "git", "fastapi", "react", "node", "javascript", "typescript", "html", "css"
 }
 
+def _parece_sigla(texto: str) -> bool:
+    """Identifica tokens com padrão geral de sigla, sem lista de vocabulário."""
+    return bool(re.search(r"[A-Z]{2,}", texto))
+
+
 def _validar_cpf_digitos(digitos: str) -> bool:
     """Valida se uma sequência de 11 dígitos possui dígitos verificadores válidos de CPF."""
     if len(digitos) != 11 or not digitos.isdigit() or len(set(digitos)) == 1:
@@ -94,17 +99,21 @@ def anonimizar_texto(texto: str) -> Tuple[str, Dict[str, int]]:
         doc = nlp(texto_anonimo)
         spans_per = []
         for ent in doc.ents:
-            if ent.label_ == "PER":
-                txt_limpo = ent.text.strip()
-                # Preserva menções já pseudonimizadas
-                if txt_limpo.startswith("@membro_") or txt_limpo.startswith("membro_"):
-                    continue
-                # Preserva termos técnicos
-                if txt_limpo.lower() in EXCECOES_TECNICAS:
-                    continue
-                if len(txt_limpo) < 2:
-                    continue
-                spans_per.append((ent.start_char, ent.end_char))
+            if ent.label_ != "PER":
+                continue
+            txt_limpo = ent.text.strip()
+            # Preserva menções já pseudonimizadas.
+            if txt_limpo.startswith("@membro_") or txt_limpo.startswith("membro_"):
+                continue
+            # Siglas e palavras que não são nomes próprios não são PII.
+            if _parece_sigla(txt_limpo) or ent.root.pos_ != "PROPN":
+                continue
+            # Preserva termos técnicos conhecidos.
+            if txt_limpo.lower() in EXCECOES_TECNICAS:
+                continue
+            if len(txt_limpo) < 2:
+                continue
+            spans_per.append((ent.start_char, ent.end_char))
 
         # Substitui da direita para a esquerda para não invalidar índices de caracteres
         spans_per.sort(key=lambda s: s[0], reverse=True)
