@@ -241,9 +241,9 @@ Usar somente dados fictícios ou autorizados e manter explícito o modo demonstr
 - [ ] Validar os contratos entre pipeline, LLM, interface e armazenamento.
 - [ ] Executar e registrar os testes integrados do CATP.
 - [ ] Demonstrar os três casos de uso com evidências.
+- [x] Corrigir e testar o envio de edições do Estúdio para a Curadoria (PRs #41 e #47). Reteste na VM pendente após a publicação do PR #47.
+- [ ] Validar o botão Regenerar com respostas reais do Gemini. O cenário sem variações já foi validado no Estúdio e na Curadoria.
 - [ ] Finalizar documentação, apresentação e entrega do MVP.
-- [ ] Corrigir e testar a transferência das edições do Estúdio para a Curadoria.
-- [ ] Corrigir e testar o comportamento do botão Regenerar com respostas reais do Gemini.
 
 ---
 
