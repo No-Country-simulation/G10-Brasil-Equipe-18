@@ -41,7 +41,7 @@ def _enviar_curadoria(hid):
         for nome_campo in (ativo.get("campos") or {}):
             origem = _chave(hid, aid, nome_campo)
             if origem in ss.dados:
-                definir(f"c:{hid}:{aid}:{nome_campo}", ss.dados[origem])
+                ss.dados[f"c:{hid}:{aid}:{nome_campo}"] = ss.dados[origem]
     ss.historia_atual = hid
     ss.mostrar_copia = False
     ss.toast = "Enviado para curadoria. Revise e aprove ou rejeite."
