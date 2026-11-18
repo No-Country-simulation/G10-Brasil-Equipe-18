@@ -776,7 +776,7 @@ A responsabilidade principal pela persistência OCI foi retificada por Jaqueline
 - Instabilidade do provedor LLM.
 - Uso indevido de fallback mock.
 - Credenciais e configuração OCI.
-- Persistência não confirmada.
+- Gravação e recuperação dos JSONs no OCI verificadas na rodada de 17/11/2026 (CATP-015). A homologação formal segue pendente até a identificação do commit implantado naquela rodada.
 - Falhas com bucket vazio.
 - Perda de rastreabilidade.
 - Mistura de resultados entre lotes.
@@ -858,8 +858,8 @@ Persistem pendências relativas a:
 - [ ] Confirmar fidelidade factual.
 - [ ] Verificar curadoria humana.
 - [ ] Verificar autorização independente.
-- [ ] Comprovar gravação OCI.
-- [ ] Comprovar recuperação OCI.
+- [x] Comprovar gravação dos JSONs no OCI na rodada de 17/11/2026 (CATP-015).
+- [x] Comprovar recuperação dos JSONs pelo Histórico na rodada de 17/11/2026 (CATP-015).
 - [ ] Verificar idempotência.
 - [ ] Testar bucket vazio.
 - [ ] Testar falhas controladas.
