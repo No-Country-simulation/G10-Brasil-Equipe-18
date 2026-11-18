@@ -5,11 +5,14 @@ não inclui credenciais; elas são fornecidas em tempo de execução.
 
 ## Requisitos
 
-- VM Ubuntu 22.04/24.04 ou Oracle Linux compatível com Docker Engine.
+- VM Ubuntu 22.04/24.04 LTS.
 - Docker Engine e plugin Docker Compose v2.
 - Acesso SSH à VM.
 - Credenciais dos provedores que serão usados e, se houver persistência,
   credenciais do OCI Object Storage.
+
+Este guia considera Ubuntu 22.04/24.04 LTS. Ubuntu 20.04 não está incluído:
+versões atuais do Docker Engine não publicam pacotes oficiais para essa versão.
 
 ## Arquivos do container
 
@@ -36,6 +39,16 @@ Edite `.env` e substitua os valores de exemplo pelas chaves reais que serão
 usadas (Gemini, Cohere, Groq e/ou Discord). Apague ou deixe vazios os
 provedores que não serão usados. Não reutilize os textos de placeholder do
 `.env.example` como credenciais.
+
+Gere um sal secreto para a pseudonimização:
+
+```bash
+openssl rand -hex 32
+```
+
+Copie o resultado para `SAL_PSEUDONIMIZACAO` em `.env`. O Compose exige esse
+valor e não inicia o serviço se ele estiver ausente. Mantenha o mesmo sal nas
+próximas implantações; trocar o valor altera os pseudônimos dos autores.
 
 Ajuste também os valores de execução no `.env`:
 
