@@ -20,9 +20,13 @@ O **CommunityLab** utiliza Inteligência Artificial para identificar histórias 
 
 A ferramenta apoia equipes de marketing e gestores de comunidades. **A IA sugere; pessoas verificam, decidem e autorizam.** Não há publicação automática no escopo do MVP.
 
+---
+
 ## 🎯 O problema
 
 Relatos de conquistas e experiências relevantes ficam dispersos em históricos de conversas. Identificá-los, conferir fatos, localizar citações originais e convertê-los em conteúdo editorial exige trabalho manual e pode introduzir erros de interpretação, atribuição ou consentimento.
+
+---
 
 ## 🚀 Objetivo e escopo do MVP
 
@@ -36,7 +40,9 @@ Demonstrar um fluxo que permita:
 6. Persistir e recuperar pacotes no **OCI Object Storage**, quando a integração estiver validada.
 7. Demonstrar pelo menos três casos de uso com dados fictícios ou autorizados.
 
-**Fora do escopo inicial:** captura direta obrigatória de Discord/Slack, publicação automática, monitoramento em tempo real e dashboards avançados.
+**Escopo e integrações:** A importação por CSV/JSON permanece como fluxo-base do MVP. O PR #35 incorporou componentes de integração com Discord e provedores de LLM Cohere e Groq. Essas integrações ainda não foram homologadas em execução real com credenciais válidas. Publicação automática, monitoramento em tempo real e dashboards avançados permanecem fora do escopo inicial.
+
+---
 
 ## 📌 Estado das entregas
 
@@ -53,6 +59,8 @@ A tabela distingue integração de código, implementação em PR e homologaçã
 | Testes CATP integrados | **Pendentes de validação final** | CATP-007 não homologado; CATP-011 executado e documentado pela desenvolvedora, com revisão técnica do PR #9 ainda aberta. |
 
 **Referências:** [PR #3](https://github.com/No-Country-simulation/G10-Brasil-Equipe-18/pull/3) · [PR #5](https://github.com/No-Country-simulation/G10-Brasil-Equipe-18/pull/5) · [PR #6](https://github.com/No-Country-simulation/G10-Brasil-Equipe-18/pull/6) · [PR #8](https://github.com/No-Country-simulation/G10-Brasil-Equipe-18/pull/8) · [PR #9](https://github.com/No-Country-simulation/G10-Brasil-Equipe-18/pull/9)
+
+---
 
 ## 🏗️ Arquitetura funcional
 
@@ -125,6 +133,8 @@ O sistema suporta dois métodos de configuração:
 
 **Importante:** `secrets.toml` está no `.gitignore` e nunca deve ser commitado. Em produção, substitua o sal de pseudonimização padrão em `.env`.
 
+---
+
 ## 🛠️ Tecnologias
 
 | Tecnologia | Utilização |
@@ -138,6 +148,8 @@ O sistema suporta dois métodos de configuração:
 | pytest | Testes automatizados e de regressão |
 | GitHub | Código, Pull Requests e revisões |
 | Trello | Planejamento e acompanhamento do projeto |
+
+---
 
 ## 📁 Organização e documentação
 
@@ -155,6 +167,8 @@ docs/
 
 A estrutura pode evoluir conforme os Pull Requests forem integrados. Para executar o front-end, consultar **`READMEFrontend.md`** e **`COMO_RODAR.md`**, quando disponíveis na branch utilizada. Não incluir chaves de API nem arquivos `.env` reais em commits.
 
+---
+
 ## 🧪 Testes e critérios de aceitação
 
 O plano oficial está em [`docs/CATP_TEST_PLAN.md`](docs/CATP_TEST_PLAN.md) (v1.1).
@@ -169,6 +183,8 @@ O plano oficial está em [`docs/CATP_TEST_PLAN.md`](docs/CATP_TEST_PLAN.md) (v1.
 
 Não interpretar commits, screenshots ou testes locais isolados como homologação automática do MVP.
 
+---
+
 ## 🧪 Casos de demonstração
 
 1. **Conquista profissional:** identificação de relato de obtenção de emprego; extração de fatos e proposta de testemunho.
@@ -176,6 +192,8 @@ Não interpretar commits, screenshots ou testes locais isolados como homologaç�
 3. **Superação e transição de carreira:** identificação de trajetória de desenvolvimento; proposta de testemunho e sugestão de post.
 
 Usar somente dados fictícios ou autorizados e manter explícito o modo demonstração.
+
+---
 
 ## 🔐 Segurança, privacidade e responsabilidade
 
@@ -187,6 +205,8 @@ Usar somente dados fictícios ou autorizados e manter explícito o modo demonstr
 - Manter revisão humana e autorização apropriada antes da divulgação pública.
 - Diferenciar claramente resultados reais, dados simulados e falhas técnicas.
 
+---
+
 ## 👥 Equipe
 
 | Integrante | Responsabilidade |
@@ -197,6 +217,8 @@ Usar somente dados fictícios ou autorizados e manter explícito o modo demonstr
 | Jaqueline de Lira | AI Engineer |
 | Luciene Godoy | Agent Engineer |
 
+---
+
 ## 🤝 Colaboração e governança
 
 - Desenvolver em branches específicas (`feature/`, `feat/`, `fix/`, `docs/`, `chore/`).
@@ -204,6 +226,8 @@ Usar somente dados fictícios ou autorizados e manter explícito o modo demonstr
 - Descrever escopo, impactos, testes e referências aos cards do Trello nos Pull Requests.
 - Submeter mudanças à revisão técnica e respeitar a proteção da `main`, incluindo a aprovação exigida.
 - Não realizar merge de funcionalidades críticas sem análise dos critérios de aceitação correspondentes.
+
+---
 
 ## 🗺️ Próximas etapas
 
@@ -217,11 +241,17 @@ Usar somente dados fictícios ou autorizados e manter explícito o modo demonstr
 - [ ] Validar os contratos entre pipeline, LLM, interface e armazenamento.
 - [ ] Executar e registrar os testes integrados do CATP.
 - [ ] Demonstrar os três casos de uso com evidências.
+- [x] Corrigir e testar o envio de edições do Estúdio para a Curadoria (PRs #41 e #47). Reteste na VM pendente após a publicação do PR #47.
+- [ ] Validar o botão Regenerar com respostas reais do Gemini. O cenário sem variações já foi validado no Estúdio e na Curadoria.
 - [ ] Finalizar documentação, apresentação e entrega do MVP.
+
+---
 
 ## 📈 Resultados esperados
 
 Ao final do hackathon, espera-se demonstrar a capacidade de identificar histórias relevantes, gerar sugestões editoriais rastreáveis, permitir curadoria responsável e recuperar ativos armazenados, com documentação e evidências de testes suficientes para avaliar o funcionamento do MVP.
+
+---
 
 ## 📄 Licença e créditos
 
