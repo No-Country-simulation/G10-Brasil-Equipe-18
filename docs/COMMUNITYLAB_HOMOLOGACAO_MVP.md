@@ -1,12 +1,11 @@
-
 # CommunityLab — Relatório de Homologação e Aceite do MVP
 
 **Projeto:** CommunityLab — Detector Inteligente de Histórias de Sucesso e Testemunhos  
 **Hackathon:** ONE G10 — Equipe 18  
 **Documento:** `COMMUNITYLAB_HOMOLOGACAO_MVP.md`  
-**Versão:** 0.4 — Consolidação dos PRs #26 e #28 e esclarecimentos da Issue #27  
+**Versão:** 0.5 — Resultados e evidências da rodada de 17/11/2026  
 **Data de preparação:** 26/10/2026  
-**Última atualização:** 29/10/2026  
+**Última atualização:** 17/11/2026  
 **Referência funcional:** `docs/CATP_TEST_PLAN.md` — CATP v1.1  
 **Referência de gestão:** Card 23 — Testes Integrados e Demonstração  
 **Responsável funcional e consolidação:** Marcus — Project Manager  
@@ -267,35 +266,35 @@ Verificações preliminares não substituem testes formais.
 
 ## 4. Matriz mestre de aceitação — CATP v1.1
 
-| ID | Funcionalidade | Execução formal | Evidência ou pendência |
+| ID | Funcionalidade | Situação | Evidência ou pendência |
 |---|---|---|---|
 | CATP-001 | Importação CSV | **Aprovado** | `tests/evidences/catp001.png`, `catp001.1.png`, `catp001.2.png`, `catp001.3.png` · `pytest tests/test_catp_grupo_a.py` · Registro individual na seção 4.3 |
 | CATP-002 | Importação JSON | **Aprovado** | `tests/evidences/catp002.png`, `catp002.1.png` · `pytest tests/test_catp_grupo_a.py` · Registro individual na seção 4.3 |
 | CATP-003 | Dados inválidos | **Aprovado** | `tests/evidences/catp003.png`, `catp003.1.png`, `catp003.2.png` · `pytest tests/test_catp_grupo_a.py` · Registro individual na seção 4.3 |
-| CATP-004 | Sentimentos | Não executado | Rastreabilidade pendente |
-| CATP-005 | Tópicos | Não executado | Rastreabilidade pendente |
-| CATP-006 | Histórias | Não executado | Fallback mock histórico; teste Gemini direto posterior positivo |
-| CATP-007 | Rastreabilidade | Não executado | Divergência histórica; autores preservados no teste direto posterior |
-| CATP-008 | Depoimentos | Não executado | Pendente |
-| CATP-009 | Cases | Não executado | Pendente |
-| CATP-010 | Curadoria humana | Não executado | Quatro subcasos pendentes |
-| CATP-010a | Validação factual | Não executado | Pendente |
-| CATP-010b | Curadoria editorial | Não executado | Pendente |
-| CATP-010c | Autorização | Não executado | Independência dos controles pendente |
-| CATP-010d | Indicador RG-03 | Não executado | Pendente |
-| CATP-011 | OCI e idempotência | Não executado | Persistência integrada não comprovada |
+| CATP-004 | Sentimentos | **Verificado no lote 701–703** | Sentimento positivo em 701 e 702; 703 sem classificação no pacote. |
+| CATP-005 | Tópicos | **Verificado no lote 701–703** | 701: tecnologia e ferramentas; 702: estudos e tecnologia. Sem resultado para 703 no pacote. |
+| CATP-006 | Histórias | **Verificado nos lotes testados** | A análise real detectou as histórias de 601, 701 e 702; 602 e 703 ficaram fora das histórias. |
+| CATP-007 | Rastreabilidade | **Verificado para as citações** | Citações literais com IDs de origem no Estúdio e nos JSONs recuperados. Fontes por ativo seguem sem validação. |
+| CATP-008 | Depoimentos | **Bloqueado no fluxo testado** | O pacote contém post e card; testemunho estruturado ausente. |
+| CATP-009 | Cases | **Bloqueado no fluxo testado** | O pacote contém post e card; case de sucesso ausente. |
+| CATP-010 | Curadoria humana | **Verificação parcial** | Estados exercitados na Curadoria; ver subcasos e CATP-022. |
+| CATP-010a | Validação factual | **Verificado na interface** | Pendente, Validada, Evidências insuficientes e Contradição exercitados. |
+| CATP-010b | Curadoria editorial | **Verificação parcial** | Rascunho, Aprovado e Ajustes solicitados observados; rejeição não verificada nesta rodada. |
+| CATP-010c | Autorização | **Verificado na interface** | Marcar autorização manteve o rascunho; aprovação editorial sem autorização manteve a publicação bloqueada. |
+| CATP-010d | Indicador RG-03 | **Verificado no rascunho fictício** | Indicador apareceu com Validada, Aprovado e autorização registrada. |
+| CATP-011 | OCI e idempotência | **Gravação e recuperação verificadas** | OCI publicado: recuperação dos dois JSONs. Idempotência na main `d08e839` documentada no [PR #43](https://github.com/No-Country-simulation/G10-Brasil-Equipe-18/pull/43). |
 | CATP-012 | CQF Score 0–100 | Não executado | Aplicabilidade pendente de decisão |
 | CATP-013 | CQF contradições | Não executado | Aplicabilidade a confirmar |
 | CATP-014 | Autorização | Não executado | Bloqueio de divulgação pendente |
-| CATP-015 | Fluxo completo | Não executado | Gemini–Streamlit–OCI não homologado |
+| CATP-015 | Fluxo completo | **Fluxo demonstrado para o lote 601–602** | Análise Cohere, gravação e recuperação no OCI e passagem à Curadoria verificadas; commit publicado não identificado. |
 | CATP-016 | Navegação Streamlit | Não executado | Verificação parcial; PR #37 integrado à main |
 | CATP-017 | Estúdio | Não executado | Pendente |
-| CATP-018 | Regeneração RG-01 | Não executado | Fidelidade factual pendente |
+| CATP-018 | Regeneração RG-01 | **Reteste aprovado para o cenário sem variações** | Falha inicial com `KeyError: 'variacoes'`. Após o PR #41, o Estúdio e a Curadoria mantiveram o Post para LinkedIn da interação 702 e exibiram o aviso esperado. A fidelidade de uma nova versão segue sem avaliação. |
 | CATP-019 | Controles de curadoria | Não executado | Independência dos controles pendente |
-| CATP-020 | Contradição RG-02 | Não executado | Bloqueio de aprovação pendente |
-| CATP-021 | Indicador RG-03 | Não executado | Pendente |
-| CATP-022 | Ajustes editoriais | Não executado | Pendente |
-| CATP-023 | Modo demonstração | Não executado | Identificação explícita de mock pendente |
+| CATP-020 | Contradição RG-02 | **Bloqueio verificado na interface** | A contradição marcada manualmente no card da interação 702 desabilitou Aprovar. |
+| CATP-021 | Indicador RG-03 | **Verificado no rascunho fictício** | A interface bloqueou a liberação sem autorização e exibiu RG-03 com os três requisitos. |
+| CATP-022 | Ajustes editoriais | **Verificação parcial** | Solicitação e parecer exibidos na sessão; o JSON recuperado em nova sessão não contém a decisão nem o parecer. |
+| CATP-023 | Modo demonstração | **Verificação parcial** | Dados fictícios identificados na importação e em Histórias; a análise foi real com Cohere. Resultado simulado ainda sem verificação. |
 
 **Nota:** CATP-010 é agregador e depende dos quatro subcasos aplicáveis.
 
@@ -412,6 +411,31 @@ Defeito vinculado / gravidade: —
 Reteste e conclusão: Aprovado sem ressalvas em primeira rodada.
 ```
 
+### 4.4 Rodada integrada de 17/11/2026
+
+Execução manual com dados fictícios no Streamlit publicado. A origem `cohere` foi confirmada nos pacotes recuperados. O commit implantado não foi identificado, portanto as verificações desse ambiente são limitadas aos lotes e controles observados. O Card 23 registra a aprovação do CATP-015 para o lote fictício 601–602; a homologação formal da versão publicada segue sujeita aos critérios da seção 3.5.
+
+- `LOTE-20261117T173331Z-BC6EE5A85EB24D258C969798DE4FEEEF`: primeira vaga de analista júnior (601) e pergunta sobre reunião (602). Uma história, dois rascunhos e três citações literais da interação 601. Pacote de distribuição e evidências gravados no OCI e recuperados no Histórico. Na Curadoria, o post foi aprovado com autorização desmarcada, com publicação bloqueada. Ao reunir os três requisitos, a interface exibiu o indicador RG-03.
+- `LOTE-20261117T181652Z-2FF459F0B642433D8240005C22DB3539`: projeto em Power BI (701), superação com SQL (702) e aviso de reunião (703). Duas histórias e quatro rascunhos. O JSON apresenta tópicos, sentimentos e referências às duas fontes. Na 702, Evidências insuficientes e a Contradição marcada manualmente bloquearam Aprovar. A solicitação de ajustes exibiu o parecer na sessão.
+- Na execução local anterior, a branch do [PR #44](https://github.com/No-Country-simulation/G10-Brasil-Equipe-18/pull/44), no commit `42660dc`, registrou 41 testes aprovados e análise real com Gemini sobre o caso 601–602. A gravação local foi bloqueada pela configuração OCI ausente. Esse resultado local não identifica a versão publicada.
+- Evidências de execução, capturas e JSONs recuperados estão no [Card 23](https://trello.com/c/dwxU4dBD).
+
+Defeitos reproduzidos na versão publicada:
+
+- A anonimização substituiu “Foi”, “Desenvolvi”, “Power” de “Power BI” e “Depois” por `[NOME]`. O PR #44 cobre especificamente “Foi”.
+- Na interação 702, o conteúdo afirma que o projeto foi concluído. A fonte confirma que a participante conseguiu montar a consulta necessária para concluí-lo.
+- Regenerar o Post para LinkedIn da interação 702 exibiu `KeyError: 'variacoes'`. O erro também está registrado no [PR #41](https://github.com/No-Country-simulation/G10-Brasil-Equipe-18/pull/41).
+- O Histórico exibiu o pacote original sem o parecer e o status de ajustes. A recuperação das decisões de Curadoria permanece sem comprovação.
+- Os lotes testados geraram Post para LinkedIn e Card de conquista. A fidelidade e a curadoria de testemunho estruturado e case de sucesso permanecem sem validação.
+
+**Reteste do CATP-018 — 17/11/2026, após o PR #41**
+
+Na VM publicada, o botão **Regenerar** foi testado no **Post para LinkedIn** da interação **702**, no Estúdio de Conteúdo e na Curadoria. Nas duas telas, o erro original ficou ausente, o rascunho foi mantido e apareceu o aviso “Sem novas variações para este rascunho. O conteúdo atual foi mantido.”
+
+**Resultado do reteste** — Aprovado para o cenário sem variações. A geração e a fidelidade de uma nova versão seguem pendentes de validação.
+
+**Lote do reteste** — `LOTE-20261117T222338Z-09DC965276FB4DF396B59004078FC0AF`. **Referência de acompanhamento** — [Card 23](https://trello.com/c/dwxU4dBD).
+
 ## 5. Registro dos seis cenários de homologação integrada
 
 A equipe informou a existência de seis arquivos de teste preparados para execução.
@@ -509,9 +533,9 @@ Conclusão:
 
 | ID | História | Verificações mínimas | Execução |
 |---|---|---|---|
-| DEMO-01 | Conquista profissional | Entrada, análise, evidências, depoimento, case, curadoria e OCI | Não executado |
-| DEMO-02 | Projeto de destaque | Participação, resultados comprovados, dois ativos, curadoria e OCI | Não executado |
-| DEMO-03 | Superação | Fidelidade aos fatos, dois ativos, curadoria e OCI | Não executado |
+| DEMO-01 | Conquista profissional | Entrada, análise, evidências, depoimento, case, curadoria e OCI | Detecção demonstrada; aceite pendente dos dois formatos principais |
+| DEMO-02 | Projeto de destaque | Participação, resultados comprovados, dois ativos, curadoria e OCI | Detecção demonstrada; aceite pendente dos dois formatos principais |
+| DEMO-03 | Superação | Fidelidade aos fatos, dois ativos, curadoria e OCI | Detecção demonstrada; aceite pendente dos dois formatos principais |
 
 ### 6.1 Condições de aprovação
 
@@ -752,7 +776,7 @@ A responsabilidade principal pela persistência OCI foi retificada por Jaqueline
 - Instabilidade do provedor LLM.
 - Uso indevido de fallback mock.
 - Credenciais e configuração OCI.
-- Persistência não confirmada.
+- Gravação e recuperação dos JSONs no OCI verificadas na rodada de 17/11/2026 (CATP-015). A homologação formal segue pendente até a identificação do commit implantado naquela rodada.
 - Falhas com bucket vazio.
 - Perda de rastreabilidade.
 - Mistura de resultados entre lotes.
@@ -770,7 +794,7 @@ A responsabilidade principal pela persistência OCI foi retificada por Jaqueline
 | DEC-001 | CATP-012 — CQF Score 0–100 | Proposta de transferência para fase posterior | Pendente |
 | DEC-002 | Aviso global, KPIs e origem dos dados | Escopo e prioridade a confirmar | Pendente |
 | DEC-003 | Fallback mock | Exigir identificação clara de conteúdo demonstrativo | Correção pendente |
-| DEC-004 | Sucesso OCI | Exigir confirmação real de persistência | Validação pendente |
+| DEC-004 | Sucesso OCI | Gravação e recuperação dos JSONs verificadas na rodada de 17/11/2026 (CATP-015) | Homologação formal pendente até identificar o commit implantado na rodada |
 | DEC-005 | Estado entre lotes | Reinicializar histórias e curadoria | Correção pendente |
 | DEC-006 | Tratamento de falhas Gemini | Testar tentativas e recuperação | Correção pendente |
 
@@ -793,27 +817,9 @@ O CATP-012 permanece **Não executado**, com aplicabilidade **Pendente de decis�
 
 ## 11. Resumo executivo de homologação
 
-| Indicador | Resultado atual |
-|---|---|
-| Casos CATP formalmente aprovados | 0 comprovados neste relatório |
-| Casos CATP formalmente reprovados | 0 registrados |
-| Casos com execução formal e evidência completa | 0 registrados |
-| Verificações locais preliminares | Registradas em 29/10/2026 |
-| Importação CSV | Prévia de duas interações verificada |
-| Gemini real | Teste direto positivo informado por Jaqueline |
-| Gemini integrado ao Streamlit | Não homologado |
-| Fallback mock | Observado na sessão histórica |
-| Rastreabilidade | Positiva no teste direto; integração pendente |
-| Persistência OCI | Não homologada |
-| Bucket vazio | Correção não confirmada |
-| Estado entre lotes | Correção pendente |
-| Seis cenários integrados | Aguardando execução formal |
-| Três demonstrações obrigatórias | Sem evidência formal completa |
-| Issue #27 | Aberta |
-| CATP-012 | Decisão de escopo pendente |
-| Aceite do MVP | Não concedido |
+A rodada de 17/11/2026 demonstrou análise real com Cohere, detecção nos três tipos de relato, rastreabilidade de citações, gravação e recuperação no OCI e o controle RG-03 na Curadoria. Os CATP-001 a 003 permanecem aprovados conforme a seção 4.3. Os resultados e os limites da nova execução estão nas seções 4 e 4.4.
 
-> Os indicadores refletem as evidências formalmente registradas neste documento. Não significam que a equipe jamais tenha realizado outros testes técnicos.
+O aceite do MVP permanece pendente. Os formatos de testemunho estruturado e case de sucesso não apareceram no fluxo publicado testado. Após o PR #41, o reteste da regeneração passou no Estúdio e na Curadoria para o cenário sem variações. A geração e a fidelidade de uma nova versão seguem pendentes de validação, assim como a recuperação das decisões da Curadoria. A versão implantada precisa ser identificada para a homologação formal.
 
 ### 11.1 Avaliação do Project Manager
 
@@ -823,12 +829,14 @@ Posteriormente, Jaqueline informou teste direto bem-sucedido na `main`, com trê
 
 Essa evidência demonstra avanço técnico, mas não comprova o funcionamento integrado de Streamlit, Gemini e OCI.
 
+Na rodada de 17/11/2026 com Streamlit e Cohere, foram verificadas a gravação no OCI e a recuperação de `pacote-distribuicao.json` e `evidencias.json` pelo Histórico (CATP-015). A homologação formal dessa execução depende da identificação do commit implantado na rodada.
+
 Persistem pendências relativas a:
 
 - Recuperação de falhas do Gemini.
 - Reinicialização entre lotes.
 - Tratamento do bucket vazio.
-- Persistência e recuperação real.
+- Comprovação da persistência e da recuperação das decisões da Curadoria (CATP-022).
 - Execução dos testes CATP.
 - Consolidação das evidências.
 
@@ -850,8 +858,8 @@ Persistem pendências relativas a:
 - [ ] Confirmar fidelidade factual.
 - [ ] Verificar curadoria humana.
 - [ ] Verificar autorização independente.
-- [ ] Comprovar gravação OCI.
-- [ ] Comprovar recuperação OCI.
+- [x] Comprovar gravação dos JSONs no OCI na rodada de 17/11/2026 (CATP-015).
+- [x] Comprovar recuperação dos JSONs pelo Histórico na rodada de 17/11/2026 (CATP-015).
 - [ ] Verificar idempotência.
 - [ ] Testar bucket vazio.
 - [ ] Testar falhas controladas.
