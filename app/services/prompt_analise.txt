@@ -38,7 +38,7 @@ Responda SOMENTE com JSON válido, neste formato exato:
     {{
       "id": "hist-001",
       "indice_interacao": 1,
-      "autor": "nome do autor da interação",
+      "autor": "identificador pseudonimizado do autor da interação",
       "canal": "canal da interação",
       "sentimento": "positivo | neutro | negativo",
       "relevancia": "alta | media | baixa",
@@ -73,8 +73,9 @@ Responda SOMENTE com JSON válido, neste formato exato:
 
 Regras obrigatórias:
 - Use apenas informação presente nas interações. Não invente nome, número ou fato.
-- "indice_interacao" é a posição da interação no lote recebido, começando em 1.
-- "destaques" deve conter trechos copiados do texto original, sem reescrever.
+- `indice_interacao` é a posição da interação no lote recebido, começando em 1.
+- Copie `autor` e `canal` da interação indicada; mantenha o pseudônimo do autor sem tentar inferir o nome real.
+- `destaques` deve conter trechos copiados do texto original, sem reescrever.
 - O texto pode conter marcadores [EMAIL], [TELEFONE], [CPF] ou [NOME]; trate-os como placeholders e não tente inferir o conteúdo substituído.
 - "confianca" entre 0.0 e 1.0; abaixo de 0.6 o item vai para revisão prioritária.
 - Se nenhuma interação tiver potencial, devolva {{"historias": []}}.
