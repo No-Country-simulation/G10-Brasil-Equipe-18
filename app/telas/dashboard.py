@@ -1,7 +1,7 @@
 """Tela Dashboard - Visão geral do CommunityLab."""
 import streamlit as st
 
-from state import contagem_ativos_completa, ir_para, resumo_ativos
+from state import contagem_ativos_completa, ir_para, legenda_ativos, resumo_ativos
 from styles import cabecalho, md, plural, topbar
 
 
@@ -54,15 +54,11 @@ def render():
         )
     
     with col3:
-        aguardando = contagem["rascunho"] + contagem["ajustes"]
-        legenda = f"{plural(aguardando, 'rascunho aguardando', 'rascunhos aguardando')} revisão"
-        if contagem["aprovado"] > 0:
-            legenda += f" · {contagem['aprovado']} {plural(contagem['aprovado'], 'aprovado', 'aprovados')}"
         _kpi_card(
             "Ativos gerados",
             total_ativos,
-            legenda,
-            "atencao" if aguardando > 0 else "sucesso"
+            legenda_ativos(contagem),
+            "atencao" if (contagem["rascunho"] + contagem["ajustes"]) > 0 else "sucesso"
         )
     
     # Status dos ativos

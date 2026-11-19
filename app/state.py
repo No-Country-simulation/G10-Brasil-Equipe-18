@@ -175,3 +175,25 @@ def contagem_ativos_completa(historias, status_dict):
         "aprovado": aprovado,
         "rejeitado": rejeitado,
     }
+
+
+def legenda_ativos(contagem):
+    """Monta a legenda dos ativos a partir da contagem.
+    
+    Função pura que não depende de st.session_state.
+    
+    Args:
+        contagem: dict retornado por contagem_ativos_completa()
+    
+    Returns:
+        str: legenda formatada (ex: "5 rascunhos aguardando revisão humana · 1 aprovado")
+    """
+    from styles import plural
+    
+    aguardando = contagem["rascunho"] + contagem["ajustes"]
+    legenda = f"{plural(aguardando, 'rascunho aguardando', 'rascunhos aguardando')} revisão humana"
+    
+    if contagem["aprovado"] > 0:
+        legenda += f" · {plural(contagem['aprovado'], 'aprovado', 'aprovados')}"
+    
+    return legenda

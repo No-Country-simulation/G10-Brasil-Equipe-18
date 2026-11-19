@@ -1,6 +1,6 @@
 import streamlit as st
 
-from state import CATEGORIA_TODAS, campo, contagem_ativos_completa, definir, ir_para, resumo_ativos
+from state import CATEGORIA_TODAS, campo, contagem_ativos_completa, definir, ir_para, legenda_ativos, resumo_ativos
 from styles import avatar, caixa, cabecalho, chip, esc, md, plural, topbar
 
 
@@ -53,11 +53,7 @@ def render():
     n_canais = len({i['canal'] for i in ss.interacoes})
     _kpi(c1, "Interações analisadas", len(ss.interacoes), f"{plural(n_canais, 'canal', 'canais')} no lote {ss.lote_id}")
     _kpi(c2, "Histórias detectadas", len(historias), f"{len(categorias)} categorias identificadas")
-    aguardando = contagem["rascunho"] + contagem["ajustes"]
-    legenda = f"{plural(aguardando, 'rascunho aguardando', 'rascunhos aguardando')} revisão humana"
-    if contagem["aprovado"] > 0:
-        legenda += f" · {contagem['aprovado']} {plural(contagem['aprovado'], 'aprovado', 'aprovados')}"
-    _kpi(c3, "Ativos gerados", total_ativos, legenda)
+    _kpi(c3, "Ativos gerados", total_ativos, legenda_ativos(contagem))
 
     origem_analise = ss.get("proc_origem_analise", "")
     
@@ -129,6 +125,6 @@ def render():
                 st.button("→ Ver no Estúdio", key=f"rev_{h['id']}", on_click=_revisar, args=(h["id"],))
 
     aprov = contagem["aprovado"]
-    texto = "Nenhum ativo aprovado ou publicado" if aprov == 0 else f"{aprov} ativo(s) aprovado(s) · nenhum publicado"
+    texto = "Nenhum ativo aprovado ou publicado" if aprov == 0 else f"{plural(aprov, 'ativo aprovado', 'ativos aprovados')} · nenhum publicado"
     md(f'<div style="display:flex;justify-content:space-between;margin-top:6px;" class="cl-muted">'
        f'<span>Exibindo {len(filtradas)} de {len(historias)} histórias</span><span>{texto}</span></div>')
