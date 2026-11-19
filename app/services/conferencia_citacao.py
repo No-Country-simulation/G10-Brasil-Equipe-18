@@ -109,15 +109,30 @@ def _lacuna_final_ok(marcador, resto):
 
 def _casa(literais, marcadores, indice, posicao, original, falhas):
     """Tenta casar literais[indice] daqui, aplicando o marcador anterior."""
+    literal = literais[indice]
     if indice == len(literais) - 1:
-        return original.find(literais[indice], posicao) != -1
+        # Sobrou só o rabo: ele precisa aparecer, e não há marcador depois.
+        return original.find(literal, posicao) != -1
 
-    literal, proximo = literais[indice], literais[indice + 1]
     marcador = marcadores[indice]
+    proximo = literais[indice + 1]
+    ultimo_literal = indice + 1 == len(literais) - 1
+
     inicio = original.find(literal, posicao)
     while inicio != -1:
         fim = inicio + len(literal)
-        if proximo.strip():
+        if ultimo_literal and not proximo:
+            # Citação termina em marcador: o original segue depois dele.
+            if _lacuna_final_ok(marcador, original[fim:]):
+                return True
+            falhas.add(MOTIVO_TIPO)
+        elif not proximo:
+            # Dois marcadores colados, sem nada entre eles: sem âncora para
+            # conferir a lacuna dos dois.
+            falhas.add(MOTIVO_LIMITE)
+        else:
+            # O próximo literal ancora a lacuna — inclusive quando ele é só um
+            # espaço entre dois marcadores.
             seguinte = original.find(proximo, fim)
             while seguinte != -1:
                 ok, motivo = _avaliar_lacuna(marcador, original[fim:seguinte])
@@ -126,10 +141,6 @@ def _casa(literais, marcadores, indice, posicao, original, falhas):
                 if motivo:
                     falhas.add(motivo)
                 seguinte = original.find(proximo, seguinte + 1)
-        elif _lacuna_final_ok(marcador, original[fim:]):
-            return True
-        else:
-            falhas.add(MOTIVO_TIPO)
         inicio = original.find(literal, inicio + 1)
     return False
 

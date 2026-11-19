@@ -97,6 +97,15 @@ ORIGINAL = "Conversei com Joao Silva ontem e ele me indicou a vaga."
         ("final com tipo errado",
          "Meu contato e [EMAIL]",
          "Meu contato e Joao Silva, me chama la.", False),
+        ("marcadores consecutivos, ambos compatíveis",
+         "Contato [NOME] [EMAIL] confirmado.",
+         "Contato Ana ana@exemplo.com confirmado.", True),
+        ("marcadores consecutivos, segundo incompatível",
+         "Contato [NOME] [EMAIL] confirmado.",
+         "Contato Ana telefone incorreto.", False),
+        ("marcadores consecutivos, resto alterado",
+         "Contato [NOME] [EMAIL] confirmado.",
+         "Contato Ana ana@exemplo.com cancelado.", False),
     ],
 )
 def test_conferencia(caso, trecho, original, esperado):
