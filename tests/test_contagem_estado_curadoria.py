@@ -13,7 +13,7 @@ import streamlit as st
 RAIZ = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(RAIZ / "app"))
 
-from state import contagem_ativos_completa, estado_editorial, legenda_ativos  # noqa: E402
+from state import contagem_ativos_completa, estado_editorial, legenda_ativos, situacao_ativos  # noqa: E402
 from telas import curadoria  # noqa: E402
 
 HISTORIAS = [{"id": "h1", "ativos": [{"id": "a1"}]}]
@@ -67,3 +67,27 @@ def test_legado_so_status_ativos_preenchido():
 
     assert contagem == {"total": 3, "rascunho": 1, "ajustes": 0, "aprovado": 1, "rejeitado": 1}
     assert estado_editorial("h1:a3", {}, legado) == "rascunho"
+
+
+SEIS_ATIVOS = [
+    {"id": "h1", "ativos": [{"id": "a1"}, {"id": "a2"}]},
+    {"id": "h2", "ativos": [{"id": "a3"}, {"id": "a4"}]},
+    {"id": "h3", "ativos": [{"id": "a5"}, {"id": "a6"}]},
+]
+
+
+def test_situacao_processamento_nao_conta_aprovado_como_rascunho():
+    """Revisão da Luciene: com 6 ativos e 1 aprovado, o resumo mostra 5 aguardando."""
+    contagem = contagem_ativos_completa(SEIS_ATIVOS, {"h1:a1": "aprovado"})
+
+    assert situacao_ativos(contagem, "salvos no OCI") == "6 ativos · 5 aguardando revisão · salvos no OCI"
+
+
+def test_situacao_processamento_soma_ajustes_em_aguardando(ss):
+    """Ativo em ajustes (gravado pela Curadoria real) conta como aguardando revisão."""
+    ss.status_curadoria["h1:a1"] = "aprovado"
+    curadoria._solicitar_ajustes("h2", "a3", "Conferir a citação.")
+
+    contagem = contagem_ativos_completa(SEIS_ATIVOS, ss.status_curadoria, ss.status_ativos)
+
+    assert situacao_ativos(contagem, "aguardando gravação") == "6 ativos · 5 aguardando revisão · aguardando gravação"
