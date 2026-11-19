@@ -106,6 +106,12 @@ ORIGINAL = "Conversei com Joao Silva ontem e ele me indicou a vaga."
         ("marcadores consecutivos, resto alterado",
          "Contato [NOME] [EMAIL] confirmado.",
          "Contato Ana ana@exemplo.com cancelado.", False),
+        ("âncora repetida não pode pular conteúdo",
+         "Falei com [NOME] ontem e [EMAIL].",
+         "Falei com Ana ontem e 123. Outra ontem e x@exemplo.com.", False),
+        ("âncora repetida com o resto batendo",
+         "Falei com [NOME] ontem e [EMAIL].",
+         "Falei com Ana ontem e x@exemplo.com.", True),
     ],
 )
 def test_conferencia(caso, trecho, original, esperado):

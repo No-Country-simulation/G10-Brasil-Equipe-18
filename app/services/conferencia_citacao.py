@@ -107,41 +107,49 @@ def _lacuna_final_ok(marcador, resto):
     return False
 
 
-def _casa(literais, marcadores, indice, posicao, original, falhas):
-    """Tenta casar literais[indice] daqui, aplicando o marcador anterior."""
-    literal = literais[indice]
+def _ocorrencias(texto, alvo, inicio=0):
+    """Todas as posições de `alvo` em `texto`, a partir de `inicio`."""
+    posicao = texto.find(alvo, inicio)
+    while posicao != -1:
+        yield posicao
+        posicao = texto.find(alvo, posicao + 1)
+
+
+def _casa(literais, marcadores, indice, inicio, original, falhas):
+    """Confere a partir de literais[indice], já localizado em `inicio`.
+
+    O literal não é procurado de novo aqui: ele está exatamente onde foi
+    encontrado. Procurar outra ocorrência mais adiante deixava a conferência
+    pular o conteúdo intermediário sem validar.
+    """
+    fim = inicio + len(literais[indice])
     if indice == len(literais) - 1:
-        # Sobrou só o rabo: ele precisa aparecer, e não há marcador depois.
-        return original.find(literal, posicao) != -1
+        return True
 
     marcador = marcadores[indice]
     proximo = literais[indice + 1]
     ultimo_literal = indice + 1 == len(literais) - 1
 
-    inicio = original.find(literal, posicao)
-    while inicio != -1:
-        fim = inicio + len(literal)
-        if ultimo_literal and not proximo:
+    if not proximo:
+        if ultimo_literal:
             # Citação termina em marcador: o original segue depois dele.
             if _lacuna_final_ok(marcador, original[fim:]):
                 return True
             falhas.add(MOTIVO_TIPO)
-        elif not proximo:
+        else:
             # Dois marcadores colados, sem nada entre eles: sem âncora para
             # conferir a lacuna dos dois.
             falhas.add(MOTIVO_LIMITE)
-        else:
-            # O próximo literal ancora a lacuna — inclusive quando ele é só um
-            # espaço entre dois marcadores.
-            seguinte = original.find(proximo, fim)
-            while seguinte != -1:
-                ok, motivo = _avaliar_lacuna(marcador, original[fim:seguinte])
-                if ok and _casa(literais, marcadores, indice + 1, seguinte, original, falhas):
-                    return True
-                if motivo:
-                    falhas.add(motivo)
-                seguinte = original.find(proximo, seguinte + 1)
-        inicio = original.find(literal, inicio + 1)
+        return False
+
+    # O próximo literal ancora a lacuna — inclusive quando ele é só um espaço
+    # entre dois marcadores.
+    for seguinte in _ocorrencias(original, proximo, fim):
+        ok, motivo = _avaliar_lacuna(marcador, original[fim:seguinte])
+        if ok and _casa(literais, marcadores, indice + 1, seguinte, original, falhas):
+            return True
+        if motivo:
+            falhas.add(motivo)
     return False
 
 
@@ -172,8 +180,9 @@ def conferir_citacao(trecho, original):
         return False, "citação só com marcador, sem trecho literal"
 
     falhas = set()
-    if _casa(literais, marcadores, 0, 0, original, falhas):
-        return True, MOTIVO_ANONIMIZADO
+    for inicio in _ocorrencias(original, literais[0]):
+        if _casa(literais, marcadores, 0, inicio, original, falhas):
+            return True, MOTIVO_ANONIMIZADO
 
     if MOTIVO_TIPO in falhas:
         return False, MOTIVO_TIPO
