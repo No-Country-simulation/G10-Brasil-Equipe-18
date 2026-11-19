@@ -2,7 +2,7 @@
 import streamlit as st
 
 from state import ir_para, resumo_ativos
-from styles import cabecalho, md, topbar
+from styles import cabecalho, md, plural, topbar
 
 
 def _kpi_card(titulo, valor, descricao, tipo="neutro"):
@@ -41,7 +41,7 @@ def render():
         _kpi_card(
             "Interações importadas",
             len(ss.interacoes),
-            f"{num_canais} canais · Lote {ss.lote_id}",
+            f"{plural(num_canais, 'canal', 'canais')} · Lote {ss.lote_id}",
             "neutro"
         )
     
