@@ -48,7 +48,7 @@ Upload usa UTF-8 (aceita BOM), CSV com csv.DictReader e JSON com json.loads. Uma
 | tipo canônico (editorial) | testemunho_estruturado | case_sucesso |
 | tipo do front (formulário) | testemunho | texto |
 | campos no front | titulo, descricao, citacao | texto |
-| titulo canônico | Título editorial | Título editorial, opcional no schema |
+| titulo canônico | Título editorial, opcional no schema | Título editorial, opcional no schema |
 | texto canônico | Descrição + duas quebras + citação entre aspas | Narrativa em texto único |
 | vínculo | interacoes_origem e evidências conferidas | interacoes_origem e evidências conferidas |
 
@@ -59,7 +59,7 @@ Upload usa UTF-8 (aceita BOM), CSV com csv.DictReader e JSON com json.loads. Uma
 | **id** | `testemunho_estruturado` (chave local) | `ativo_001` (ID único do lote) | Gerado pela aplicação | ID único dentro do lote, sem colisão | Aprovado - IDs separados por contexto |
 | **tipo** | `testemunho` (tipo de formulário) | `testemunho_estruturado` (tipo editorial) | Normalizado pela aplicação | Validação contra schema canônico | **Post LinkedIn e Card mantêm seus tipos editoriais próprios** |
 | **nome** | `"Testemunho estruturado"` (rótulo UI) | Não presente no schema canônico | Interface do usuário | Exibição no Estúdio/Curadoria | Aprovado - apenas para apresentação |
-| **titulo** | `campos.titulo` (editável) | `titulo` (string, obrigatório) | Gerado por LLM, editável no Estúdio | Preservação após edição | Aprovado - campo mantido em ambas representações |
+| **titulo** | `campos.titulo` (editável; o formulário do Estúdio e da Curadoria lê o campo diretamente, então a projeção do front deve trazê-lo) | `titulo` (string, **opcional**: fora de `required` em `schemas/ativo_gerado_schema.json` e `Optional[str]` em `src/modelos.py`; máx. 200) | Gerado por LLM, editável no Estúdio | Preservação após edição; ativo canônico sem `titulo` continua válido | Aprovado - opcional no canônico; quando presente, igual a `campos.titulo` |
 | **descricao** | `campos.descricao` (editável) | Parte de `texto` (antes das aspas) | Gerado por LLM, editável no Estúdio | Conversão bidirecional sem perda | **Pendente** - adaptador não implementado |
 | **citacao** | `campos.citacao` (editável) | Parte de `texto` (entre aspas) | Gerado por LLM, editável no Estúdio | Conversão bidirecional sem perda | **Pendente** - adaptador não implementado |
 | **texto** | Não editável diretamente | Composição: `descricao + "\n\n\"" + citacao + "\""` | Derivado dos campos estruturados | Formato com duas quebras + aspas | Aprovado - regra de composição definida |
