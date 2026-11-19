@@ -1,29 +1,52 @@
 """Conferência de citação contra a mensagem original.
 
-A citação nasce do texto que passou pela anonimização, então pode conter
-marcadores como [NOME] ou [EMAIL] onde a mensagem original tem o dado real.
-A comparação direta (`trecho in original`) falha nesses casos. Esta função
-compara aceitando o marcador como trecho variável e exigindo que todo o
-resto do texto apareça literalmente, na mesma ordem.
+A REGRA — é isto que a função promete, e é o que os testes gerados cobrem.
+Qualquer caso fora daqui é decisão de contrato, não de implementação:
 
-O trecho variável tem limite: no máximo MAX_PALAVRAS_MARCADOR palavras e
-sem atravessar fim de frase. Sem esses limites, uma citação com marcador
-consegue "pular" meia mensagem e casar com texto que não é dela.
+1. Sem marcador: a citação confere quando o texto aparece literalmente na
+   mensagem original (MOTIVO_LITERAL).
+2. Com marcador: o texto literal da citação tem que aparecer no original, na
+   mesma ordem, e cada marcador cobre uma lacuna — o trecho entre dois
+   literais, ou o trecho logo depois do último literal quando o marcador
+   fecha a citação (MOTIVO_ANONIMIZADO).
+3. Toda lacuna tem no máximo MAX_PALAVRAS_MARCADOR palavras e não pode
+   conter fim de frase.
+4. A lacuna tem que ter a forma do tipo do marcador: [EMAIL] com arroba e
+   domínio, [CPF] com 11 dígitos, [TELEFONE] com 8 dígitos ou mais, [NOME]
+   só com letras e no máximo MAX_PALAVRAS_MARCADOR palavras.
+5. O alinhamento não pode pular conteúdo: cada literal é conferido exatamente
+   na posição em que foi encontrado, e o que fica entre dois literais é
+   conferido pelas regras 3 e 4. Se nenhum alinhamento satisfaz as regras, a
+   citação não confere.
 
-Distingue dois sucessos, e a interface não deve tratá-los como iguais:
+Princípio: na dúvida, reprova. A função só responde que confere quando consegue
+provar. O que é formato não muda o que foi dito e é tolerado: espaço a mais
+(a limpeza do contrato já normaliza espaços) e reticências no fim da citação.
+O que muda o texto é recusado. Se nenhuma leitura satisfaz as regras, o
+resultado é não confere, com motivo — a função nunca tenta adivinhar.
+Citação recortada no meio de palavra também não confere.
 
-- MOTIVO_LITERAL — o trecho não tem marcador e aparece literal na mensagem.
-- MOTIVO_ANONIMIZADO — o trecho tem marcador e o texto literal bate, com a
-  lacuna coberta por conteúdo de forma compatível com o tipo do marcador.
+Decisões de contrato embutidas, para ficarem visíveis:
+- Dois marcadores colados, sem literal entre eles, reprovam: sem âncora não há
+  como medir a lacuna (MOTIVO_LIMITE).
+- Marcador no início da citação confere pelo mesmo critério do meio: a lacuna
+  é o trecho até o próximo literal.
 
-O marcador pode estar no meio ou no fim da citação: no fim, o original segue
-depois dele, então a lacuna é lida como um trecho curto a partir dali.
+Fora de escopo, de propósito: qual interação é a origem. O contrato
+(`especificacao_dados` §4) exige citação literal amarrada ao `id_interacao`;
+esta função recebe os dois textos, e resolver o id é de quem chama.
 
 Limitação declarada: nada aqui prova que a anonimização foi correta nem que
 o conteúdo do ativo é fiel ao relato. MOTIVO_ANONIMIZADO diz que a citação é
 compatível com o texto anonimizado e que a lacuna tem a forma esperada do
-tipo; o dado real por trás do marcador não é conferido, e a comparação com
-a mensagem original sem transformação é o caso MOTIVO_LITERAL.
+tipo; o dado real por trás do marcador não é conferido, e a comparação sem
+transformação é o caso MOTIVO_LITERAL.
+
+Referências: `docs/architecture/docs_data_ml/especificacao_dados.md` §4
+(citações literais com id_interacao), `docs/architecture/docs_data_ml/
+contrato_saida.md` §4 (marcadores e melhor esforço na detecção de nomes) e
+`docs/CQF_SPECIFICATION.md` (preservação de citações literais; edição exige
+nova validação de fidelidade).
 """
 import re
 
@@ -45,10 +68,23 @@ _PONTUACAO_FINAL = ".,;:!?"
 # Forma esperada do conteúdo escondido atrás de cada marcador. Não valida o
 # dado real (não temos acesso a ele): só impede que um marcador de um tipo
 # cubra texto de outro, que é o que deixaria a lacuna genérica.
-_SO_NOME = re.compile(r"^[^\W\d_]+(?:[ '\-.][^\W\d_]+)*$")
+_SO_NOME = re.compile(r"^[^\W\d_]+(?:[ ,.\-'()]+[^\W\d_]+)*[.,)]?$")
 _EMAIL = re.compile(r"^[\w.+-]+@[\w-]+(\.[\w-]+)+$")
 _CPF = re.compile(r"^\d{3}\.?\d{3}\.?\d{3}-?\d{2}$")
 _TELEFONE = re.compile(r"^[\d()+\-\s]{8,}$")
+
+
+def _preparar(texto):
+    """Normaliza só o que é formato: espaços repetidos e reticência final."""
+    texto = re.sub(r"\s+", " ", (texto or "")).strip()
+    return re.sub(r"(?:\.{2,}|…)$", "", texto).strip()
+
+
+def _limite_de_palavra(original, posicao):
+    """A posição cai em limite de palavra? (antes/depois não é letra ou número)"""
+    if posicao < 0 or posicao >= len(original):
+        return True
+    return not original[posicao].isalnum()
 
 
 def _literais_e_marcadores(trecho):
@@ -124,6 +160,10 @@ def _casa(literais, marcadores, indice, inicio, original, falhas):
     """
     fim = inicio + len(literais[indice])
     if indice == len(literais) - 1:
+        # O último literal tem que terminar em limite de palavra: citação
+        # recortada no meio de uma palavra não confere.
+        if literais[indice] and not _limite_de_palavra(original, fim):
+            return False
         return True
 
     marcador = marcadores[indice]
@@ -162,8 +202,8 @@ def conferir_citacao(trecho, original):
     literal do sucesso com anonimização, e confere=False vem sempre com o
     motivo, para a tela poder explicar em vez de só reprovar.
     """
-    trecho = (trecho or "").strip()
-    original = (original or "").strip()
+    trecho = _preparar(trecho)
+    original = _preparar(original)
     if not trecho:
         return False, "citação vazia"
     if not original:
@@ -171,9 +211,13 @@ def conferir_citacao(trecho, original):
 
     literais, marcadores = _literais_e_marcadores(trecho)
     if not marcadores:
-        # Sem marcador: conferência literal, igual à de hoje.
-        if trecho in original:
-            return True, MOTIVO_LITERAL
+        # Sem marcador: conferência literal, em limite de palavra.
+        inicio = original.find(trecho)
+        while inicio != -1:
+            fim = inicio + len(trecho)
+            if _limite_de_palavra(original, inicio - 1) and _limite_de_palavra(original, fim):
+                return True, MOTIVO_LITERAL
+            inicio = original.find(trecho, inicio + 1)
         return False, "trecho não encontrado na mensagem original"
 
     if not any(literal.strip() for literal in literais):
@@ -181,6 +225,8 @@ def conferir_citacao(trecho, original):
 
     falhas = set()
     for inicio in _ocorrencias(original, literais[0]):
+        if literais[0] and not _limite_de_palavra(original, inicio - 1):
+            continue
         if _casa(literais, marcadores, 0, inicio, original, falhas):
             return True, MOTIVO_ANONIMIZADO
 
