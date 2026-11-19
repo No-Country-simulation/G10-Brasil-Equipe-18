@@ -56,7 +56,7 @@ Upload usa UTF-8 (aceita BOM), CSV com csv.DictReader e JSON com json.loads. Uma
 
 | Campo | Representação Front | Representação Canônica | Origem do dado | Critério de teste | Decisão |
 |-------|---------------------|------------------------|----------------|-------------------|---------|
-| **id** | `testemunho_estruturado` (chave local) | `ativo_001` (ID único do lote) | Gerado pela aplicação | ID único dentro do lote, sem colisão | Aprovado - IDs separados por contexto |
+| **id_ativo** (canônico) / `id` (front) | `id`: `testemunho_estruturado` (chave local) | `id_ativo`: `ativo_001` (ID único do lote) | Gerado pela aplicação | ID único dentro do lote, sem colisão | Aprovado - IDs separados por contexto |
 | **tipo** | `testemunho` (tipo de formulário) | `testemunho_estruturado` (tipo editorial) | Normalizado pela aplicação | Validação contra schema canônico | **Post LinkedIn e Card mantêm seus tipos editoriais próprios** |
 | **nome** | `"Testemunho estruturado"` (rótulo UI) | Não presente no schema canônico | Interface do usuário | Exibição no Estúdio/Curadoria | Aprovado - apenas para apresentação |
 | **titulo** | `campos.titulo` (editável; o formulário do Estúdio e da Curadoria lê o campo diretamente, então a projeção do front deve trazê-lo) | `titulo` (string, **opcional**: fora de `required` em `schemas/ativo_gerado_schema.json` e `Optional[str]` em `src/modelos.py`; máx. 200) | Gerado por LLM, editável no Estúdio | Preservação após edição; ativo canônico sem `titulo` continua válido | Aprovado - opcional no canônico; quando presente, igual a `campos.titulo` |
@@ -74,7 +74,7 @@ Upload usa UTF-8 (aceita BOM), CSV com csv.DictReader e JSON com json.loads. Uma
 
 | Campo | Representação Front | Representação Canônica | Origem do dado | Critério de teste | Decisão |
 |-------|---------------------|------------------------|----------------|-------------------|---------|
-| **id** | `case_sucesso` (chave local) | `ativo_002` (ID único do lote) | Gerado pela aplicação | ID único dentro do lote, sem colisão | Aprovado - IDs separados por contexto |
+| **id_ativo** (canônico) / `id` (front) | `id`: `case_sucesso` (chave local) | `id_ativo`: `ativo_002` (ID único do lote) | Gerado pela aplicação | ID único dentro do lote, sem colisão | Aprovado - IDs separados por contexto |
 | **tipo** | `texto` (tipo de formulário) | `case_sucesso` (tipo editorial) | Normalizado pela aplicação | Validação contra schema canônico | **Post LinkedIn e Card mantêm seus tipos editoriais próprios** |
 | **nome** | `"Case de sucesso"` (rótulo UI) | Não presente no schema canônico | Interface do usuário | Exibição no Estúdio/Curadoria | Aprovado - apenas para apresentação |
 | **titulo** | Não presente no formulário atual | `titulo` (string, opcional no schema) | Pode ser gerado por LLM | **Decidir se será metadado ou incorporado ao texto** | **Pendente de decisão** - evitar duplicação |
