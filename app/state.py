@@ -136,3 +136,42 @@ def resumo_ativos():
     for status in st.session_state.status_ativos.values():
         contagem[status] += 1
     return contagem
+
+
+def contagem_ativos_completa(historias, status_dict):
+    """Conta ativos por estado, incluindo os que não têm status registrado.
+    
+    Args:
+        historias: lista de histórias do lote
+        status_dict: dicionário {f"{hid}:{aid}": "rascunho"|"aprovado"|"rejeitado"}
+    
+    Returns:
+        dict com: total, rascunho, ajustes, aprovado, rejeitado
+    """
+    total = sum(len(h.get("ativos", [])) for h in historias)
+    aprovado = 0
+    rejeitado = 0
+    ajustes = 0
+    
+    # Conta os que têm status registrado
+    for h in historias:
+        for ativo in h.get("ativos", []):
+            chave = f"{h['id']}:{ativo['id']}"
+            status = status_dict.get(chave, "rascunho")
+            if status == "aprovado":
+                aprovado += 1
+            elif status == "rejeitado":
+                rejeitado += 1
+            elif status == "ajustes":
+                ajustes += 1
+    
+    # Rascunho = total - (aprovado + rejeitado + ajustes)
+    rascunho = total - aprovado - rejeitado - ajustes
+    
+    return {
+        "total": total,
+        "rascunho": rascunho,
+        "ajustes": ajustes,
+        "aprovado": aprovado,
+        "rejeitado": rejeitado,
+    }

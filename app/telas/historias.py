@@ -1,6 +1,6 @@
 import streamlit as st
 
-from state import CATEGORIA_TODAS, campo, definir, ir_para, resumo_ativos
+from state import CATEGORIA_TODAS, campo, contagem_ativos_completa, definir, ir_para, resumo_ativos
 from styles import avatar, caixa, cabecalho, chip, esc, md, plural, topbar
 
 
@@ -45,15 +45,19 @@ def render():
         st.button("→ Ir para Importação", type="primary", on_click=ir_para, args=("importacao",))
         return
 
-    contagem = resumo_ativos()
-    total_ativos = sum(contagem.values())
+    contagem = contagem_ativos_completa(historias, ss.status_ativos)
+    total_ativos = contagem["total"]
     categorias = sorted({h["categoria"] for h in historias})
 
     c1, c2, c3 = st.columns(3)
     n_canais = len({i['canal'] for i in ss.interacoes})
     _kpi(c1, "Interações analisadas", len(ss.interacoes), f"{plural(n_canais, 'canal', 'canais')} no lote {ss.lote_id}")
     _kpi(c2, "Histórias detectadas", len(historias), f"{len(categorias)} categorias identificadas")
-    _kpi(c3, "Ativos gerados", total_ativos, f"{contagem['rascunho']} rascunhos aguardando revisão humana")
+    aguardando = contagem["rascunho"] + contagem["ajustes"]
+    legenda = f"{plural(aguardando, 'rascunho aguardando', 'rascunhos aguardando')} revisão humana"
+    if contagem["aprovado"] > 0:
+        legenda += f" · {contagem['aprovado']} {plural(contagem['aprovado'], 'aprovado', 'aprovados')}"
+    _kpi(c3, "Ativos gerados", total_ativos, legenda)
 
     origem_analise = ss.get("proc_origem_analise", "")
     
