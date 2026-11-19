@@ -16,6 +16,9 @@ Distingue dois sucessos, e a interface não deve tratá-los como iguais:
 - MOTIVO_ANONIMIZADO — o trecho tem marcador e o texto literal bate, com a
   lacuna coberta por conteúdo de forma compatível com o tipo do marcador.
 
+O marcador pode estar no meio ou no fim da citação: no fim, o original segue
+depois dele, então a lacuna é lida como um trecho curto a partir dali.
+
 Limitação declarada: nada aqui prova que a anonimização foi correta nem que
 o conteúdo do ativo é fiel ao relato. MOTIVO_ANONIMIZADO diz que a citação é
 compatível com o texto anonimizado e que a lacuna tem a forma esperada do
@@ -29,36 +32,38 @@ MARCADORES = ("[NOME]", "[EMAIL]", "[CPF]", "[TELEFONE]")
 MOTIVO_LITERAL = "trecho literal conferido"
 MOTIVO_ANONIMIZADO = "trecho compatível com anonimização"
 
+MOTIVO_TIPO = "marcador cobrindo conteúdo incompatível com o tipo"
+MOTIVO_LIMITE = "marcador cobrindo trecho longo ou atravessando fim de frase"
+
 # Nome completo cabe em 5 palavras; e-mail e telefone em uma ou duas.
 MAX_PALAVRAS_MARCADOR = 5
-# Janela em caracteres só como teto técnico, para a expressão não correr solta.
-JANELA_CARACTERES = 80
 
 _PADRAO_MARCADOR = re.compile("|".join(re.escape(m) for m in MARCADORES))
 _FIM_DE_FRASE = re.compile(r"[.!?][\s\"')\]]|\n")
+_PONTUACAO_FINAL = ".,;:!?"
 
 # Forma esperada do conteúdo escondido atrás de cada marcador. Não valida o
 # dado real (não temos acesso a ele): só impede que um marcador de um tipo
 # cubra texto de outro, que é o que deixaria a lacuna genérica.
-_FORMAS = {
-    "[EMAIL]": re.compile(r"[\w.+-]+@[\w-]+(\.[\w-]+)+"),
-    "[CPF]": re.compile(r"\d{3}\.?\d{3}\.?\d{3}-?\d{2}"),
-    "[TELEFONE]": re.compile(r"[\d()+\-\s]{8,}"),
-    "[NOME]": re.compile(r"[^\W\d_]+(?:[ '\-.][^\W\d_]+)*"),
-}
-
 _SO_NOME = re.compile(r"^[^\W\d_]+(?:[ '\-.][^\W\d_]+)*$")
+_EMAIL = re.compile(r"^[\w.+-]+@[\w-]+(\.[\w-]+)+$")
+_CPF = re.compile(r"^\d{3}\.?\d{3}\.?\d{3}-?\d{2}$")
+_TELEFONE = re.compile(r"^[\d()+\-\s]{8,}$")
 
 
-def _partes(trecho):
-    """Divide o trecho em (pedaços literais, marcadores encontrados)."""
-    partes, posicao = [], 0
+def _literais_e_marcadores(trecho):
+    """Separa o trecho em literais e marcadores.
+
+    Devolve (literais, marcadores): `marcadores[i]` fica entre `literais[i]`
+    e `literais[i + 1]`, então a lista de literais tem sempre um item a mais.
+    """
+    literais, marcadores, posicao = [], [], 0
     for achado in _PADRAO_MARCADOR.finditer(trecho):
-        partes.append(("literal", trecho[posicao:achado.start()]))
-        partes.append(("marcador", achado.group(0)))
+        literais.append(trecho[posicao:achado.start()])
+        marcadores.append(achado.group(0))
         posicao = achado.end()
-    partes.append(("literal", trecho[posicao:]))
-    return partes
+    literais.append(trecho[posicao:])
+    return literais, marcadores
 
 
 def _cabe_no_tipo(marcador, texto):
@@ -66,16 +71,67 @@ def _cabe_no_tipo(marcador, texto):
     texto = (texto or "").strip()
     if not texto:
         return False
-    forma = _FORMAS.get(marcador)
-    if forma is None:
-        return False
     if marcador == "[NOME]":
-        if len(texto.split()) > MAX_PALAVRAS_MARCADOR:
-            return False
-        return bool(_SO_NOME.match(texto))
+        return bool(_SO_NOME.match(texto)) and len(texto.split()) <= MAX_PALAVRAS_MARCADOR
+    if marcador == "[EMAIL]":
+        return bool(_EMAIL.match(texto))
+    if marcador == "[CPF]":
+        return bool(_CPF.match(texto))
     if marcador == "[TELEFONE]":
-        return bool(forma.fullmatch(texto)) and sum(c.isdigit() for c in texto) >= 8
-    return bool(forma.fullmatch(texto))
+        return bool(_TELEFONE.match(texto)) and sum(c.isdigit() for c in texto) >= 8
+    return False
+
+
+def _avaliar_lacuna(marcador, lacuna):
+    """Devolve (ok, motivo) para o texto coberto por um marcador."""
+    if not (lacuna or "").strip():
+        return False, MOTIVO_TIPO
+    if len(lacuna.split()) > MAX_PALAVRAS_MARCADOR or _FIM_DE_FRASE.search(lacuna):
+        return False, MOTIVO_LIMITE
+    if not _cabe_no_tipo(marcador, lacuna.strip()):
+        return False, MOTIVO_TIPO
+    return True, ""
+
+
+def _lacuna_final_ok(marcador, resto):
+    """Marcador no fim da citação: o original pode continuar depois dele.
+
+    Tenta de uma a MAX_PALAVRAS_MARCADOR palavras a partir do ponto onde o
+    texto literal terminou, aceitando a primeira que tenha a forma do tipo.
+    """
+    palavras = (resto or "").split()
+    for total in range(1, min(len(palavras), MAX_PALAVRAS_MARCADOR) + 1):
+        candidato = " ".join(palavras[:total]).rstrip(_PONTUACAO_FINAL)
+        if _cabe_no_tipo(marcador, candidato):
+            return True
+    return False
+
+
+def _casa(literais, marcadores, indice, posicao, original, falhas):
+    """Tenta casar literais[indice] daqui, aplicando o marcador anterior."""
+    if indice == len(literais) - 1:
+        return original.find(literais[indice], posicao) != -1
+
+    literal, proximo = literais[indice], literais[indice + 1]
+    marcador = marcadores[indice]
+    inicio = original.find(literal, posicao)
+    while inicio != -1:
+        fim = inicio + len(literal)
+        if proximo.strip():
+            seguinte = original.find(proximo, fim)
+            while seguinte != -1:
+                ok, motivo = _avaliar_lacuna(marcador, original[fim:seguinte])
+                if ok and _casa(literais, marcadores, indice + 1, seguinte, original, falhas):
+                    return True
+                if motivo:
+                    falhas.add(motivo)
+                seguinte = original.find(proximo, seguinte + 1)
+        elif _lacuna_final_ok(marcador, original[fim:]):
+            return True
+        else:
+            falhas.add(MOTIVO_TIPO)
+        inicio = original.find(literal, inicio + 1)
+    return False
 
 
 def conferir_citacao(trecho, original):
@@ -94,44 +150,22 @@ def conferir_citacao(trecho, original):
     if not original:
         return False, "mensagem original ausente"
 
-    partes = _partes(trecho)
-    if len(partes) == 1:
+    literais, marcadores = _literais_e_marcadores(trecho)
+    if not marcadores:
         # Sem marcador: conferência literal, igual à de hoje.
         if trecho in original:
             return True, MOTIVO_LITERAL
         return False, "trecho não encontrado na mensagem original"
 
-    if not any(tipo == "literal" and texto.strip() for tipo, texto in partes):
+    if not any(literal.strip() for literal in literais):
         return False, "citação só com marcador, sem trecho literal"
 
-    marcadores = [texto for tipo, texto in partes if tipo == "marcador"]
-    expressao = "".join(
-        re.escape(texto) if tipo == "literal" else f"(.{{1,{JANELA_CARACTERES}}}?)"
-        for tipo, texto in partes
-    )
-
-    houve_lacuna_limite = False
-    houve_lacuna_de_tipo = False
-    for achado in re.finditer(expressao, original, flags=re.DOTALL):
-        coberturas = [g for g in achado.groups() if g is not None]
-        if len(coberturas) != len(marcadores):
-            continue
-        if any(
-            len(g.split()) > MAX_PALAVRAS_MARCADOR or _FIM_DE_FRASE.search(g)
-            for g in coberturas
-        ):
-            houve_lacuna_limite = True
-            continue
-        if not all(
-            _cabe_no_tipo(marcador, cobertura)
-            for marcador, cobertura in zip(marcadores, coberturas)
-        ):
-            houve_lacuna_de_tipo = True
-            continue
+    falhas = set()
+    if _casa(literais, marcadores, 0, 0, original, falhas):
         return True, MOTIVO_ANONIMIZADO
 
-    if houve_lacuna_de_tipo:
-        return False, "marcador cobrindo conteúdo incompatível com o tipo"
-    if houve_lacuna_limite:
-        return False, "marcador cobrindo trecho longo ou atravessando fim de frase"
+    if MOTIVO_TIPO in falhas:
+        return False, MOTIVO_TIPO
+    if MOTIVO_LIMITE in falhas:
+        return False, MOTIVO_LIMITE
     return False, "trecho alterado ou não encontrado na mensagem original"
