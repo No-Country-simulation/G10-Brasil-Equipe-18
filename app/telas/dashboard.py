@@ -77,7 +77,7 @@ def render():
         with col2:
             md(f'<div style="text-align:center;">'
                f'<div style="font-size:28px; font-weight:700; color:#F59E0B;">{contagem["rascunho"] + contagem["ajustes"]}</div>'
-               f'<div class="cl-muted">Rascunhos</div>'
+               f'<div class="cl-muted">Aguardando revisão</div>'
                f'</div>')
         
         with col3:
