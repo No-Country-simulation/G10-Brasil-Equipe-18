@@ -1,0 +1,18 @@
+[
+  {
+    "versao_schema": "1.0",
+    "id": 1,
+    "autor_id": "membro_001",
+    "data": "2026-11-18T18:00:00Z",
+    "origem": "simulado",
+    "texto": "Depois de concluir o curso de análise de dados e montar dois projetos para meu portfólio, consegui minha primeira vaga como analista júnior."
+  },
+  {
+    "versao_schema": "1.0",
+    "id": 2,
+    "autor_id": "membro_002",
+    "data": "2026-11-18T18:00:00Z",
+    "origem": "simulado",
+    "texto": "Desenvolvi um painel de vendas em Power BI e apresentei o projeto na reunião da comunidade."
+  }
+]
