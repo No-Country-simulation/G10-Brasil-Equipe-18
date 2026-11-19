@@ -60,8 +60,8 @@ Upload usa UTF-8 (aceita BOM), CSV com csv.DictReader e JSON com json.loads. Uma
 | **tipo** | `testemunho` (tipo de formulário) | `testemunho_estruturado` (tipo editorial) | Normalizado pela aplicação | Validação contra schema canônico | **Post LinkedIn e Card mantêm seus tipos editoriais próprios** |
 | **nome** | `"Testemunho estruturado"` (rótulo UI) | Não presente no schema canônico | Interface do usuário | Exibição no Estúdio/Curadoria | Aprovado - apenas para apresentação |
 | **titulo** | `campos.titulo` (editável; o formulário do Estúdio e da Curadoria lê o campo diretamente, então a projeção do front deve trazê-lo) | `titulo` (string, **opcional**: fora de `required` em `schemas/ativo_gerado_schema.json` e `Optional[str]` em `src/modelos.py`; máx. 200) | Gerado por LLM, editável no Estúdio | Preservação após edição; ativo canônico sem `titulo` continua válido | Aprovado - opcional no canônico; quando presente, igual a `campos.titulo` |
-| **descricao** | `campos.descricao` (editável) | Parte de `texto` (antes das aspas) | Gerado por LLM, editável no Estúdio | Conversão bidirecional sem perda | **Pendente** - adaptador não implementado |
-| **citacao** | `campos.citacao` (editável) | Parte de `texto` (entre aspas) | Gerado por LLM, editável no Estúdio | Conversão bidirecional sem perda | **Pendente** - adaptador não implementado |
+| **descricao** | `campos.descricao` (editável) | Parte de `texto` (antes das aspas) | Gerado por LLM, editável no Estúdio | Ida: compor `texto`. Volta: ler do envelope (ver 4.6) | **Pendente** - adaptador não implementado |
+| **citacao** | `campos.citacao` (editável) | Parte de `texto` (entre aspas) | Gerado por LLM, editável no Estúdio | Ida: compor `texto`. Volta: ler do envelope (ver 4.6) | **Pendente** - adaptador não implementado |
 | **texto** | Não editável diretamente | Composição: `descricao + "\n\n\"" + citacao + "\""` | Derivado dos campos estruturados | Formato com duas quebras + aspas | Aprovado - regra de composição definida |
 | **interacoes_origem** | Não editável (metadado exibido) | `interacoes_origem` (array de int) | Vínculo estabelecido na análise | Rastreabilidade completa | Aprovado - vínculo preservado |
 | **status_revisao** | Não presente (usa controles separados) | `status_revisao: "pendente"` | Iniciado pela aplicação | Mapeamento: rascunho/ajustes → pendente | **Pendente** - envelope deve preservar estados detalhados |
@@ -99,6 +99,10 @@ Upload usa UTF-8 (aceita BOM), CSV com csv.DictReader e JSON com json.loads. Uma
 **Proposta de mapeamento, ainda não adaptador implementado.** Preservar dados estruturados de título/descrição/citação no envelope de apresentação; não tentar recuperar campos perdidos dividindo texto livre. Ao salvar edições, atualizar também a projeção canônica. No case, o formulário atual só edita texto: conferir se o título será exibido como metadado ou incorporado ao conteúdo sem duplicação. Não declarar essa decisão de interface concluída.
 
 O schema canônico de ativo tem additionalProperties=false. Não acrescentar campos, id_historia, lote ou estados próprios ao objeto AtivoGerado sem revisão versionada. Esses dados podem ficar num envelope explicitamente separado.
+
+### 4.6 Volta ao formulário depende do envelope
+
+A volta do canônico para o formulário do front (por exemplo, ao recuperar um ativo no Histórico) depende dos campos estruturados preservados no envelope de curadoria: `historias[].ativos[].campos` com `titulo`, `descricao` e `citacao` no testemunho e `texto` no case. O formulário é reconstruído a partir desses campos, sem divisão de texto livre: o adaptador não deve separar o `texto` canônico em descrição e citação procurando quebras de linha ou aspas. Se o envelope não trouxer os campos estruturados, a volta é tratada como dado incompleto e não como texto a ser fatiado.
 
 ## 5. Metadados e governança
 | Campo canônico | Quem preenche |
