@@ -169,6 +169,11 @@ def esc(texto):
     return _html.escape(str(texto))
 
 
+def plural(n, singular, plural_):
+    """Ex.: plural(1, "canal", "canais") -> "1 canal"."""
+    return f"{n} {singular if n == 1 else plural_}"
+
+
 def chip(texto, tom="gray"):
     return f'<span class="chip chip-{tom}">{esc(texto)}</span>'
 

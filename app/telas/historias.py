@@ -1,7 +1,7 @@
 import streamlit as st
 
 from state import CATEGORIA_TODAS, campo, definir, ir_para, resumo_ativos
-from styles import avatar, caixa, cabecalho, chip, esc, md, topbar
+from styles import avatar, caixa, cabecalho, chip, esc, md, plural, topbar
 
 
 def _kpi(coluna, rotulo, numero, legenda):
@@ -50,7 +50,8 @@ def render():
     categorias = sorted({h["categoria"] for h in historias})
 
     c1, c2, c3 = st.columns(3)
-    _kpi(c1, "Interações analisadas", len(ss.interacoes), f"{len({i['canal'] for i in ss.interacoes})} canais no lote {ss.lote_id}")
+    n_canais = len({i['canal'] for i in ss.interacoes})
+    _kpi(c1, "Interações analisadas", len(ss.interacoes), f"{plural(n_canais, 'canal', 'canais')} no lote {ss.lote_id}")
     _kpi(c2, "Histórias detectadas", len(historias), f"{len(categorias)} categorias identificadas")
     _kpi(c3, "Ativos gerados", total_ativos, f"{contagem['rascunho']} rascunhos aguardando revisão humana")
 

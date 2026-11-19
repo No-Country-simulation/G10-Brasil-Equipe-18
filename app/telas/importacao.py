@@ -7,7 +7,7 @@ import streamlit as st
 
 from services import data_service as svc
 from state import CANAL_TODOS, campo, definir, ir_para, resetar_lote, valor
-from styles import cabecalho, chip, esc, md, topbar
+from styles import cabecalho, chip, esc, md, plural, topbar
 
 
 def render():
@@ -260,9 +260,9 @@ def _previa():
     if not interacoes:
         detalhe = "Nenhuma fonte carregada. Escolha uma aba acima para importar dados."
     elif origem == "Discord":
-        detalhe = f"{esc(origem)} · {len(canais)} canais"
+        detalhe = f"{esc(origem)} · {plural(len(canais), 'canal', 'canais')}"
     else:
-        detalhe = f"Lote demonstrativo · {len(canais)} canais · mensagens fictícias"
+        detalhe = f"Lote demonstrativo · {plural(len(canais), 'canal', 'canais')} · mensagens fictícias"
     with st.container(border=True):
         esq, dir_ = st.columns([3, 1])
         with esq:
