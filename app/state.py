@@ -209,5 +209,24 @@ def legenda_ativos(contagem):
     
     if contagem["aprovado"] > 0:
         legenda += f" · {plural(contagem['aprovado'], 'aprovado', 'aprovados')}"
-    
+
     return legenda
+
+
+def situacao_ativos(contagem, gravacao):
+    """Linha de situação do resumo do lote no Processamento.
+
+    Mostra o total de ativos e quantos aguardam revisão (rascunho e ajustes),
+    para que um ativo aprovado não continue contado como rascunho.
+
+    Args:
+        contagem: dict retornado por contagem_ativos_completa()
+        gravacao: texto do estado da gravação (ex: "salvos no OCI")
+
+    Returns:
+        str: ex. "6 ativos · 5 aguardando revisão · salvos no OCI"
+    """
+    from styles import plural
+
+    aguardando = contagem["rascunho"] + contagem["ajustes"]
+    return f"{plural(contagem['total'], 'ativo', 'ativos')} · {aguardando} aguardando revisão · {gravacao}"
