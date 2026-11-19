@@ -138,13 +138,27 @@ def resumo_ativos():
     return contagem
 
 
-def contagem_ativos_completa(historias, status_dict):
+def estado_editorial(chave, status_curadoria, status_legado=None):
+    """Estado editorial atual de um ativo ("hist:ativo").
+
+    Lê primeiro status_curadoria, que a Curadoria grava em todas as decisões
+    (inclusive Solicitar ajustes). Usa status_ativos (legado) só quando o
+    estado atual não existe. Sem nenhum dos dois, o ativo é rascunho.
+    """
+    status = (status_curadoria or {}).get(chave)
+    if status is None:
+        status = (status_legado or {}).get(chave, "rascunho")
+    return status
+
+
+def contagem_ativos_completa(historias, status_curadoria, status_legado=None):
     """Conta ativos por estado, incluindo os que não têm status registrado.
-    
+
     Args:
         historias: lista de histórias do lote
-        status_dict: dicionário {f"{hid}:{aid}": "rascunho"|"aprovado"|"rejeitado"}
-    
+        status_curadoria: estado atual {f"{hid}:{aid}": "rascunho"|"ajustes"|"aprovado"|"rejeitado"}
+        status_legado: status_ativos (legado), usado só quando o estado atual não existe
+
     Returns:
         dict com: total, rascunho, ajustes, aprovado, rejeitado
     """
@@ -152,12 +166,12 @@ def contagem_ativos_completa(historias, status_dict):
     aprovado = 0
     rejeitado = 0
     ajustes = 0
-    
+
     # Conta os que têm status registrado
     for h in historias:
         for ativo in h.get("ativos", []):
             chave = f"{h['id']}:{ativo['id']}"
-            status = status_dict.get(chave, "rascunho")
+            status = estado_editorial(chave, status_curadoria, status_legado)
             if status == "aprovado":
                 aprovado += 1
             elif status == "rejeitado":

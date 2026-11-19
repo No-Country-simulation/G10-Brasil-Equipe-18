@@ -145,7 +145,7 @@ def _desenhar(etapas, botoes):
             historias_ok = etapas[4] == "concluida"
             historias = ss.get("historias", []) if historias_ok else []
             if historias_ok:
-                contagem = contagem_ativos_completa(historias, ss.status_ativos)
+                contagem = contagem_ativos_completa(historias, ss.status_curadoria, ss.status_ativos)
                 aguardando = contagem["rascunho"] + contagem["ajustes"]
                 if persistido:
                     situacao = f"{plural(contagem['total'], 'rascunho', 'rascunhos')} · salvos no OCI"

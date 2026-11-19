@@ -1,6 +1,6 @@
 import streamlit as st
 
-from state import CATEGORIA_TODAS, campo, contagem_ativos_completa, definir, ir_para, legenda_ativos, resumo_ativos
+from state import CATEGORIA_TODAS, campo, contagem_ativos_completa, definir, estado_editorial, ir_para, legenda_ativos, resumo_ativos
 from styles import avatar, caixa, cabecalho, chip, esc, md, plural, topbar
 
 
@@ -25,8 +25,8 @@ def _revisar(hid):
 
 def _status_da_historia(h):
     ss = st.session_state
-    estados = [ss.status_ativos.get(f"{h['id']}:{a['id']}", "rascunho") for a in h["ativos"]]
-    if "rascunho" in estados:
+    estados = [estado_editorial(f"{h['id']}:{a['id']}", ss.status_curadoria, ss.status_ativos) for a in h["ativos"]]
+    if any(e in ("rascunho", "ajustes") for e in estados):
         return chip("Revisão humana pendente", "yellow")
     if all(e == "rejeitado" for e in estados):
         return chip("Rejeitado", "red")
@@ -45,7 +45,7 @@ def render():
         st.button("→ Ir para Importação", type="primary", on_click=ir_para, args=("importacao",))
         return
 
-    contagem = contagem_ativos_completa(historias, ss.status_ativos)
+    contagem = contagem_ativos_completa(historias, ss.status_curadoria, ss.status_ativos)
     total_ativos = contagem["total"]
     categorias = sorted({h["categoria"] for h in historias})
 

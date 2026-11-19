@@ -31,7 +31,7 @@ def render():
     )
     
     # Métricas principais
-    contagem = contagem_ativos_completa(ss.historias, ss.status_ativos)
+    contagem = contagem_ativos_completa(ss.historias, ss.status_curadoria, ss.status_ativos)
     total_ativos = contagem["total"]
     num_canais = len({i["canal"] for i in ss.interacoes})
     
