@@ -1,0 +1,103 @@
+"""Testes da conferência de citação.
+
+Cobrem os quatro tipos de dado pessoal mascarados, a rejeição de citação
+alterada e de citação de outra interação, e um guarda-corpo: se a
+anonimização passar a produzir um marcador que a conferência não conhece,
+o último teste quebra em vez de o defeito voltar em silêncio.
+"""
+import re
+import sys
+from pathlib import Path
+
+import pytest
+
+RAIZ = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(RAIZ))
+sys.path.insert(0, str(RAIZ / "app"))
+
+from services.conferencia_citacao import MARCADORES, conferir_citacao  # noqa: E402
+
+ORIGINAL = "Conversei com Joao Silva ontem e ele me indicou a vaga."
+
+
+@pytest.mark.parametrize(
+    "caso, trecho, original, esperado",
+    [
+        ("nome mascarado",
+         "Conversei com [NOME] ontem e ele me indicou a vaga.", ORIGINAL, True),
+        ("nome de quatro partes",
+         "Quem me indicou foi [NOME], do time de dados.",
+         "Quem me indicou foi Ana Paula de Souza, do time de dados.", True),
+        ("e-mail mascarado",
+         "Meu contato e [EMAIL], me chama la.",
+         "Meu contato e maria@exemplo.com, me chama la.", True),
+        ("CPF mascarado",
+         "Meu CPF e [CPF], confere ai.",
+         "Meu CPF e 123.456.789-09, confere ai.", True),
+        ("telefone mascarado",
+         "Liga no [TELEFONE] depois das 18h.",
+         "Liga no (13) 99876-5432 depois das 18h.", True),
+        ("sem marcador, literal",
+         "primeira vaga como dev junior",
+         "Consegui minha primeira vaga como dev junior!", True),
+        ("sem marcador, alterado",
+         "primeira vaga como dev pleno",
+         "Consegui minha primeira vaga como dev junior!", False),
+        ("citação alterada fora do marcador",
+         "Conversei com [NOME] ontem e ele me indicou o emprego.", ORIGINAL, False),
+        ("citação de outra interação",
+         "Organizei meus estudos com as dicas.",
+         "Consegui minha primeira vaga como dev junior!", False),
+        ("marcador cobrindo meia frase",
+         "Comecei [NOME] fim.",
+         "Comecei a estudar muito tempo depois, no fim.", False),
+        ("marcador atravessando fim de frase",
+         "Consegui a vaga [NOME] hoje eu recomendo.",
+         "Consegui a vaga. Muito tempo depois, hoje eu recomendo.", False),
+        ("citação só com marcador", "[NOME]", "Joao Silva deu a dica.", False),
+        ("citação vazia", "", ORIGINAL, False),
+        ("mensagem original ausente", "[NOME] ontem", "", False),
+    ],
+)
+def test_conferencia(caso, trecho, original, esperado):
+    confere, motivo = conferir_citacao(trecho, original)
+    assert confere is esperado, f"{caso}: esperado {esperado}, veio {confere} ({motivo})"
+    if not esperado:
+        assert motivo, f"{caso}: reprovou sem motivo"
+
+
+def test_motivo_distingue_alterado_de_ausente():
+    _, motivo_sem_marcador = conferir_citacao("primeira vaga como dev pleno",
+                                              "primeira vaga como dev junior")
+    _, motivo_com_marcador = conferir_citacao("Conversei com [NOME] ontem e ele me indicou o emprego.",
+                                              ORIGINAL)
+    assert "não encontrado" in motivo_sem_marcador
+    assert "alterado" in motivo_com_marcador
+
+
+def test_marcadores_conhecidos_cobrem_o_que_a_anonimizacao_produz():
+    """Guarda-corpo: um marcador novo na anonimização tem que aparecer aqui."""
+    from src.preprocessing import anonimizacao
+
+    texto = (
+        "Sou o Joao Silva, meu e-mail e joao@exemplo.com, "
+        "meu CPF e 123.456.789-09 e meu telefone e (13) 99876-5432."
+    )
+    anonimizado, _ = anonimizar_texto_seguro(anonimizacao, texto)
+    produzidos = set(re.findall(r"\[[A-ZÇÃÕ]+\]", anonimizado))
+
+    desconhecidos = produzidos - set(MARCADORES)
+    assert not desconhecidos, (
+        f"a anonimização produziu marcadores que a conferência não conhece: "
+        f"{sorted(desconhecidos)}. Atualizar MARCADORES em conferencia_citacao.py"
+    )
+
+
+def anonimizar_texto_seguro(modulo, texto):
+    """Anonimiza sem depender do modelo spaCy (usa o fallback)."""
+    original = modulo._obter_nlp
+    modulo._obter_nlp = lambda: None
+    try:
+        return modulo.anonimizar_texto(texto)
+    finally:
+        modulo._obter_nlp = original
