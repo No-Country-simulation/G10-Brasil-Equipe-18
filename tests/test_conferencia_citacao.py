@@ -1,9 +1,11 @@
 """Testes da conferência de citação.
 
-Cobrem os quatro tipos de dado pessoal mascarados, a rejeição de citação
-alterada e de citação de outra interação, e um guarda-corpo: se a
-anonimização passar a produzir um marcador que a conferência não conhece,
-o último teste quebra em vez de o defeito voltar em silêncio.
+Cobrem os quatro tipos de dado pessoal mascarados, os dois motivos de sucesso
+(literal e com anonimização), a rejeição de citação alterada, de citação de
+outra interação e de marcador cobrindo conteúdo incompatível com o seu tipo,
+e um guarda-corpo: se a anonimização passar a produzir um marcador que a
+conferência não conhece, o último teste quebra em vez de o defeito voltar em
+silêncio.
 """
 import re
 import sys
@@ -15,7 +17,12 @@ RAIZ = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(RAIZ))
 sys.path.insert(0, str(RAIZ / "app"))
 
-from services.conferencia_citacao import MARCADORES, conferir_citacao  # noqa: E402
+from services.conferencia_citacao import (  # noqa: E402
+    MARCADORES,
+    MOTIVO_ANONIMIZADO,
+    MOTIVO_LITERAL,
+    conferir_citacao,
+)
 
 ORIGINAL = "Conversei com Joao Silva ontem e ele me indicou a vaga."
 
@@ -57,6 +64,18 @@ ORIGINAL = "Conversei com Joao Silva ontem e ele me indicou a vaga."
         ("citação só com marcador", "[NOME]", "Joao Silva deu a dica.", False),
         ("citação vazia", "", ORIGINAL, False),
         ("mensagem original ausente", "[NOME] ontem", "", False),
+        ("marcador de e-mail cobrindo nome",
+         "Meu contato e [EMAIL], me chama la.",
+         "Meu contato e Joao Silva, me chama la.", False),
+        ("marcador de CPF cobrindo e-mail",
+         "Meu CPF e [CPF], confere ai.",
+         "Meu CPF e maria@exemplo.com, confere ai.", False),
+        ("marcador de nome cobrindo numero",
+         "Falei com [NOME] ontem.",
+         "Falei com 2024 ontem.", False),
+        ("marcador de telefone cobrindo palavra",
+         "Liga no [TELEFONE] depois das 18h.",
+         "Liga no suporte depois das 18h.", False),
     ],
 )
 def test_conferencia(caso, trecho, original, esperado):
@@ -64,6 +83,38 @@ def test_conferencia(caso, trecho, original, esperado):
     assert confere is esperado, f"{caso}: esperado {esperado}, veio {confere} ({motivo})"
     if not esperado:
         assert motivo, f"{caso}: reprovou sem motivo"
+
+
+def test_sucesso_literal_tem_motivo_proprio():
+    confere, motivo = conferir_citacao(
+        "primeira vaga como dev junior",
+        "Consegui minha primeira vaga como dev junior!",
+    )
+    assert confere is True
+    assert motivo == MOTIVO_LITERAL
+
+
+def test_sucesso_com_marcador_tem_motivo_proprio():
+    confere, motivo = conferir_citacao(
+        "Conversei com [NOME] ontem e ele me indicou a vaga.", ORIGINAL
+    )
+    assert confere is True
+    assert motivo == MOTIVO_ANONIMIZADO
+
+
+def test_motivos_de_sucesso_sao_distintos():
+    """A interface não pode apresentar os dois casos com o mesmo texto."""
+    assert MOTIVO_LITERAL != MOTIVO_ANONIMIZADO
+    assert "literal" in MOTIVO_LITERAL
+    assert "anonimização" in MOTIVO_ANONIMIZADO
+
+
+def test_motivo_aponta_tipo_incompativel():
+    _, motivo = conferir_citacao(
+        "Meu contato e [EMAIL], me chama la.",
+        "Meu contato e Joao Silva, me chama la.",
+    )
+    assert "incompatível com o tipo" in motivo
 
 
 def test_motivo_distingue_alterado_de_ausente():
