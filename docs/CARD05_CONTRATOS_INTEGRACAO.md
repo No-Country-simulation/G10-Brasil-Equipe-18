@@ -100,6 +100,18 @@ Upload usa UTF-8 (aceita BOM), CSV com csv.DictReader e JSON com json.loads. Uma
 
 O schema canônico de ativo tem additionalProperties=false. Não acrescentar campos, id_historia, lote ou estados próprios ao objeto AtivoGerado sem revisão versionada. Esses dados podem ficar num envelope explicitamente separado.
 
+### 4.5 Campos opcionais de revisão e CQF — destino
+
+Os três campos existem no schema canônico (`schemas/ativo_gerado_schema.json`) e em `AtivoGerado` (`src/modelos.py`), valem para Testemunho e Case e são opcionais. Hoje nenhum código do app os preenche nem grava, e o envelope proposto no #49 (`envelope_proposto.json`) não os inclui. Por isso o destino fica pendente.
+
+| Campo | Definição no contrato | Onde é gravado hoje | Para onde vai | Decisão |
+|-------|-----------------------|---------------------|---------------|---------|
+| **revisor** | string; "quem aprovou ou rejeitou" | Em nenhum lugar: a Curadoria não registra o responsável pela decisão | Não definido | **Pendente** |
+| **observacao_revisor** | string, máx. 500 | Não é gravado no ativo. A Curadoria guarda a observação de ajustes e o motivo de rejeição só na sessão (`observacoes` e `motivos`), e o envelope do #49 tem `parecer` em `curadoria`; a relação entre esses campos não está decidida | Não definido | **Pendente** |
+| **id_avaliacao_cqf** | string no padrão `cqf_NNN`; liga o ativo a uma avaliação CQF (`schemas/avaliacao_cqf_schema.json`) | Em nenhum lugar no app; aparece só nos exemplos `data/samples/cenarios_cqf.json` e nos testes | Não definido | **Pendente** |
+
+Até a decisão, omitir os três campos do objeto canônico (não usar `null`, porque o schema exige string quando a propriedade está presente).
+
 ### 4.6 Volta ao formulário depende do envelope
 
 A volta do canônico para o formulário do front (por exemplo, ao recuperar um ativo no Histórico) depende dos campos estruturados preservados no envelope de curadoria: `historias[].ativos[].campos` com `titulo`, `descricao` e `citacao` no testemunho e `texto` no case. O formulário é reconstruído a partir desses campos, sem divisão de texto livre: o adaptador não deve separar o `texto` canônico em descrição e citação procurando quebras de linha ou aspas. Se o envelope não trouxer os campos estruturados, a volta é tratada como dado incompleto e não como texto a ser fatiado.
