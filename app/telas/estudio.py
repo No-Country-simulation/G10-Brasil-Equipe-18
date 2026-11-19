@@ -167,11 +167,11 @@ def _coluna_conteudo(h):
         
         # Botões de ação
         st.write("")
-        col1, col2, col3, col4 = st.columns([1.2, 1.2, 2, 2])
+        col1, col2, col3 = st.columns([1.5, 1.2, 2.8])
         col1.button("↻ Regenerar", key=f"regen_estudio_{hid}_{aid}", on_click=_regenerar, args=(hid, aid), 
                    use_container_width=True)
         col2.button("Copiar", key=f"copy_estudio_{hid}_{aid}", on_click=_alternar_copia, use_container_width=True)
-        col4.button("→ Enviar para curadoria", key=f"enviar_{hid}", on_click=_enviar_curadoria, args=(hid,),
+        col3.button("→ Enviar para curadoria", key=f"enviar_{hid}", on_click=_enviar_curadoria, args=(hid,),
                    type="primary", use_container_width=True)
         
         if st.session_state.mostrar_copia:
