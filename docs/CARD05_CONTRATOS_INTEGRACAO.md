@@ -40,18 +40,81 @@ Upload usa UTF-8 (aceita BOM), CSV com csv.DictReader e JSON com json.loads. Uma
 - Conversões devem preservar o vínculo entre cada história e sua interação, inclusive quando duas histórias estão no mesmo lote.
 
 ## 4. Mapeamento proposto para os dois formatos
+
+### 4.1 Visão geral dos tipos
+
 | Aspecto | Testemunho | Case |
 |---|---|---|
 | tipo canônico (editorial) | testemunho_estruturado | case_sucesso |
 | tipo do front (formulário) | testemunho | texto |
 | campos no front | titulo, descricao, citacao | texto |
-| titulo canônico | Título editorial | Título editorial, opcional no schema |
+| titulo canônico | Título editorial, opcional no schema | Título editorial, opcional no schema |
 | texto canônico | Descrição + duas quebras + citação entre aspas | Narrativa em texto único |
 | vínculo | interacoes_origem e evidências conferidas | interacoes_origem e evidências conferidas |
+
+### 4.2 Tabela campo a campo — Testemunho Estruturado
+
+| Campo | Representação Front | Representação Canônica | Origem do dado | Critério de teste | Decisão |
+|-------|---------------------|------------------------|----------------|-------------------|---------|
+| **id_ativo** (canônico) / `id` (front) | `id`: `testemunho_estruturado` (chave local) | `id_ativo`: `ativo_001` (ID único do lote) | Gerado pela aplicação | ID único dentro do lote, sem colisão | Aprovado - IDs separados por contexto |
+| **tipo** | `testemunho` (tipo de formulário) | `testemunho_estruturado` (tipo editorial) | Normalizado pela aplicação | Validação contra schema canônico | **Post LinkedIn e Card mantêm seus tipos editoriais próprios** |
+| **nome** | `"Testemunho estruturado"` (rótulo UI) | Não presente no schema canônico | Interface do usuário | Exibição no Estúdio/Curadoria | Aprovado - apenas para apresentação |
+| **titulo** | `campos.titulo` (editável; o formulário do Estúdio e da Curadoria lê o campo diretamente, então a projeção do front deve trazê-lo) | `titulo` (string, **opcional**: fora de `required` em `schemas/ativo_gerado_schema.json` e `Optional[str]` em `src/modelos.py`; máx. 200) | Gerado por LLM, editável no Estúdio | Preservação após edição; ativo canônico sem `titulo` continua válido | Aprovado - opcional no canônico; quando presente, igual a `campos.titulo` |
+| **descricao** | `campos.descricao` (editável) | Parte de `texto` (antes das aspas) | Gerado por LLM, editável no Estúdio | Ida: compor `texto`. Volta: ler do envelope (ver 4.6) | **Pendente** - adaptador não implementado |
+| **citacao** | `campos.citacao` (editável) | Parte de `texto` (entre aspas) | Gerado por LLM, editável no Estúdio | Ida: compor `texto`. Volta: ler do envelope (ver 4.6) | **Pendente** - adaptador não implementado |
+| **texto** | Não editável diretamente | Composição: `descricao + "\n\n\"" + citacao + "\""` | Derivado dos campos estruturados | Formato com duas quebras + aspas | Aprovado - regra de composição definida |
+| **interacoes_origem** | Não editável (metadado exibido) | `interacoes_origem` (array de int) | Vínculo estabelecido na análise | Rastreabilidade completa | Aprovado - vínculo preservado |
+| **status_revisao** | Não presente (usa controles separados) | `status_revisao: "pendente"` | Iniciado pela aplicação | Mapeamento: rascunho/ajustes → pendente | **Pendente** - envelope deve preservar estados detalhados |
+| **criado_em** | Não exibido | `criado_em` (ISO 8601 UTC) | Timestamp real da geração | Data de criação, não da interação | Aprovado - instante UTC real |
+| **modelo_llm** | Não exibido | `modelo_llm` (opcional) | Provedor efetivamente usado | Rastreabilidade técnica | Aprovado - quando disponível |
+| **versao_schema** | Não presente | `"1.0"` | Aplicação | Validação de compatibilidade | Aprovado - fixo em 1.0 |
+| **oci_object_path** | Não presente | Omitido (opcional no schema) | Não usado atualmente | Padrão `ativos/AAAA-MM-DD/...` se presente | Aprovado - omissão permitida |
+
+### 4.3 Tabela campo a campo — Case de Sucesso
+
+| Campo | Representação Front | Representação Canônica | Origem do dado | Critério de teste | Decisão |
+|-------|---------------------|------------------------|----------------|-------------------|---------|
+| **id_ativo** (canônico) / `id` (front) | `id`: `case_sucesso` (chave local) | `id_ativo`: `ativo_002` (ID único do lote) | Gerado pela aplicação | ID único dentro do lote, sem colisão | Aprovado - IDs separados por contexto |
+| **tipo** | `texto` (tipo de formulário) | `case_sucesso` (tipo editorial) | Normalizado pela aplicação | Validação contra schema canônico | **Post LinkedIn e Card mantêm seus tipos editoriais próprios** |
+| **nome** | `"Case de sucesso"` (rótulo UI) | Não presente no schema canônico | Interface do usuário | Exibição no Estúdio/Curadoria | Aprovado - apenas para apresentação |
+| **titulo** | Não presente no formulário atual | `titulo` (string, opcional no schema) | Pode ser gerado por LLM | **Decidir se será metadado ou incorporado ao texto** | **Pendente de decisão** - evitar duplicação |
+| **texto** | `campos.texto` (editável) | `texto` (string, obrigatório) | Gerado por LLM, editável no Estúdio | Preservação após edição | Aprovado - narrativa em texto único |
+| **interacoes_origem** | Não editável (metadado exibido) | `interacoes_origem` (array de int) | Vínculo estabelecido na análise | Rastreabilidade completa | Aprovado - vínculo preservado |
+| **status_revisao** | Não presente (usa controles separados) | `status_revisao: "pendente"` | Iniciado pela aplicação | Mapeamento: rascunho/ajustes → pendente | **Pendente** - envelope deve preservar estados detalhados |
+| **criado_em** | Não exibido | `criado_em` (ISO 8601 UTC) | Timestamp real da geração | Data de criação, não da interação | Aprovado - instante UTC real |
+| **modelo_llm** | Não exibido | `modelo_llm` (opcional) | Provedor efetivamente usado | Rastreabilidade técnica | Aprovado - quando disponível |
+| **versao_schema** | Não presente | `"1.0"` | Aplicação | Validação de compatibilidade | Aprovado - fixo em 1.0 |
+| **oci_object_path** | Não presente | Omitido (opcional no schema) | Não usado atualmente | Padrão `ativos/AAAA-MM-DD/...` se presente | Aprovado - omissão permitida |
+
+### 4.4 Post LinkedIn e Card de Conquista
+
+**Decisão do Marcus (comentário de 18/11/2026):**
+> Post LinkedIn e Card de conquista seguem como tipos editoriais próprios; formato de tela não deve mudar essa classificação.
+
+| Tipo de ativo | Tipo editorial canônico | Tipo de formulário front | Observação |
+|---------------|-------------------------|--------------------------|------------|
+| Post para LinkedIn | `post_linkedin` | `texto` ou `card` (a definir) | Formato de tela não altera classificação editorial |
+| Card de conquista | `card_conquista` | `card` | Preserva estrutura visual específica |
 
 **Proposta de mapeamento, ainda não adaptador implementado.** Preservar dados estruturados de título/descrição/citação no envelope de apresentação; não tentar recuperar campos perdidos dividindo texto livre. Ao salvar edições, atualizar também a projeção canônica. No case, o formulário atual só edita texto: conferir se o título será exibido como metadado ou incorporado ao conteúdo sem duplicação. Não declarar essa decisão de interface concluída.
 
 O schema canônico de ativo tem additionalProperties=false. Não acrescentar campos, id_historia, lote ou estados próprios ao objeto AtivoGerado sem revisão versionada. Esses dados podem ficar num envelope explicitamente separado.
+
+### 4.5 Campos opcionais de revisão e CQF — destino
+
+Os três campos existem no schema canônico (`schemas/ativo_gerado_schema.json`) e em `AtivoGerado` (`src/modelos.py`), valem para Testemunho e Case e são opcionais. Hoje nenhum código do app os preenche nem grava, e o envelope proposto no #49 (`envelope_proposto.json`) não os inclui. Por isso o destino fica pendente.
+
+| Campo | Definição no contrato | Onde é gravado hoje | Para onde vai | Decisão |
+|-------|-----------------------|---------------------|---------------|---------|
+| **revisor** | string; "quem aprovou ou rejeitou" | Em nenhum lugar: a Curadoria não registra o responsável pela decisão | Não definido | **Pendente** |
+| **observacao_revisor** | string, máx. 500 | Não é gravado no ativo. A Curadoria guarda a observação de ajustes e o motivo de rejeição só na sessão (`observacoes` e `motivos`), e o envelope do #49 tem `parecer` em `curadoria`; a relação entre esses campos não está decidida | Não definido | **Pendente** |
+| **id_avaliacao_cqf** | string no padrão `cqf_NNN`; liga o ativo a uma avaliação CQF (`schemas/avaliacao_cqf_schema.json`) | Em nenhum lugar no app; aparece só nos exemplos `data/samples/cenarios_cqf.json` e nos testes | Não definido | **Pendente** |
+
+Até a decisão, omitir os três campos do objeto canônico (não usar `null`, porque o schema exige string quando a propriedade está presente).
+
+### 4.6 Volta ao formulário depende do envelope
+
+A volta do canônico para o formulário do front (por exemplo, ao recuperar um ativo no Histórico) depende dos campos estruturados preservados no envelope de curadoria: `historias[].ativos[].campos` com `titulo`, `descricao` e `citacao` no testemunho e `texto` no case. O formulário é reconstruído a partir desses campos, sem divisão de texto livre: o adaptador não deve separar o `texto` canônico em descrição e citação procurando quebras de linha ou aspas. Se o envelope não trouxer os campos estruturados, a volta é tratada como dado incompleto e não como texto a ser fatiado.
 
 ## 5. Metadados e governança
 | Campo canônico | Quem preenche |
