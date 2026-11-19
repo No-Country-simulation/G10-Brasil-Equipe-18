@@ -40,6 +40,9 @@ Upload usa UTF-8 (aceita BOM), CSV com csv.DictReader e JSON com json.loads. Uma
 - Conversões devem preservar o vínculo entre cada história e sua interação, inclusive quando duas histórias estão no mesmo lote.
 
 ## 4. Mapeamento proposto para os dois formatos
+
+### 4.1 Visão geral dos tipos
+
 | Aspecto | Testemunho | Case |
 |---|---|---|
 | tipo canônico (editorial) | testemunho_estruturado | case_sucesso |
@@ -48,6 +51,50 @@ Upload usa UTF-8 (aceita BOM), CSV com csv.DictReader e JSON com json.loads. Uma
 | titulo canônico | Título editorial | Título editorial, opcional no schema |
 | texto canônico | Descrição + duas quebras + citação entre aspas | Narrativa em texto único |
 | vínculo | interacoes_origem e evidências conferidas | interacoes_origem e evidências conferidas |
+
+### 4.2 Tabela campo a campo — Testemunho Estruturado
+
+| Campo | Representação Front | Representação Canônica | Origem do dado | Critério de teste | Decisão |
+|-------|---------------------|------------------------|----------------|-------------------|---------|
+| **id** | `testemunho_estruturado` (chave local) | `ativo_001` (ID único do lote) | Gerado pela aplicação | ID único dentro do lote, sem colisão | Aprovado - IDs separados por contexto |
+| **tipo** | `testemunho` (tipo de formulário) | `testemunho_estruturado` (tipo editorial) | Normalizado pela aplicação | Validação contra schema canônico | **Post LinkedIn e Card mantêm seus tipos editoriais próprios** |
+| **nome** | `"Testemunho estruturado"` (rótulo UI) | Não presente no schema canônico | Interface do usuário | Exibição no Estúdio/Curadoria | Aprovado - apenas para apresentação |
+| **titulo** | `campos.titulo` (editável) | `titulo` (string, obrigatório) | Gerado por LLM, editável no Estúdio | Preservação após edição | Aprovado - campo mantido em ambas representações |
+| **descricao** | `campos.descricao` (editável) | Parte de `texto` (antes das aspas) | Gerado por LLM, editável no Estúdio | Conversão bidirecional sem perda | **Pendente** - adaptador não implementado |
+| **citacao** | `campos.citacao` (editável) | Parte de `texto` (entre aspas) | Gerado por LLM, editável no Estúdio | Conversão bidirecional sem perda | **Pendente** - adaptador não implementado |
+| **texto** | Não editável diretamente | Composição: `descricao + "\n\n\"" + citacao + "\""` | Derivado dos campos estruturados | Formato com duas quebras + aspas | Aprovado - regra de composição definida |
+| **interacoes_origem** | Não editável (metadado exibido) | `interacoes_origem` (array de int) | Vínculo estabelecido na análise | Rastreabilidade completa | Aprovado - vínculo preservado |
+| **status_revisao** | Não presente (usa controles separados) | `status_revisao: "pendente"` | Iniciado pela aplicação | Mapeamento: rascunho/ajustes → pendente | **Pendente** - envelope deve preservar estados detalhados |
+| **criado_em** | Não exibido | `criado_em` (ISO 8601 UTC) | Timestamp real da geração | Data de criação, não da interação | Aprovado - instante UTC real |
+| **modelo_llm** | Não exibido | `modelo_llm` (opcional) | Provedor efetivamente usado | Rastreabilidade técnica | Aprovado - quando disponível |
+| **versao_schema** | Não presente | `"1.0"` | Aplicação | Validação de compatibilidade | Aprovado - fixo em 1.0 |
+| **oci_object_path** | Não presente | Omitido (opcional no schema) | Não usado atualmente | Padrão `ativos/AAAA-MM-DD/...` se presente | Aprovado - omissão permitida |
+
+### 4.3 Tabela campo a campo — Case de Sucesso
+
+| Campo | Representação Front | Representação Canônica | Origem do dado | Critério de teste | Decisão |
+|-------|---------------------|------------------------|----------------|-------------------|---------|
+| **id** | `case_sucesso` (chave local) | `ativo_002` (ID único do lote) | Gerado pela aplicação | ID único dentro do lote, sem colisão | Aprovado - IDs separados por contexto |
+| **tipo** | `texto` (tipo de formulário) | `case_sucesso` (tipo editorial) | Normalizado pela aplicação | Validação contra schema canônico | **Post LinkedIn e Card mantêm seus tipos editoriais próprios** |
+| **nome** | `"Case de sucesso"` (rótulo UI) | Não presente no schema canônico | Interface do usuário | Exibição no Estúdio/Curadoria | Aprovado - apenas para apresentação |
+| **titulo** | Não presente no formulário atual | `titulo` (string, opcional no schema) | Pode ser gerado por LLM | **Decidir se será metadado ou incorporado ao texto** | **Pendente de decisão** - evitar duplicação |
+| **texto** | `campos.texto` (editável) | `texto` (string, obrigatório) | Gerado por LLM, editável no Estúdio | Preservação após edição | Aprovado - narrativa em texto único |
+| **interacoes_origem** | Não editável (metadado exibido) | `interacoes_origem` (array de int) | Vínculo estabelecido na análise | Rastreabilidade completa | Aprovado - vínculo preservado |
+| **status_revisao** | Não presente (usa controles separados) | `status_revisao: "pendente"` | Iniciado pela aplicação | Mapeamento: rascunho/ajustes → pendente | **Pendente** - envelope deve preservar estados detalhados |
+| **criado_em** | Não exibido | `criado_em` (ISO 8601 UTC) | Timestamp real da geração | Data de criação, não da interação | Aprovado - instante UTC real |
+| **modelo_llm** | Não exibido | `modelo_llm` (opcional) | Provedor efetivamente usado | Rastreabilidade técnica | Aprovado - quando disponível |
+| **versao_schema** | Não presente | `"1.0"` | Aplicação | Validação de compatibilidade | Aprovado - fixo em 1.0 |
+| **oci_object_path** | Não presente | Omitido (opcional no schema) | Não usado atualmente | Padrão `ativos/AAAA-MM-DD/...` se presente | Aprovado - omissão permitida |
+
+### 4.4 Post LinkedIn e Card de Conquista
+
+**Decisão do Marcus (comentário de 18/11/2026):**
+> Post LinkedIn e Card de conquista seguem como tipos editoriais próprios; formato de tela não deve mudar essa classificação.
+
+| Tipo de ativo | Tipo editorial canônico | Tipo de formulário front | Observação |
+|---------------|-------------------------|--------------------------|------------|
+| Post para LinkedIn | `post_linkedin` | `texto` ou `card` (a definir) | Formato de tela não altera classificação editorial |
+| Card de conquista | `card_conquista` | `card` | Preserva estrutura visual específica |
 
 **Proposta de mapeamento, ainda não adaptador implementado.** Preservar dados estruturados de título/descrição/citação no envelope de apresentação; não tentar recuperar campos perdidos dividindo texto livre. Ao salvar edições, atualizar também a projeção canônica. No case, o formulário atual só edita texto: conferir se o título será exibido como metadado ou incorporado ao conteúdo sem duplicação. Não declarar essa decisão de interface concluída.
 
