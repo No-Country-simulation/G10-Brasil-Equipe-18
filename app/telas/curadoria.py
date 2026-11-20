@@ -15,11 +15,70 @@ def _chave(hid, aid, nome_campo):
     return f"c:{hid}:{aid}:{nome_campo}"
 
 
+def _pacote_principal():
+    """Pacote do lote no bucket (o que carrega as histórias, não a evidência)."""
+    ss = st.session_state
+    for pacote in ss.get("pacotes_oci") or []:
+        caminho = str(pacote.get("caminho") or "")
+        if caminho and "evidencia" not in caminho:
+            return pacote
+    return None
+
+
+def _persistir():
+    """Grava as decisões no pacote do lote.
+
+    Falha não apaga a decisão: ela segue na sessão e a tela mostra o erro, em
+    vez de dar a gravação como feita.
+    """
+    ss = st.session_state
+    pacote = _pacote_principal()
+    if pacote is None or not ss.get("historias"):
+        return
+    resultado = svc.salvar_decisoes(
+        ss.lote_id,
+        pacote["caminho"],
+        ss.historias,
+        {
+            "status_curadoria": ss.status_curadoria,
+            "validacao_factual": ss.validacao_factual,
+            "autorizacao": ss.autorizacao,
+            "observacoes": ss.observacoes,
+            "motivos": ss.motivos,
+        },
+    )
+    if resultado.get("ok"):
+        ss.erro_curadoria = ""
+    else:
+        ss.erro_curadoria = (
+            "Decisão registrada nesta sessão, mas não gravada no bucket: "
+            f"{resultado.get('motivo') or 'motivo não informado'}"
+        )
+
+
+def _hidratar_decisoes():
+    """Traz de volta as decisões gravadas no pacote, quando a sessão está vazia."""
+    ss = st.session_state
+    if ss.get("status_curadoria") or ss.get("validacao_factual") or ss.get("autorizacao"):
+        return
+    pacote = _pacote_principal()
+    if pacote is None:
+        return
+    decisoes = svc.ler_decisoes(pacote["caminho"])
+    for chave, decisao in decisoes.items():
+        ss.validacao_factual[chave] = decisao["validacao_factual"]
+        ss.status_curadoria[chave] = decisao["status_curadoria"]
+        ss.autorizacao[chave] = decisao["autorizacao"]
+        if decisao["parecer"]:
+            ss.observacoes[chave] = decisao["parecer"]
+
+
 def _aprovar(hid, aid):
     ss = st.session_state
     chave = f"{hid}:{aid}"
     ss.status_curadoria[chave] = "aprovado"
     ss.status_ativos[chave] = "aprovado"  # legado
+    _persistir()
     ss.toast = "Rascunho aprovado. Nenhum conteúdo foi publicado."
 
 
@@ -28,6 +87,7 @@ def _solicitar_ajustes(hid, aid, obs):
     chave = f"{hid}:{aid}"
     ss.status_curadoria[chave] = "ajustes"
     ss.observacoes[chave] = obs
+    _persistir()
     ss.toast = "Ajustes solicitados. Revise novamente após correções."
 
 
@@ -40,6 +100,7 @@ def _desfazer(hid, aid):
     ss.autorizacao[chave] = "nao_registrada"
     ss.motivos.pop(chave, None)
     ss.observacoes.pop(chave, None)
+    _persistir()
     ss.toast = "Decisão desfeita. O ativo voltou para rascunho."
 
 
@@ -57,6 +118,7 @@ def _dialogo_rejeitar(hid, aid, nome_ativo, autor):
         ss.status_curadoria[chave] = "rejeitado"
         ss.status_ativos[chave] = "rejeitado"  # legado
         ss.motivos[chave] = motivo.strip()
+        _persistir()
         ss.toast = "Rascunho rejeitado."
         st.rerun()
 
@@ -144,10 +206,13 @@ def render():
         st.button("→ Ir para Importação", type="primary", on_click=ir_para, args=("importacao",))
         return
 
+    _hidratar_decisoes()
     hid = ss.historia_atual or ss.historias[0]["id"]
     h = historia_por_id(hid)
     topbar()
     cabecalho("Etapa 4 de 4 · Decidir", "Curadoria", "Revise, valide e decida sobre cada rascunho antes de qualquer publicação.")
+    if ss.get("erro_curadoria"):
+        caixa("red", f"<b>Decisão não gravada no bucket</b><br>{esc(ss.erro_curadoria)}")
     st.button("← Voltar para histórias", on_click=ir_para, args=("historias",))
 
     with st.container(border=True):
@@ -194,6 +259,7 @@ def render():
                                          disabled=status_cur not in ["rascunho", "ajustes"])
             if map_validacao[nova_validacao] != validacao:
                 ss.validacao_factual[chave] = map_validacao[nova_validacao]
+                _persistir()
                 st.rerun()
             
             if validacao == "contradicao":
@@ -228,6 +294,7 @@ def render():
                                     disabled=status_cur not in ["rascunho", "ajustes"])
             if autorizado != (autorizacao == "registrada"):
                 ss.autorizacao[chave] = "registrada" if autorizado else "nao_registrada"
+                _persistir()
                 st.rerun()
             
             # Indicador "Liberado para publicação" (RG-03)
