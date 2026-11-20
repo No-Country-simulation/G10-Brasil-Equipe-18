@@ -81,6 +81,15 @@ PROMPT = Path(__file__).with_name("prompt_analise.txt").read_text(encoding="utf-
 class ErroAnalise(RuntimeError):
     """Falha controlada na análise por LLM."""
 
+
+class ErroRespostaTruncada(ErroAnalise):
+    """A resposta do LLM foi cortada pelo limite de saída.
+
+    Separado de `ErroAnalise` porque a causa é outra: o texto não está inválido,
+    ele termina no meio. A tela pode dizer isso sem mandar quem lê procurar um
+    problema no JSON.
+    """
+
 def _iniciais(nome: str) -> str:
     partes = [p for p in re.split(r"\s+", (nome or "").strip()) if p]
     if not partes:
@@ -502,6 +511,18 @@ def analisar(interacoes: list, maximo: int = MAXIMO_HISTORIAS, timeout: int = 60
     except Exception as erro:
         raise ErroAnalise(f"Erro inesperado na chamada do LLM: {erro}") from erro
 
+    # Resposta cortada no meio pelo limite de saída: a causa é o limite, não o
+    # formato. Verificada antes de interpretar, para a tela dizer o certo.
+    finish_reason = str(getattr(resultado, "finish_reason", "") or "")
+    if finish_reason.upper() == "MAX_TOKENS":
+        raise ErroRespostaTruncada(
+            "A resposta da IA foi truncada pelo limite de saída "
+            f"({len(texto)} caracteres recebidos; "
+            f"provedor={resultado.provedor}; modelo={resultado.modelo}; "
+            "finish_reason=MAX_TOKENS). "
+            "Reduza o lote ou aumente LLM_MAX_OUTPUT_TOKENS e tente novamente."
+        )
+
     # Desserializa e valida o JSON retornado.
     try:
         conteudo = json.loads(texto)
@@ -511,17 +532,10 @@ def analisar(interacoes: list, maximo: int = MAXIMO_HISTORIAS, timeout: int = 60
         try:
             conteudo = json.loads(texto_limpo)
         except json.JSONDecodeError as erro:
-            finish_reason = resultado.finish_reason or "não informado"
-            diagnostico_limite = ""
-            if str(finish_reason).upper() == "MAX_TOKENS":
-                diagnostico_limite = (
-                    "A resposta foi truncada pelo limite de saída; aumente "
-                    "LLM_MAX_OUTPUT_TOKENS. "
-                )
             raise ErroAnalise(
                 "JSON inválido do LLM: "
                 f"provedor={resultado.provedor}; modelo={resultado.modelo}; "
-                f"finish_reason={finish_reason}; {diagnostico_limite}"
+                f"finish_reason={finish_reason or 'não informado'}; "
                 f"resposta_chars={len(texto)}; "
                 f"parser_chars={len(texto_limpo)}; linha={erro.lineno}; "
                 f"coluna={erro.colno}; posição={erro.pos}. "
