@@ -68,10 +68,16 @@ def _hidratar_decisoes():
     decisoes = svc.ler_decisoes(pacote["caminho"])
     for chave, decisao in decisoes.items():
         ss.validacao_factual[chave] = decisao["validacao_factual"]
-        ss.status_curadoria[chave] = decisao["status_curadoria"]
+        status = decisao["status_curadoria"]
+        ss.status_curadoria[chave] = status
         ss.autorizacao[chave] = decisao["autorizacao"]
-        if decisao["parecer"]:
+        # O parecer volta para o campo do status gravado. Sem isso, uma
+        # rejeição reaberta vira observação de ajuste e o defeito reaparece.
+        campo = svc.campo_do_parecer(status)
+        if decisao["parecer"] and campo == "observacoes":
             ss.observacoes[chave] = decisao["parecer"]
+        elif decisao["parecer"] and campo == "motivos":
+            ss.motivos[chave] = decisao["parecer"]
 
 
 def _aprovar(hid, aid):

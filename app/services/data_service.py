@@ -513,6 +513,30 @@ CAMINHO_CURSOR_DISCORD = "discord/cursor.json"
 MARCADOR_ULTIMO_ID_DISCORD = "__ultimo_id_discord__:"
 
 
+def campo_do_parecer(status):
+    """Campo do estado que guarda o parecer vigente deste status editorial.
+
+    O envelope do Card 05 tem um campo só para o parecer, mas a Curadoria
+    grava textos em dois: observação de ajuste e motivo de rejeição. Devolver
+    None quer dizer que o status atual não tem parecer pendente a registrar.
+    """
+    return {"ajustes": "observacoes", "rejeitado": "motivos"}.get(status)
+
+
+def parecer_do_estado(status, chave, observacoes, motivos):
+    """Parecer do ativo escolhido pelo status, nunca pela ordem dos campos.
+
+    Antes valia a primeira chave preenchida (`observacoes or motivos`): depois
+    de "Solicitar ajustes", a rejeição gravava o motivo em `motivos` mas o
+    pacote saía com a observação antiga. O texto que vale é o do estado atual.
+    """
+    campo = campo_do_parecer(status)
+    if campo is None:
+        return ""
+    origem = observacoes if campo == "observacoes" else motivos
+    return str(origem.get(chave) or "").strip()
+
+
 def montar_bloco_curadoria(lote_id, historias, estado):
     """Monta as decisões de Curadoria no formato do envelope do Card 05.
 
@@ -535,15 +559,16 @@ def montar_bloco_curadoria(lote_id, historias, estado):
             if id_historia is None or id_ativo is None:
                 continue
             chave = f"{id_historia}:{id_ativo}"
+            status_ativo = status_editorial.get(chave, "rascunho")
             linhas.append(
                 {
                     "lote": lote_id,
                     "id_historia": str(id_historia),
                     "id_ativo": str(id_ativo),
                     "validacao_factual": validacao.get(chave, "pendente"),
-                    "status_curadoria": status_editorial.get(chave, "rascunho"),
+                    "status_curadoria": status_ativo,
                     "autorizacao": autorizacao.get(chave, "nao_registrada"),
-                    "parecer": str(observacoes.get(chave) or motivos.get(chave) or "").strip(),
+                    "parecer": parecer_do_estado(status_ativo, chave, observacoes, motivos),
                 }
             )
     return linhas

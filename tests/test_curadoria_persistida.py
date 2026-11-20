@@ -140,7 +140,8 @@ def test_pacote_antigo_aceita_decisao_nova(monkeypatch):
     monkeypatch.setattr(svc, "_storage", lambda: armazenamento)
 
     resultado = svc.salvar_decisoes("LOTE-1", caminho, HISTORIAS, {
-        "validacao_factual": {}, "status_curadoria": {}, "autorizacao": {},
+        "validacao_factual": {}, "status_curadoria": {"hist-001:testemunho_estruturado": "ajustes"},
+        "autorizacao": {},
         "observacoes": {"hist-001:testemunho_estruturado": "Ajustar o título."}, "motivos": {},
     })
 
@@ -253,3 +254,79 @@ def test_pacote_inexistente_nao_cria_objeto(monkeypatch):
     resultado = svc.salvar_decisoes("LOTE-1", "lotes/LOTE-1/lote_LOTE-1.json", HISTORIAS, {})
     assert resultado["ok"] is False
     assert armazenamento.gravacoes == []
+
+
+# O parecer é escolhido pelo status vigente, nunca pela ordem dos campos.
+# Antes, "Solicitar ajustes" seguido de "Rejeitar" gravava a observação antiga
+# e perdia o motivo da rejeição.
+
+OBSERVACAO_AJUSTE = "Encurtar o segundo parágrafo."
+MOTIVO_REJEICAO = "Fato não comprovado na origem."
+
+
+def _estado(chave, status, observacoes=None, motivos=None):
+    return {
+        "validacao_factual": {},
+        "status_curadoria": {chave: status},
+        "autorizacao": {},
+        "observacoes": observacoes or {},
+        "motivos": motivos or {},
+    }
+
+
+def test_rejeicao_nao_herda_observacao_de_ajuste():
+    """Sequência reproduzida na revisão: ajustes e depois rejeição."""
+    chave = "hist-001:case_sucesso"
+    estado = _estado(
+        chave,
+        "rejeitado",
+        observacoes={chave: OBSERVACAO_AJUSTE},
+        motivos={chave: MOTIVO_REJEICAO},
+    )
+    bloco = svc.montar_bloco_curadoria("LOTE-1", HISTORIAS, estado)
+    assert bloco[1]["parecer"] == MOTIVO_REJEICAO
+
+
+def test_aprovacao_nao_herda_observacao_de_ajuste():
+    chave = "hist-001:case_sucesso"
+    estado = _estado(chave, "aprovado", observacoes={chave: OBSERVACAO_AJUSTE})
+    bloco = svc.montar_bloco_curadoria("LOTE-1", HISTORIAS, estado)
+    assert bloco[1]["parecer"] == ""
+
+
+def test_ativo_em_rascunho_nao_herda_observacao_antiga():
+    chave = "hist-001:case_sucesso"
+    estado = _estado(chave, "rascunho", observacoes={chave: OBSERVACAO_AJUSTE})
+    bloco = svc.montar_bloco_curadoria("LOTE-1", HISTORIAS, estado)
+    assert bloco[1]["parecer"] == ""
+
+
+def test_parecer_vazio_quando_o_status_nao_tem_texto():
+    chave = "hist-001:case_sucesso"
+    estado = _estado(chave, "rejeitado")
+    bloco = svc.montar_bloco_curadoria("LOTE-1", HISTORIAS, estado)
+    assert bloco[1]["parecer"] == ""
+
+
+def test_campo_do_parecer_segue_o_status():
+    assert svc.campo_do_parecer("ajustes") == "observacoes"
+    assert svc.campo_do_parecer("rejeitado") == "motivos"
+    assert svc.campo_do_parecer("aprovado") is None
+    assert svc.campo_do_parecer("rascunho") is None
+
+
+def test_parecer_volta_para_o_campo_do_status_gravado():
+    """Ida e volta: o parecer do pacote aponta para o campo certo do estado."""
+    chave = "hist-001:case_sucesso"
+    estado = _estado(
+        chave,
+        "rejeitado",
+        observacoes={chave: OBSERVACAO_AJUSTE},
+        motivos={chave: MOTIVO_REJEICAO},
+    )
+    bloco = svc.montar_bloco_curadoria("LOTE-1", HISTORIAS, estado)
+    decisao = svc.decisoes_do_bloco({"curadoria": bloco})[chave]
+
+    assert decisao["status_curadoria"] == "rejeitado"
+    assert decisao["parecer"] == MOTIVO_REJEICAO
+    assert svc.campo_do_parecer(decisao["status_curadoria"]) == "motivos"
