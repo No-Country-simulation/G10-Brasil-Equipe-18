@@ -11,8 +11,18 @@ EXCECOES_TECNICAS = {
     "python", "oracle", "streamlit", "github", "discord", "slack", 
     "sql", "langgraph", "pandas", "pytest", "pydantic", "json", "csv",
     "alura", "docker", "kubernetes", "linux", "aws", "gcp", "azure",
-    "git", "fastapi", "react", "node", "javascript", "typescript", "html", "css"
+    "git", "fastapi", "react", "node", "javascript", "typescript", "html", "css",
+    "api", "apis", "power bi",
 }
+
+
+def _eh_inicio_de_frase(palavras: list[str], indice: int) -> bool:
+    """Detecta palavras após ponto, exclamação ou interrogação."""
+    if indice == 0:
+        return True
+    anterior = palavras[indice - 1].rstrip("\"'”’»)]}")
+    return anterior.endswith((".", "!", "?"))
+
 
 def _validar_cpf_digitos(digitos: str) -> bool:
     """Valida se uma sequência de 11 dígitos possui dígitos verificadores válidos de CPF."""
@@ -94,17 +104,21 @@ def anonimizar_texto(texto: str) -> Tuple[str, Dict[str, int]]:
         doc = nlp(texto_anonimo)
         spans_per = []
         for ent in doc.ents:
-            if ent.label_ == "PER":
-                txt_limpo = ent.text.strip()
-                # Preserva menções já pseudonimizadas
-                if txt_limpo.startswith("@membro_") or txt_limpo.startswith("membro_"):
-                    continue
-                # Preserva termos técnicos
-                if txt_limpo.lower() in EXCECOES_TECNICAS:
-                    continue
-                if len(txt_limpo) < 2:
-                    continue
-                spans_per.append((ent.start_char, ent.end_char))
+            if ent.label_ != "PER":
+                continue
+            txt_limpo = ent.text.strip()
+            # Preserva menções já pseudonimizadas.
+            if txt_limpo.startswith("@membro_") or txt_limpo.startswith("membro_"):
+                continue
+            # Só entidades com núcleo nominal próprio são tratadas como nomes.
+            if ent.root.pos_ != "PROPN":
+                continue
+            # Preserva termos técnicos conhecidos, sem inferir siglas por caixa alta.
+            if txt_limpo.lower() in EXCECOES_TECNICAS:
+                continue
+            if len(txt_limpo) < 2:
+                continue
+            spans_per.append((ent.start_char, ent.end_char))
 
         # Substitui da direita para a esquerda para não invalidar índices de caracteres
         spans_per.sort(key=lambda s: s[0], reverse=True)
@@ -124,6 +138,17 @@ def anonimizar_texto(texto: str) -> Tuple[str, Dict[str, int]]:
         for i, palavra in enumerate(palavras):
             palavra_limpa = re.sub(r'[^\w@]', '', palavra)
             if palavra_limpa.startswith("@membro_") or palavra_limpa.startswith("membro_"):
+                palavras_anonimizadas.append(palavra)
+                continue
+            palavra_seguinte = (
+                re.sub(r"[^\w]", "", palavras[i + 1]).lower()
+                if i + 1 < len(palavras)
+                else ""
+            )
+            if palavra_limpa.lower() == "power" and palavra_seguinte == "bi":
+                palavras_anonimizadas.append(palavra)
+                continue
+            if _eh_inicio_de_frase(palavras, i):
                 palavras_anonimizadas.append(palavra)
                 continue
             if palavra_limpa.lower() in locais_conhecidos:

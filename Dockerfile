@@ -8,7 +8,9 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 WORKDIR /app
 
 COPY . .
-RUN pip install --no-cache-dir .
+RUN pip install --no-cache-dir . \
+    && python -m spacy download pt_core_news_sm \
+    && python -c "import spacy; spacy.load('pt_core_news_sm')"
 
 RUN groupadd --system --gid 10001 communitylab \
     && useradd --system --uid 10001 --gid communitylab \

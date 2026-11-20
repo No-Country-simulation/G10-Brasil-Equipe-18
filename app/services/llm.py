@@ -37,6 +37,7 @@ from pathlib import Path
 
 import requests
 
+from src import SAL_PADRAO, pseudonimizar_autor  # type: ignore[reportMissingImports]
 from src.preprocessing import anonimizar_texto, normalizar_texto
 
 MODELO_PADRAO = "gemini-1.5-flash"
@@ -336,12 +337,13 @@ def _normalizar(historias: list, interacoes: list) -> list:
             continue
         if str(hist.get("id") or "").strip():
             identificador = str(hist["id"]).strip()
-        autor = str(hist.get("autor") or "").strip()
-        original = str(hist.get("mensagem_original") or "").strip()
         base = _fonte_confiavel(hist, por_posicao)
         canal = str(hist.get("canal") or (base.get("canal") if base else "") or "")
-        # O texto usado para validar a citacao vem do lote, nunca do modelo.
+        # Original e autor vêm da interação rastreada, não do texto ecoado pelo LLM.
         texto_fonte = str(base.get("texto") or "") if base else ""
+        original = texto_fonte.strip()
+        autor_fonte = str((base or {}).get("autor") or hist.get("autor") or "").strip()
+        autor = pseudonimizar_autor(autor_fonte, SAL_PADRAO)
         id_interacao = int(base.get("_id") or 0) if base else 0
 
         ativos = []
@@ -472,7 +474,9 @@ def analisar(interacoes: list, maximo: int = MAXIMO_HISTORIAS, timeout: int = 60
         payload.append(
             {
                 "id": id_interacao,
-                "autor": interacao.get("autor", ""),
+                "autor": pseudonimizar_autor(
+                    str(interacao.get("autor") or ""), SAL_PADRAO
+                ),
                 "canal": interacao.get("canal", ""),
                 "tipo": interacao.get("tipo", "mensagem"),
                 "texto": interacao["texto"],

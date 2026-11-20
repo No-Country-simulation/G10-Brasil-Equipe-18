@@ -270,10 +270,15 @@ Interação (entrada):
 
 Antes de enviar ao provedor, `llm.analisar()` inclui o ID efetivo e aplica
 `normalizar_texto()` e `anonimizar_texto()` de `src.preprocessing` ao texto.
-Marcadores como `[EMAIL]`, `[TELEFONE]`, `[CPF]` e `[NOME]` são enviados no lugar dos
-valores reconhecidos. O campo `autor` é mantido no formato do front; a ingestão
-do Discord já o pseudonimiza, mas arquivos CSV/JSON ainda podem trazer o nome
-original e precisam de pseudonimização própria para dados reais.
+Marcadores como `[EMAIL]`, `[TELEFONE]`, `[CPF]` e `[NOME]` substituem os
+valores identificados. O campo `autor` também é pseudonimizado com
+`SAL_PSEUDONIMIZACAO` antes do envio; valores já no formato `membro_...` são
+mantidos. Na resposta, `mensagem_original`, autor e citações são obtidos da
+interação de origem correspondente, não do texto repetido pelo LLM.
+
+Na imagem Docker, `pt_core_news_sm` é instalado e validado durante o build.
+Fora desse ambiente, se o modelo não estiver disponível, a anonimização de
+nomes usa um fallback heurístico de melhor esforço.
 
 História detectada (saída):
 

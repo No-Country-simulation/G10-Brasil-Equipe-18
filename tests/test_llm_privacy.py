@@ -54,7 +54,8 @@ def test_payload_preserva_id_e_campos_de_entrada(chamada_llm):
     llm.analisar([INTERACAO])
 
     assert chamada_llm[0]["id"] == 1
-    assert chamada_llm[0]["autor"] == "Marina Costa"
+    assert chamada_llm[0]["autor"].startswith("membro_")
+    assert "Marina Costa" not in chamada_llm[0]["autor"]
     assert chamada_llm[0]["canal"] == "#conquistas"
     assert chamada_llm[0]["tipo"] == "mensagem"
 
