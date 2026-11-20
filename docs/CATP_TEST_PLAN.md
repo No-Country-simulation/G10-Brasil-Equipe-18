@@ -184,11 +184,11 @@ O CATP-010 somente será considerado aprovado quando seus quatro subcasos aplic�
 | Dados de entrada | Lote de teste identificável: 2 interações fictícias, canal `persistencia-curadoria-20261119`, autor `membro_teste_curadoria` |
 | Pré-condições | Credencial OCI válida; lote gravado no bucket pela tela Importação antes da decisão |
 | Resultado esperado | Observação de ajuste registrada, vinculada ao ativo e ao lote, e legível de volta depois da sessão |
-| Resultado observado | Lote `LOTE-20261120T011523Z-E19DFEBC30624C7788E326BC61CAF66E`: pacote com 2 histórias e bloco `curadoria` de 4 linhas. A linha `hist-001` / `post_linkedin` ficou com `status_curadoria: "ajustes"`, `validacao_factual: "pendente"`, `autorizacao: "nao_registrada"` e `parecer: "Observação de teste do CATP-022: encurtar o segundo parágrafo."`. O bloco foi lido de volta do bucket por `ler_decisoes` depois da decisão, com a sessão do navegador já encerrada |
+| Resultado observado | Lote `LOTE-20261120T011523Z-E19DFEBC30624C7788E326BC61CAF66E`: pacote com 2 histórias e bloco `curadoria` de 4 linhas. A linha `hist-001` / `post_linkedin` ficou com `status_curadoria: "ajustes"`, `validacao_factual: "pendente"`, `autorizacao: "nao_registrada"` e `parecer: "Observação de teste do CATP-022: encurtar o segundo parágrafo."`. O bloco foi conferido de volta pelo Histórico, em "Ver JSON" do pacote, depois da decisão e com a sessão do navegador já encerrada; `ler_decisoes` devolve os mesmos valores |
 | Status de implementação | Disponível |
 | Aplicabilidade ao escopo aprovado | Aplicável |
 | Status de execução | **Executado** |
-| Evidências de execução | `tests/evidences/catp022.01-curadoria-ajuste-solicitado.png` (tela com o status e a observação) e `tests/evidences/catp022.02-pacote-curadoria-lido.png` (bloco `curadoria` lido do bucket) |
+| Evidências de execução | `tests/evidences/catp022.01-curadoria-ajuste-solicitado.png` (Curadoria com o status e a observação) e `tests/evidences/catp022.02-historico-ver-json-curadoria.png` (diálogo "Ver JSON" do Histórico, com o bloco `curadoria` do lote e o parecer do ajuste) |
 | Defeito identificado | Nenhum impeditivo. Observação de escopo: recuperar o lote inteiro numa sessão nova (trazer as histórias do bucket de volta para a tela) não está implementado; a prova aqui é do registro no pacote e da leitura dele, não da tela reconstruída |
 | Resultado do reteste | Não aplicável — executado em primeira rodada |
 
