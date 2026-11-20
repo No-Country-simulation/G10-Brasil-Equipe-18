@@ -513,6 +513,109 @@ CAMINHO_CURSOR_DISCORD = "discord/cursor.json"
 MARCADOR_ULTIMO_ID_DISCORD = "__ultimo_id_discord__:"
 
 
+def montar_bloco_curadoria(lote_id, historias, estado):
+    """Monta as decisões de Curadoria no formato do envelope do Card 05.
+
+    Cada linha liga um ativo às três dimensões independentes — validação
+    factual, status editorial e autorização — mais o parecer escrito pelo
+    curador. As dimensões não se misturam: aprovado não é autorizado, e
+    validado não é aprovado.
+    """
+    observacoes = estado.get("observacoes") or {}
+    motivos = estado.get("motivos") or {}
+    validacao = estado.get("validacao_factual") or {}
+    status_editorial = estado.get("status_curadoria") or {}
+    autorizacao = estado.get("autorizacao") or {}
+
+    linhas = []
+    for historia in historias or []:
+        id_historia = historia.get("id")
+        for ativo in historia.get("ativos") or []:
+            id_ativo = ativo.get("id")
+            if id_historia is None or id_ativo is None:
+                continue
+            chave = f"{id_historia}:{id_ativo}"
+            linhas.append(
+                {
+                    "lote": lote_id,
+                    "id_historia": str(id_historia),
+                    "id_ativo": str(id_ativo),
+                    "validacao_factual": validacao.get(chave, "pendente"),
+                    "status_curadoria": status_editorial.get(chave, "rascunho"),
+                    "autorizacao": autorizacao.get(chave, "nao_registrada"),
+                    "parecer": str(observacoes.get(chave) or motivos.get(chave) or "").strip(),
+                }
+            )
+    return linhas
+
+
+def decisoes_do_bloco(conteudo):
+    """Decisões de um pacote, por chave "historia:ativo".
+
+    Pacote gravado antes deste bloco devolve vazio, em vez de erro: é o caso
+    de todo lote anterior a esta mudança.
+    """
+    if not isinstance(conteudo, dict):
+        return {}
+    bloco = conteudo.get("curadoria")
+    if not isinstance(bloco, list):
+        return {}
+    decisoes = {}
+    for linha in bloco:
+        if not isinstance(linha, dict):
+            continue
+        id_historia = linha.get("id_historia")
+        id_ativo = linha.get("id_ativo")
+        if id_historia is None or id_ativo is None:
+            continue
+        decisoes[f"{id_historia}:{id_ativo}"] = {
+            "validacao_factual": linha.get("validacao_factual", "pendente"),
+            "status_curadoria": linha.get("status_curadoria", "rascunho"),
+            "autorizacao": linha.get("autorizacao", "nao_registrada"),
+            "parecer": linha.get("parecer", ""),
+        }
+    return decisoes
+
+
+def ler_decisoes(caminho):
+    """Decisões guardadas no pacote; vazio quando não há bloco ou a leitura falha."""
+    return decisoes_do_bloco(conteudo_pacote(caminho))
+
+
+def salvar_decisoes(lote_id, caminho, historias, estado):
+    """Acrescenta o bloco de curadoria ao pacote gravado e regrava no mesmo caminho.
+
+    Lê o pacote antes de escrever, em vez de remontar o conteúdo a partir da
+    tela: assim um lote gravado antes deste bloco também aceita decisão nova, e
+    o risco de apagar histórias cai. Devolve {"ok", "motivo", "data"}.
+    """
+    armazenamento = _storage()
+    if armazenamento is None:
+        return {
+            "ok": False,
+            "motivo": ULTIMO_ERRO_OCI or "OCI indisponivel: credencial nao configurada",
+            "data": None,
+        }
+
+    try:
+        atual = armazenamento.ler_objeto(str(caminho))
+    except Exception as erro:
+        _registrar_erro_oci(erro)
+        return {"ok": False, "motivo": str(erro), "data": None}
+
+    if not isinstance(atual, dict) or not atual:
+        return {"ok": False, "motivo": "Pacote não encontrado no bucket: nada foi gravado", "data": None}
+
+    atual["curadoria"] = montar_bloco_curadoria(lote_id, historias, estado)
+    try:
+        resultado = armazenamento.salvar_objeto(str(caminho), atual)
+    except Exception as erro:
+        _registrar_erro_oci(erro)
+        return {"ok": False, "motivo": str(erro), "data": None}
+
+    return {"ok": True, "motivo": None, "data": _data_br(resultado.get("salvo_em"))}
+
+
 def buscar_mensagens_discord(canal_id=None, after_id=None, limite=50):
     """Busca mensagens no Discord usando o contrato do serviço de ingestão."""
     from src.ingestion.discord_load import buscar_mensagens_discord as buscar
