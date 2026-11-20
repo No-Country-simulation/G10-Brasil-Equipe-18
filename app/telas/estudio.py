@@ -2,7 +2,7 @@
 import streamlit as st
 
 from state import campo, definir, historia_por_id, ir_para, valor
-from styles import avatar, cabecalho, caixa, chip, destacar, esc, md, topbar
+from styles import avatar, cabecalho, caixa, chip, conferencia_da_citacao_editada, destacar, esc, md, topbar
 
 
 def _chave(hid, aid, nome_campo):
@@ -120,6 +120,7 @@ def _coluna_conteudo(h):
             campo(st.text_input, "Título", _chave(hid, aid, "titulo"), ativo["campos"]["titulo"])
             campo(st.text_area, "Descrição", _chave(hid, aid, "descricao"), ativo["campos"]["descricao"], height=120)
             campo(st.text_area, "Citação", _chave(hid, aid, "citacao"), ativo["campos"]["citacao"], height=60)
+            conferencia_da_citacao_editada(valor(_chave(hid, aid, "citacao"), ""), h, st.session_state.interacoes)
             
             # Contador de caracteres
             titulo = valor(_chave(hid, aid, "titulo"), "")

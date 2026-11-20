@@ -154,15 +154,31 @@ Os IDs calculados são armazenados em `_id_efetivo` e **nunca mudam após filtro
 
 Após filtrar por `#conquistas`, os IDs continuam 101 e 309 (não viram 1 e 2).
 
-### Conferência literal de evidências
+### Conferência de citações
 
-A seção "Evidências citadas" no Estúdio e na Curadoria mostra cada trecho com conferência automática:
+Cada citação é conferida contra o texto **da interação indicada pelo seu `id_interacao`** (não contra a mensagem inteira nem o lote todo). A regra de comparação está em `app/services/conferencia_citacao.py`; as telas chegam a ela só pelo `data_service` (`conferencia_da_citacao` e `conferencia_da_citacao_do_ativo`). O resultado é **por citação**, sempre com o motivo ao lado, e **não existe selo geral por ativo**.
 
-- ✅ **Selo verde** "Trecho literal conferido" — o trecho existe palavra por palavra no texto da interação
-- ⚠️ **Selo amarelo** "Trecho não encontrado na mensagem original" — a interação existe no lote mas o trecho não está nela (NUNCA marca como validada)
-- 🔄 **Conferência indisponível** (neutro, sem selo) — a interação com aquele ID não existe no lote atual (exemplo: citação de ID 999 mas o lote só tem IDs 1-10)
+| Rótulo na tela | Cor | Quando aparece |
+|---|---|---|
+| Trecho literal conferido | verde | o texto existe igual na interação, sem marcador |
+| Compatível com anonimização · a parte mascarada não é conferida | azul | a citação tem `[NOME]`, `[EMAIL]`, `[CPF]` ou `[TELEFONE]` e o resto bate com o original |
+| ⚠ Não confere + motivo | amarelo | trecho alterado, marcador de outro tipo, lacuna longa etc. |
+| Conferência indisponível | neutro, sem chip | a interação com aquele ID não está no lote |
+| Conferência indisponível (mais de uma origem) | neutro, sem chip | o ativo tem mais de uma interação de origem |
+| ID não informado | neutro, sem chip | `id_interacao` ausente, 0 ou inválido |
 
-**Regra crítica:** o sistema **NUNCA marca automaticamente como validada** quando a interação não existe no lote.
+Os dois "confere" nunca usam o mesmo rótulo nem a mesma cor. O azul **não é uma aprovação**: a função só confere a forma da parte mascarada, não o dado real. Um termo mascarado por engano (por exemplo `[NOME]` no lugar de "Cloud") também aparece como compatível.
+
+**Onde aparece**
+
+- **Evidências citadas** (Estúdio e Curadoria): um resultado por citação, com "interação nº N" visível.
+- **Campo "Citação" editável** (Estúdio e Curadoria): o resultado fica logo abaixo do campo e é recalculado a cada edição. Como o campo não tem `id_interacao` próprio, a origem é `interacoes_origem` da história.
+
+**Regras**
+
+- O sistema **nunca mostra verde nem azul** sem interação de origem no lote.
+- Origem ambígua (mais de uma interação, ou nenhuma) não é adivinhada: o resultado fica neutro.
+- A conferência confirma que o trecho existe na mensagem. Não prova que o conteúdo do ativo é fiel ao relato nem autoriza publicação.
 
 ### Modo demonstração
 
@@ -173,7 +189,7 @@ Quando `modo_demonstracao=True` (padrão), as evidências citadas recebem o chip
 - **Importação:** coluna "ID" na prévia das interações
 - **Estúdio e Curadoria:** linha "ID da interação" nos metadados (separada do campo "Lote")
 - **Evidências citadas:** "interação nº N" para cada trecho
-- **ID não informado:** quando `id_interacao` é 0 ou ausente, exibe "ID não informado" em vez de "ID 0"
+- **ID não informado:** quando `id_interacao` é 0, ausente ou inválido, exibe "ID não informado" em vez de "ID 0"
 
 ### Implementação técnica
 
