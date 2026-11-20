@@ -5,7 +5,7 @@ import time
 import streamlit as st
 
 from services import data_service as svc
-from state import ir_para
+from state import contagem_ativos_completa, ir_para, situacao_ativos
 from styles import caixa, cabecalho, esc, md, topbar
 
 
@@ -144,16 +144,14 @@ def _desenhar(etapas, botoes):
             canais = len({i["canal"] for i in ss.interacoes})
             historias_ok = etapas[4] == "concluida"
             historias = ss.get("historias", []) if historias_ok else []
-            quantidade_ativos = sum(
-                len(h.get("ativos", [])) for h in historias if isinstance(h, dict)
-            )
             if historias_ok:
+                contagem = contagem_ativos_completa(historias, ss.status_curadoria, ss.status_ativos)
                 if persistido:
-                    situacao = f"{quantidade_ativos} rascunhos · salvos no OCI"
+                    situacao = situacao_ativos(contagem, "salvos no OCI")
                 elif com_erro:
-                    situacao = f"{quantidade_ativos} rascunhos · gravação não confirmada"
+                    situacao = situacao_ativos(contagem, "gravação não confirmada")
                 else:
-                    situacao = f"{quantidade_ativos} rascunhos · aguardando gravação"
+                    situacao = situacao_ativos(contagem, "aguardando gravação")
             else:
                 situacao = "Ativos ainda não gerados"
             ambiente = "Demonstração" if demonstrativo else "Análise real" if origem == "gemini" else "Não confirmado"

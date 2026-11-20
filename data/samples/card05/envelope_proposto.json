@@ -1,0 +1,85 @@
+{
+  "versao_proposta": "0.1",
+  "natureza_dados": "ficticios",
+  "lote": "LOTE-EXEMPLO-CARD05",
+  "historias": [
+    {
+      "id": "hist-001",
+      "interacoes_origem": [
+        1
+      ],
+      "citacoes": [
+        {
+          "id_interacao": 1,
+          "texto": "consegui minha primeira vaga como analista júnior"
+        }
+      ],
+      "ativos": [
+        {
+          "id": "testemunho_estruturado",
+          "nome": "Testemunho estruturado",
+          "tipo": "testemunho",
+          "campos": {
+            "titulo": "Primeira vaga como analista júnior",
+            "descricao": "Participante relata a conclusão de um curso de análise de dados, a construção de dois projetos para o portfólio e a conquista da primeira vaga como analista júnior.",
+            "citacao": "consegui minha primeira vaga como analista júnior"
+          }
+        }
+      ]
+    },
+    {
+      "id": "hist-002",
+      "interacoes_origem": [
+        2
+      ],
+      "citacoes": [
+        {
+          "id_interacao": 2,
+          "texto": "Desenvolvi um painel de vendas em Power BI e apresentei o projeto na reunião da comunidade."
+        }
+      ],
+      "ativos": [
+        {
+          "id": "case_sucesso",
+          "nome": "Case de sucesso",
+          "tipo": "texto",
+          "campos": {
+            "texto": "Um participante desenvolveu um painel de vendas em Power BI e apresentou o projeto em uma reunião da comunidade. O relato comprova o desenvolvimento e a apresentação. Não informa métricas de uso ou resultados comerciais."
+          }
+        }
+      ]
+    }
+  ],
+  "vinculos": [
+    {
+      "id_historia": "hist-001",
+      "id_local": "testemunho_estruturado",
+      "id_ativo": "ativo_001"
+    },
+    {
+      "id_historia": "hist-002",
+      "id_local": "case_sucesso",
+      "id_ativo": "ativo_002"
+    }
+  ],
+  "curadoria": [
+    {
+      "lote": "LOTE-EXEMPLO-CARD05",
+      "id_historia": "hist-001",
+      "id_ativo": "ativo_001",
+      "validacao_factual": "pendente",
+      "status_curadoria": "rascunho",
+      "autorizacao": "nao_registrada",
+      "parecer": ""
+    },
+    {
+      "lote": "LOTE-EXEMPLO-CARD05",
+      "id_historia": "hist-002",
+      "id_ativo": "ativo_002",
+      "validacao_factual": "pendente",
+      "status_curadoria": "rascunho",
+      "autorizacao": "nao_registrada",
+      "parecer": ""
+    }
+  ]
+}

@@ -1,8 +1,8 @@
 """Tela Dashboard - Visão geral do CommunityLab."""
 import streamlit as st
 
-from state import ir_para, resumo_ativos
-from styles import cabecalho, md, topbar
+from state import contagem_ativos_completa, ir_para, legenda_ativos, resumo_ativos
+from styles import cabecalho, md, plural, topbar
 
 
 def _kpi_card(titulo, valor, descricao, tipo="neutro"):
@@ -31,8 +31,8 @@ def render():
     )
     
     # Métricas principais
-    contagem = resumo_ativos()
-    total_ativos = sum(contagem.values())
+    contagem = contagem_ativos_completa(ss.historias, ss.status_curadoria, ss.status_ativos)
+    total_ativos = contagem["total"]
     num_canais = len({i["canal"] for i in ss.interacoes})
     
     col1, col2, col3 = st.columns(3)
@@ -41,7 +41,7 @@ def render():
         _kpi_card(
             "Interações importadas",
             len(ss.interacoes),
-            f"{num_canais} canais · Lote {ss.lote_id}",
+            f"{plural(num_canais, 'canal', 'canais')} · Lote {ss.lote_id}",
             "neutro"
         )
     
@@ -57,8 +57,8 @@ def render():
         _kpi_card(
             "Ativos gerados",
             total_ativos,
-            f"{contagem['rascunho']} aguardando revisão",
-            "atencao" if contagem['rascunho'] > 0 else "sucesso"
+            legenda_ativos(contagem),
+            "atencao" if (contagem["rascunho"] + contagem["ajustes"]) > 0 else "sucesso"
         )
     
     # Status dos ativos
@@ -76,8 +76,8 @@ def render():
         
         with col2:
             md(f'<div style="text-align:center;">'
-               f'<div style="font-size:28px; font-weight:700; color:#F59E0B;">{contagem["rascunho"]}</div>'
-               f'<div class="cl-muted">Rascunhos</div>'
+               f'<div style="font-size:28px; font-weight:700; color:#F59E0B;">{contagem["rascunho"] + contagem["ajustes"]}</div>'
+               f'<div class="cl-muted">Aguardando revisão</div>'
                f'</div>')
         
         with col3:
@@ -124,7 +124,7 @@ def render():
                '<div class="cl-muted" style="font-size:13px; margin-bottom:12px;">Aprovar ou rejeitar rascunhos</div>'
                '</div>')
             st.button("→ Ir para Curadoria", key="goto_cur", on_click=ir_para, args=("curadoria",), 
-                     disabled=contagem['rascunho'] == 0, use_container_width=True)
+                     disabled=(contagem['rascunho'] + contagem['ajustes']) == 0, use_container_width=True)
     
     # Rodapé
     st.write("")

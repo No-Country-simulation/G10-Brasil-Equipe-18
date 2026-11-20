@@ -14,8 +14,12 @@ def _regenerar(hid, aid):
     ss = st.session_state
     h = historia_por_id(hid)
     n = ss.regen.get(f"{hid}:{aid}", 0) + 1
+    novo = svc.regenerar(h, aid, n)
+    if not novo:
+        ss.toast = "Sem novas variações para este rascunho. O conteúdo atual foi mantido."
+        return
     ss.regen[f"{hid}:{aid}"] = n
-    for nome_campo, texto in svc.regenerar(h, aid, n).items():
+    for nome_campo, texto in novo.items():
         definir(_chave(hid, aid, nome_campo), texto)
     # Resetar validação factual para "pendente" ao regenerar (requisito do review)
     chave = f"{hid}:{aid}"
@@ -29,6 +33,15 @@ def _alternar_copia():
 
 def _enviar_curadoria(hid):
     ss = st.session_state
+    # Leva as edições do Estúdio ("e:") para as chaves da Curadoria ("c:").
+    # Só copia o que foi aberto no Estúdio; o resto fica com o texto original.
+    h = historia_por_id(hid)
+    for ativo in (h or {}).get("ativos", []):
+        aid = ativo["id"]
+        for nome_campo in (ativo.get("campos") or {}):
+            origem = _chave(hid, aid, nome_campo)
+            if origem in ss.dados:
+                ss.dados[f"c:{hid}:{aid}:{nome_campo}"] = ss.dados[origem]
     ss.historia_atual = hid
     ss.mostrar_copia = False
     ss.toast = "Enviado para curadoria. Revise e aprove ou rejeite."
@@ -116,12 +129,23 @@ def _coluna_conteudo(h):
             st.caption(f"{total} caracteres no total")
             
             copiavel = f"{titulo}\n\n{descricao}\n\n\"{citacao}\""
-        else:  # texto
+        elif ativo["tipo"] == "card":
+            campos_card = ativo.get("campos") or {}
+            campo(st.text_input, "Título", _chave(hid, aid, "titulo"), campos_card.get("titulo", ""))
+            campo(st.text_input, "Frase de destaque", _chave(hid, aid, "frase"), campos_card.get("frase", ""))
+            titulo = valor(_chave(hid, aid, "titulo"), "")
+            frase = valor(_chave(hid, aid, "frase"), "")
+            st.caption(f"{len(titulo) + len(frase)} caracteres no total")
+            copiavel = f"{titulo}\n{frase}"
+        elif ativo["tipo"] == "texto":
             texto_campo = ativo["campos"].get("texto", "")
             campo(st.text_area, "Texto do case", _chave(hid, aid, "texto"), texto_campo, height=300)
             texto = valor(_chave(hid, aid, "texto"), "")
             st.caption(f"{len(texto)} caracteres")
             copiavel = texto
+        else:
+            st.warning(f"Tipo de ativo não suportado no Estúdio: {ativo['tipo']}")
+            copiavel = ""
         
         st.divider()
         
@@ -143,11 +167,11 @@ def _coluna_conteudo(h):
         
         # Botões de ação
         st.write("")
-        col1, col2, col3, col4 = st.columns([1.2, 1.2, 2, 2])
+        col1, col2, col3 = st.columns([1.5, 1.2, 2.8])
         col1.button("↻ Regenerar", key=f"regen_estudio_{hid}_{aid}", on_click=_regenerar, args=(hid, aid), 
                    use_container_width=True)
         col2.button("Copiar", key=f"copy_estudio_{hid}_{aid}", on_click=_alternar_copia, use_container_width=True)
-        col4.button("→ Enviar para curadoria", key=f"enviar_{hid}", on_click=_enviar_curadoria, args=(hid,),
+        col3.button("→ Enviar para curadoria", key=f"enviar_{hid}", on_click=_enviar_curadoria, args=(hid,),
                    type="primary", use_container_width=True)
         
         if st.session_state.mostrar_copia:
