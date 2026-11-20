@@ -231,6 +231,24 @@ def conferencia_html(confere, motivo):
     )
 
 
+def conferencia_da_citacao_editada(texto, historia, interacoes):
+    """Resultado logo abaixo do campo "Citação" editável (Estúdio e Curadoria).
+
+    Recalculado a cada rerun, portanto a cada edição. Texto vazio não mostra nada.
+    """
+    from services import data_service as svc
+
+    if not (texto or "").strip():
+        return
+    confere, motivo, id_int = svc.conferencia_da_citacao_do_ativo(texto, historia, interacoes)
+    origem = f"interação nº {id_int}" if id_int else ""
+    md(
+        f'<div class="cl-muted" style="font-size:12px; margin:-8px 0 8px 0;">'
+        f'Conferência da citação {("(" + origem + ") ") if origem else ""}→ '
+        f'{conferencia_html(confere, motivo)}</div>'
+    )
+
+
 def evidencias_citadas(historia, interacoes_do_lote, modo_demonstracao=True):
     """Componente compartilhado: exibe evidências citadas com conferência por citação.
 

@@ -3,7 +3,7 @@ import streamlit as st
 
 from services import data_service as svc
 from state import campo, definir, historia_por_id, ir_para, valor
-from styles import avatar, cabecalho, caixa, chip, destacar, esc, md, topbar
+from styles import avatar, cabecalho, caixa, chip, conferencia_da_citacao_editada, destacar, esc, md, topbar
 
 try:  # st.dialog existe a partir da 1.37; antes era experimental
     _dialogo = st.dialog
@@ -117,6 +117,7 @@ def _coluna_rascunhos(h, ativo, status):
         campo(st.text_input, "Título", _chave(hid, aid, "titulo"), ativo["campos"]["titulo"], disabled=not editavel)
         campo(st.text_area, "Descrição", _chave(hid, aid, "descricao"), ativo["campos"]["descricao"], height=100, disabled=not editavel)
         campo(st.text_area, "Citação", _chave(hid, aid, "citacao"), ativo["campos"]["citacao"], height=60, disabled=not editavel)
+        conferencia_da_citacao_editada(valor(_chave(hid, aid, "citacao"), ""), h, st.session_state.interacoes)
         total = len(valor(_chave(hid, aid, "titulo"), "")) + len(valor(_chave(hid, aid, "descricao"), "")) + len(valor(_chave(hid, aid, "citacao"), ""))
         st.caption(f"{total} caracteres no total")
         copiavel = f"{valor(_chave(hid, aid, 'titulo'), '')}\n\n{valor(_chave(hid, aid, 'descricao'), '')}\n\n\"{valor(_chave(hid, aid, 'citacao'), '')}\""
