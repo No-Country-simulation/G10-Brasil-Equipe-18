@@ -54,6 +54,7 @@ def resetar_lote(ss=None):
     ss.status_ativos = {}          # legado — manter compatibilidade
     ss.regen = {}
     ss.pacotes_oci = []
+    ss.erro_curadoria = ""     # falha ao gravar decisão no bucket
 
 
 def init_state():
@@ -85,6 +86,7 @@ def init_state():
     ss.status_ativos = {}  # "hist:ativo" -> rascunho | aprovado | rejeitado (legado)
     ss.regen = {}
     ss.pacotes_oci = []
+    ss.erro_curadoria = ""  # falha ao gravar decisão no bucket
     ss.toast = None
     ss.mostrar_copia = False
 

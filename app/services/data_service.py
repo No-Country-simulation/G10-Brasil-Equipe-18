@@ -513,6 +513,171 @@ CAMINHO_CURSOR_DISCORD = "discord/cursor.json"
 MARCADOR_ULTIMO_ID_DISCORD = "__ultimo_id_discord__:"
 
 
+def campo_do_parecer(status):
+    """Campo do estado que guarda o parecer vigente deste status editorial.
+
+    O envelope do Card 05 tem um campo só para o parecer, mas a Curadoria
+    grava textos em dois: observação de ajuste e motivo de rejeição. Devolver
+    None quer dizer que o status atual não tem parecer pendente a registrar.
+    """
+    return {"ajustes": "observacoes", "rejeitado": "motivos"}.get(status)
+
+
+def parecer_do_estado(status, chave, observacoes, motivos):
+    """Parecer do ativo escolhido pelo status, nunca pela ordem dos campos.
+
+    Antes valia a primeira chave preenchida (`observacoes or motivos`): depois
+    de "Solicitar ajustes", a rejeição gravava o motivo em `motivos` mas o
+    pacote saía com a observação antiga. O texto que vale é o do estado atual.
+    """
+    campo = campo_do_parecer(status)
+    if campo is None:
+        return ""
+    origem = observacoes if campo == "observacoes" else motivos
+    return str(origem.get(chave) or "").strip()
+
+
+def montar_bloco_curadoria(lote_id, historias, estado):
+    """Monta as decisões de Curadoria no formato do envelope do Card 05.
+
+    Cada linha liga um ativo às três dimensões independentes — validação
+    factual, status editorial e autorização — mais o parecer escrito pelo
+    curador. As dimensões não se misturam: aprovado não é autorizado, e
+    validado não é aprovado.
+    """
+    observacoes = estado.get("observacoes") or {}
+    motivos = estado.get("motivos") or {}
+    validacao = estado.get("validacao_factual") or {}
+    status_editorial = estado.get("status_curadoria") or {}
+    autorizacao = estado.get("autorizacao") or {}
+
+    linhas = []
+    for historia in historias or []:
+        id_historia = historia.get("id")
+        for ativo in historia.get("ativos") or []:
+            id_ativo = ativo.get("id")
+            if id_historia is None or id_ativo is None:
+                continue
+            chave = f"{id_historia}:{id_ativo}"
+            status_ativo = status_editorial.get(chave, "rascunho")
+            linhas.append(
+                {
+                    "lote": lote_id,
+                    "id_historia": str(id_historia),
+                    "id_ativo": str(id_ativo),
+                    "validacao_factual": validacao.get(chave, "pendente"),
+                    "status_curadoria": status_ativo,
+                    "autorizacao": autorizacao.get(chave, "nao_registrada"),
+                    "parecer": parecer_do_estado(status_ativo, chave, observacoes, motivos),
+                }
+            )
+    return linhas
+
+
+def decisoes_do_bloco(conteudo):
+    """Decisões de um pacote, por chave "historia:ativo".
+
+    Pacote gravado antes deste bloco devolve vazio, em vez de erro: é o caso
+    de todo lote anterior a esta mudança.
+    """
+    if not isinstance(conteudo, dict):
+        return {}
+    bloco = conteudo.get("curadoria")
+    if not isinstance(bloco, list):
+        return {}
+    decisoes = {}
+    for linha in bloco:
+        if not isinstance(linha, dict):
+            continue
+        id_historia = linha.get("id_historia")
+        id_ativo = linha.get("id_ativo")
+        if id_historia is None or id_ativo is None:
+            continue
+        decisoes[f"{id_historia}:{id_ativo}"] = {
+            "validacao_factual": linha.get("validacao_factual", "pendente"),
+            "status_curadoria": linha.get("status_curadoria", "rascunho"),
+            "autorizacao": linha.get("autorizacao", "nao_registrada"),
+            "parecer": linha.get("parecer", ""),
+        }
+    return decisoes
+
+
+def ler_decisoes(caminho):
+    """Decisões guardadas no pacote; vazio quando não há bloco ou a leitura falha."""
+    return decisoes_do_bloco(conteudo_pacote(caminho))
+
+
+def aplicar_edicoes(historias, edicoes):
+    """Devolve as histórias com os campos editados na sessão aplicados.
+
+    As edições vivem na sessão, em chaves `c:<historia>:<ativo>:<campo>`. O
+    envelope do Card 05 (§4.6) pede os campos estruturados preservados, então
+    o pacote passa a guardar o texto como o curador deixou — sem isso, reabrir
+    um lote devolveria o texto da IA e perderia a revisão.
+    """
+    edicoes = edicoes or {}
+    resultado = []
+    for historia in historias or []:
+        nova = dict(historia)
+        id_historia = historia.get("id")
+        ativos = []
+        for ativo in historia.get("ativos") or []:
+            novo_ativo = dict(ativo)
+            id_ativo = ativo.get("id")
+            campos = dict(ativo.get("campos") or {})
+            editado = False
+            for nome_campo in list(campos):
+                chave = f"c:{id_historia}:{id_ativo}:{nome_campo}"
+                if chave in edicoes and edicoes[chave] is not None:
+                    campos[nome_campo] = str(edicoes[chave])
+                    editado = True
+            # Só mexe no formato quando havia campos ou quando houve edição:
+            # ativo sem campos continua sem o bloco, em vez de ganhar um vazio.
+            if "campos" in ativo or editado:
+                novo_ativo["campos"] = campos
+            ativos.append(novo_ativo)
+        nova["ativos"] = ativos
+        resultado.append(nova)
+    return resultado
+
+
+def salvar_decisoes(lote_id, caminho, historias, estado, edicoes=None):
+    """Acrescenta o bloco de curadoria ao pacote gravado e regrava no mesmo caminho.
+
+    Lê o pacote antes de escrever, em vez de remontar o conteúdo a partir da
+    tela: assim um lote gravado antes deste bloco também aceita decisão nova, e
+    o risco de apagar histórias cai. Também grava os campos com as edições do
+    curador, para a revisão não se perder ao reabrir o lote.
+    Devolve {"ok", "motivo", "data"}.
+    """
+    armazenamento = _storage()
+    if armazenamento is None:
+        return {
+            "ok": False,
+            "motivo": ULTIMO_ERRO_OCI or "OCI indisponivel: credencial nao configurada",
+            "data": None,
+        }
+
+    try:
+        atual = armazenamento.ler_objeto(str(caminho))
+    except Exception as erro:
+        _registrar_erro_oci(erro)
+        return {"ok": False, "motivo": str(erro), "data": None}
+
+    if not isinstance(atual, dict) or not atual:
+        return {"ok": False, "motivo": "Pacote não encontrado no bucket: nada foi gravado", "data": None}
+
+    atual["historias"] = aplicar_edicoes(historias, edicoes)
+    atual["curadoria"] = montar_bloco_curadoria(lote_id, historias, estado)
+    try:
+        resultado = armazenamento.salvar_objeto(str(caminho), atual)
+    except Exception as erro:
+        _registrar_erro_oci(erro)
+        return {"ok": False, "motivo": str(erro), "data": None}
+
+    return {"ok": True, "motivo": None, "data": _data_br(resultado.get("salvo_em"))}
+
+
 def buscar_mensagens_discord(canal_id=None, after_id=None, limite=50):
     """Busca mensagens no Discord usando o contrato do serviço de ingestão."""
     from src.ingestion.discord_load import buscar_mensagens_discord as buscar
