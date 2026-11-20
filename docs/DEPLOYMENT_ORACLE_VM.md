@@ -13,8 +13,9 @@ não inclui credenciais; elas são fornecidas em tempo de execução.
 
 ## Arquivos do container
 
-- `Dockerfile`: instala as dependências definidas em `pyproject.toml` e inicia
-  `app/main.py` na porta 8501. O processo roda sem privilégios de root.
+- `Dockerfile`: instala as dependências de `pyproject.toml`, instala e valida
+  `pt_core_news_sm` durante o build e inicia `app/main.py` na porta 8501. O
+  processo roda sem privilégios de root.
 - `.dockerignore`: impede que arquivos locais, credenciais e dependências do
   host sejam enviados ao contexto ou incluídos na imagem.
 - `compose.yaml`: inicia o serviço, define limites de porta e monta a

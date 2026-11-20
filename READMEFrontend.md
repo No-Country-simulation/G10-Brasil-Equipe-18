@@ -276,6 +276,10 @@ valores identificados. O campo `autor` também é pseudonimizado com
 mantidos. Na resposta, `mensagem_original`, autor e citações são obtidos da
 interação de origem correspondente, não do texto repetido pelo LLM.
 
+Na imagem Docker, `pt_core_news_sm` é instalado e validado durante o build.
+Fora desse ambiente, se o modelo não estiver disponível, a anonimização de
+nomes usa um fallback heurístico de melhor esforço.
+
 História detectada (saída):
 
 ```json
