@@ -179,9 +179,10 @@ def test_citacao_inventada_nunca_conferida():
     
     html = evidencias_citadas(historia, interacoes, modo_demonstracao=False)
     
-    # A citação NÃO deve ter selo verde
+    # A citação NÃO deve ter selo verde e o motivo da reprovação aparece
+    assert "chip-green" not in html
     assert "Trecho literal conferido" not in html
-    assert "Trecho não encontrado" in html or "Conferência indisponível" in html
+    assert "não encontrado na mensagem original" in html.lower()
 
 
 def test_citacao_sem_interacao_indisponivel():
