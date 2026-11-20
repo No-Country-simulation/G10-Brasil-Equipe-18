@@ -10,7 +10,7 @@ PROVISÓRIO. Quem define o contrato oficial é o back.
 import csv
 import io
 import json
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 from mocks import mock_data as m
 
@@ -204,15 +204,50 @@ def _registrar_erro_oci(erro):
     print(f"[oci] falhou: {ULTIMO_ERRO_OCI}", flush=True)
 
 
+def _fuso_brasil():
+    """Fuso de São Paulo, com queda para UTC-3 fixo.
+
+    Desde 2019 o Brasil não tem horário de verão, então UTC-3 é o valor
+    correto o ano inteiro. O fallback existe para imagem sem base de fusos,
+    como alguns containers mínimos.
+    """
+    try:
+        from zoneinfo import ZoneInfo
+
+        return ZoneInfo("America/Sao_Paulo")
+    except Exception:  # pragma: no cover - depende da imagem
+        return timezone(timedelta(hours=-3))
+
+
 def _data_br(iso: str) -> str:
-    """Converte 2026-10-22T04:05:54+00:00 em 22/10/2026 04:05."""
-    texto = (iso or "").replace("T", " ")
-    if len(texto) < 16:
-        return texto
-    data, hora = texto[:10], texto[11:16]
+    """Converte o instante ISO para o fuso de São Paulo: 22/10/2026 01:05.
+
+    Aceita offset explícito, sufixo Z e data sem fuso (tratada como UTC, que é
+    como o bucket grava). Se o texto não for um instante válido, devolve o que
+    veio, só com a formatação antiga, sem levantar erro.
+    """
+    texto = (iso or "").strip()
+    if not texto:
+        return ""
+    try:
+        from datetime import datetime
+
+        momento = datetime.fromisoformat(texto.replace("Z", "+00:00"))
+    except ValueError:
+        momento = None
+
+    if momento is not None:
+        if momento.tzinfo is None:
+            momento = momento.replace(tzinfo=timezone.utc)
+        return momento.astimezone(_fuso_brasil()).strftime("%d/%m/%Y %H:%M")
+
+    legivel = texto.replace("T", " ")
+    if len(legivel) < 16:
+        return legivel
+    data, hora = legivel[:10], legivel[11:16]
     partes = data.split("-")
     if len(partes) != 3:
-        return texto
+        return legivel
     return f"{partes[2]}/{partes[1]}/{partes[0]} {hora}"
 
 
