@@ -44,6 +44,7 @@ def resetar_lote(ss=None):
     ss.proc_origem_analise = ""    # "gemini" | "mock" | ""
     ss.proc_erro_oci = ""          # motivo da falha OCI (quando houver)
     ss.proc_erro_analise = ""      # mensagem de erro da análise (quando houver)
+    ss.proc_erro_truncada = False  # True quando a falha foi corte por limite de saída
     ss.proc_erro_etapa = ""        # etapa onde ocorreu erro
     # Controles de curadoria — limpos para não herdar dados do lote anterior
     ss.validacao_factual = {}
