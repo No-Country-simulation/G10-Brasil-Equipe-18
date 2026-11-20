@@ -63,7 +63,7 @@ Todos os testes possuem status inicial **Não executado**.
 | CATP-019 | Curadoria — controles | Três controles independentes funcionam corretamente | Não executado |
 | CATP-020 | Contradição RG-02 | Interface bloqueia aprovação diante de contradição não resolvida | Não executado |
 | CATP-021 | Indicador RG-03 | Indicador de liberação corresponde às condições efetivas de publicação | Não executado |
-| CATP-022 | Solicitação de ajustes | Observações editoriais registradas e vinculadas ao conteúdo | Não executado |
+| CATP-022 | Solicitação de ajustes | Observações editoriais registradas e vinculadas ao conteúdo | Executado |
 | CATP-023 | Modo demonstração | Dados fictícios e resultados simulados identificados explicitamente | Não executado |
 
 ### 3.1. CATP-007 — Rastreabilidade das evidências
@@ -171,6 +171,28 @@ O CATP-010 somente será considerado aprovado quando seus quatro subcasos aplic�
 | Resultado do reteste | Não aplicável — aprovado em primeira execução |
 
 **Nota de escopo:** este registro é o status de execução do caso de teste. A consolidação dos resultados e a decisão de aceite do MVP permanecem com o responsável funcional, e o relatório de homologação segue com o status vigente até deliberação do PM.
+
+#### 3.3.2. Registro de execução — CATP-022
+
+| Campo | Registro |
+|---|---|
+| Identificador do teste | CATP-022 — Solicitação de ajustes com observação editorial registrada |
+| Data de execução | 19/11/2026, decisão às 22h15 (BRT) |
+| Responsável pela execução | Jaqueline (AI Engineer) |
+| Ambiente utilizado | App local Streamlit em `http://localhost:8503` (Windows); bucket `G10communitylab-ativos`; credencial OCI em `~/.oci/config`; análise real pelo Gemini (`gemini-3-flash-preview`) |
+| Branch, versão e commit testados | `feat/curadoria-persistida`, commits `d7e4d14` e `2cc0ad1`, sobre a `main` `756e9b5` |
+| Dados de entrada | Lote de teste identificável: 2 interações fictícias, canal `persistencia-curadoria-20261119`, autor `membro_teste_curadoria` |
+| Pré-condições | Credencial OCI válida; lote gravado no bucket pela tela Importação antes da decisão |
+| Resultado esperado | Observação de ajuste registrada, vinculada ao ativo e ao lote, e legível de volta depois da sessão |
+| Resultado observado | Lote `LOTE-20261120T011523Z-E19DFEBC30624C7788E326BC61CAF66E`: pacote com 2 histórias e bloco `curadoria` de 4 linhas. A linha `hist-001` / `post_linkedin` ficou com `status_curadoria: "ajustes"`, `validacao_factual: "pendente"`, `autorizacao: "nao_registrada"` e `parecer: "Observação de teste do CATP-022: encurtar o segundo parágrafo."`. O bloco foi lido de volta do bucket por `ler_decisoes` depois da decisão, com a sessão do navegador já encerrada |
+| Status de implementação | Disponível |
+| Aplicabilidade ao escopo aprovado | Aplicável |
+| Status de execução | **Executado** |
+| Evidências de execução | `tests/evidences/catp022.01-curadoria-ajuste-solicitado.png` (tela com o status e a observação) e `tests/evidences/catp022.02-pacote-curadoria-lido.png` (bloco `curadoria` lido do bucket) |
+| Defeito identificado | Nenhum impeditivo. Observação de escopo: recuperar o lote inteiro numa sessão nova (trazer as histórias do bucket de volta para a tela) não está implementado; a prova aqui é do registro no pacote e da leitura dele, não da tela reconstruída |
+| Resultado do reteste | Não aplicável — executado em primeira rodada |
+
+**Nota de escopo:** este registro é o status de execução do caso de teste. A aprovação do caso e a decisão de aceite do MVP permanecem com o responsável funcional.
 
 ### 3.4. Regras de negócio e testes de interface
 
