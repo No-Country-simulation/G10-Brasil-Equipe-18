@@ -412,6 +412,32 @@ Defeito vinculado / gravidade: —
 Reteste e conclusão: Aprovado sem ressalvas em primeira rodada.
 ```
 
+### 4.4 Reteste isolado da anonimização — 20/11/2026
+
+- Escopo: preservar “Power BI” como termo técnico, vinculado ao PR #44 / Card 07. Este reteste é separado da conferência de citações do PR #54.
+- SHA-base: `756e9b59820ad91a17fc3718514723c77e9315c8`. A execução foi feita na branch `fix/anonimizacao-regressao-power-bi`, com alterações locais ainda não commitadas.
+- No ambiente local `.venv`, spaCy `3.8.18` carregou `pt_core_news_sm`; a mensagem fictícia “Criei um painel em Power BI para analisar os resultados.” permaneceu intacta e a contagem de nomes foi zero.
+- No container construído para esse reteste, a aplicação iniciou saudável (`/_stcore/health`: HTTP 200). A imagem `sha256:93b0ee0d5349ac21e0de85fc78432a556d0f094f531ba7d1461a0b01499f5af0` foi construída sobre o SHA-base acima, com alterações locais não commitadas. O container tinha spaCy `3.8.18`, mas não `pt_core_news_sm`; o download em tempo de execução caiu na instalação do usuário (`/tmp/.local/lib/python3.11/site-packages`), ausente de `sys.path`. `spacy.load()` falhou com E050 e a função usou o fallback. A mensagem fictícia permaneceu intacta e a contagem de nomes foi zero.
+- A regressão determinística passou nos caminhos simulados de spaCy e fallback; a suíte completa passou: 3.639 testes. Esse resultado identifica a imagem testada, não a versão implantada na VM, cujo SHA segue desconhecido.
+
+### 4.5 Reteste informado na VM atualizada em `68ec2f2` — 19/11/2026
+
+Resultado relatado pelo gerente para a rodada com entrada JSON fictícia de três autores/interações e provedor `Cohere`:
+
+- Os contadores mostraram 6 gerados/6 aguardando; após aprovar um ativo, 6 gerados/5 aguardando/1 aprovado. Depois de desfazer e solicitar ajustes, voltaram a 6 aguardando/0 aprovados. Histórias também refletiu o estado pendente.
+- Os rótulos completos dos botões apareceram no Estúdio nesta resolução, o envio para Curadoria funcionou e o Histórico listou o lote e abriu os dois JSONs.
+- No lote `LOTE-20261119T205249Z-EC215F909A5943B3B2D90BB23E36A1C7`, interação 902, “Power BI” virou “[NOME] BI” nos fatos, na citação, no post e em `evidencias.json`. A conferência mostrou “Trecho não encontrado na mensagem original”; o ativo não foi aprovado.
+
+**Conferência local do caminho de anonimização** — A imagem Docker foi reconstruída a partir do commit completo `68ec2f26eed2596e569b3b3527568435ce093cdd` (`68ec2f2`). A imagem `sha256:29d8efa99844bc11f12a3dfa5d05da4f8ab90d11a278411e82fa1c45cdc34c84` iniciou saudável (HTTP 200). No container, spaCy `3.8.18` estava instalado, mas `pt_core_news_sm` não. O download em tempo de execução instalou no user-site, ausente de `sys.path`; `spacy.load()` falhou com E050 e o fallback foi usado. Com a frase sintética “Criei um painel em Power BI para analisar os resultados.”, a versão desse commit reproduziu “Criei um painel em [NOME] BI para analisar os resultados.”
+
+Esse teste confirma o fallback na imagem reconstruída do SHA informado, não uma inspeção direta da VM. A regressão do mascaramento está vinculada ao PR #44 / Card 07 e separada dos testes de conferência de citações do PR #54. O ativo da rodada não foi aprovado.
+
+### 4.6 Reteste local da atualização do PR #44 — 20/11/2026
+
+- A suíte completa passou: 170 testes.
+- A imagem Docker instalou `pt_core_news_sm` `3.8.0` durante o build e carregou o modelo como usuário sem privilégios. “Usei”, “Com” e “Power BI” permaneceram intactos; “MARIA” foi mascarado.
+- O endpoint `/_stcore/health` respondeu `ok` e o container ficou `healthy`. A imagem foi construída como `linux/arm64`; a arquitetura da VM de destino não foi verificada.
+
 ## 5. Registro dos seis cenários de homologação integrada
 
 A equipe informou a existência de seis arquivos de teste preparados para execução.
