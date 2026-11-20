@@ -16,3 +16,12 @@ def test_fallback_mascara_nome_proprio(monkeypatch):
     resultado, _ = anonimizacao.anonimizar_texto("Conversei com Mariana ontem.")
 
     assert resultado == "Conversei com [NOME] ontem."
+
+
+def test_fallback_preserva_palavras_no_inicio_de_frase(monkeypatch):
+    monkeypatch.setattr(anonimizacao, "_obter_nlp", lambda: None)
+    texto = "Concluí o módulo. Usei os exemplos. Com isso, avancei."
+
+    resultado, _ = anonimizacao.anonimizar_texto(texto)
+
+    assert resultado == texto

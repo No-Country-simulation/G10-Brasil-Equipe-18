@@ -74,3 +74,17 @@ def test_ner_mantem_mascaramento_de_nome_proprio(monkeypatch):
 
     assert resultado == "Conversei com [NOME] ontem."
     assert contagem["nome"] == 1
+
+
+def test_ner_mascara_nome_proprio_em_caixa_alta(monkeypatch):
+    texto = "Conversei com MARIA ontem."
+    monkeypatch.setattr(
+        anonimizacao,
+        "_obter_nlp",
+        lambda: _NLPFalso([("MARIA", "PROPN")]),
+    )
+
+    resultado, contagem = anonimizacao.anonimizar_texto(texto)
+
+    assert resultado == "Conversei com [NOME] ontem."
+    assert contagem["nome"] == 1

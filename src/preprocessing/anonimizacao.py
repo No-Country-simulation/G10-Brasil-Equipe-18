@@ -11,12 +11,17 @@ EXCECOES_TECNICAS = {
     "python", "oracle", "streamlit", "github", "discord", "slack", 
     "sql", "langgraph", "pandas", "pytest", "pydantic", "json", "csv",
     "alura", "docker", "kubernetes", "linux", "aws", "gcp", "azure",
-    "git", "fastapi", "react", "node", "javascript", "typescript", "html", "css"
+    "git", "fastapi", "react", "node", "javascript", "typescript", "html", "css",
+    "api", "apis", "power bi",
 }
 
-def _parece_sigla(texto: str) -> bool:
-    """Identifica tokens com padrão geral de sigla, sem lista de vocabulário."""
-    return bool(re.search(r"[A-Z]{2,}", texto))
+
+def _eh_inicio_de_frase(palavras: list[str], indice: int) -> bool:
+    """Detecta palavras após ponto, exclamação ou interrogação."""
+    if indice == 0:
+        return True
+    anterior = palavras[indice - 1].rstrip("\"'”’»)]}")
+    return anterior.endswith((".", "!", "?"))
 
 
 def _validar_cpf_digitos(digitos: str) -> bool:
@@ -105,10 +110,10 @@ def anonimizar_texto(texto: str) -> Tuple[str, Dict[str, int]]:
             # Preserva menções já pseudonimizadas.
             if txt_limpo.startswith("@membro_") or txt_limpo.startswith("membro_"):
                 continue
-            # Siglas e palavras que não são nomes próprios não são PII.
-            if _parece_sigla(txt_limpo) or ent.root.pos_ != "PROPN":
+            # Só entidades com núcleo nominal próprio são tratadas como nomes.
+            if ent.root.pos_ != "PROPN":
                 continue
-            # Preserva termos técnicos conhecidos.
+            # Preserva termos técnicos conhecidos, sem inferir siglas por caixa alta.
             if txt_limpo.lower() in EXCECOES_TECNICAS:
                 continue
             if len(txt_limpo) < 2:
@@ -135,6 +140,17 @@ def anonimizar_texto(texto: str) -> Tuple[str, Dict[str, int]]:
             if palavra_limpa.startswith("@membro_") or palavra_limpa.startswith("membro_"):
                 palavras_anonimizadas.append(palavra)
                 continue
+            palavra_seguinte = (
+                re.sub(r"[^\w]", "", palavras[i + 1]).lower()
+                if i + 1 < len(palavras)
+                else ""
+            )
+            if palavra_limpa.lower() == "power" and palavra_seguinte == "bi":
+                palavras_anonimizadas.append(palavra)
+                continue
+            if _eh_inicio_de_frase(palavras, i):
+                palavras_anonimizadas.append(palavra)
+                continue
             if palavra_limpa.lower() in locais_conhecidos:
                 palavras_anonimizadas.append(palavra)
                 continue
@@ -146,7 +162,6 @@ def anonimizar_texto(texto: str) -> Tuple[str, Dict[str, int]]:
                 i > 0 
                 and palavra_limpa 
                 and palavra_limpa[0].isupper() 
-                and not (palavra_limpa.lower() == "foi" and palavras[i - 1].endswith((".", "!", "?")))
                 and palavra_limpa.lower() not in EXCECOES_TECNICAS
                 and not palavra_limpa.isupper()
             ):
