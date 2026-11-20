@@ -183,7 +183,18 @@ def _desenhar(etapas, botoes):
 
     if com_erro:
         if erro_analise:
-            caixa("red", "<b>Falha na análise.</b><br>" + esc(ss.get("proc_erro_analise", "Erro desconhecido.")))
+            if ss.get("proc_erro_truncada"):
+                caixa(
+                    "red",
+                    "<b>A análise não coube no limite de saída da IA.</b><br>"
+                    "A resposta foi cortada antes do fim. O lote e as interações "
+                    "continuam nesta sessão; uma nova tentativa refaz a análise sem "
+                    "importar de novo.",
+                )
+            else:
+                caixa("red", "<b>Falha na análise.</b><br>" + esc(ss.get("proc_erro_analise", "Erro desconhecido.")))
+            if botoes:
+                st.button("↻ Tentar novamente", on_click=_retomar_processamento, key="retry_analise")
         else:
             motivo = ss.get("proc_erro_oci", "") or _motivo_falha(pacotes)
             caixa(
@@ -308,6 +319,7 @@ def render():
     if not retry:
         ss.proc_erro_oci = ""
         ss.proc_erro_analise = ""
+        ss.proc_erro_truncada = False
         ss.proc_erro_etapa = ""
         ss.proc_origem_analise = ""
 
@@ -332,6 +344,7 @@ def render():
             ss.proc_status = "erro"
             ss.proc_erro_etapa = "analise"
             ss.proc_erro_analise = str(erro)
+            ss.proc_erro_truncada = bool(getattr(svc, "ULTIMO_ERRO_TRUNCADO", False))
             _persistir_progresso(ss, etapas)
             with area.container():
                 _desenhar(etapas, botoes=True)

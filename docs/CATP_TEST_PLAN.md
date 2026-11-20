@@ -65,6 +65,7 @@ Todos os testes possuem status inicial **Não executado**.
 | CATP-021 | Indicador RG-03 | Indicador de liberação corresponde às condições efetivas de publicação | Não executado |
 | CATP-022 | Solicitação de ajustes | Observações editoriais registradas e vinculadas ao conteúdo | Não executado |
 | CATP-023 | Modo demonstração | Dados fictícios e resultados simulados identificados explicitamente | Não executado |
+| CATP-024 | Análise com resposta truncada | Resposta cortada pelo limite de saída é identificada com mensagem própria, e a nova tentativa reaproveita o lote sem nova importação | Executado
 
 ### 3.1. CATP-007 — Rastreabilidade das evidências
 
@@ -216,6 +217,23 @@ As informações abaixo foram apresentadas durante a revisão do frontend e deve
 - Especificações: `CLAUDE.md` e `READMEFrontend.md`
 
 O funcionamento com dados fictícios não comprova a integração real com LLM e OCI.
+
+### 3.6. CATP-024 — Resposta truncada pelo limite de saída
+
+Executado em 20/11/2026, no app local, com o cenário de seis interações de `data/samples/cenarios_demo.json`.
+
+**A falha é intermitente, não determinística.** O mesmo lote de seis interações falhou uma vez e concluiu duas vezes no mesmo dia, com o mesmo provedor e modelo. O que varia é o quanto o modelo gasta antes de escrever o JSON: o raciocínio consome o mesmo orçamento de saída (`LLM_MAX_OUTPUT_TOKENS`, padrão 8192). Por isso o caso não é "lote grande quebra".
+
+**Reprodução determinística:** com `LLM_MAX_OUTPUT_TOKENS=250` a resposta trunca sempre. É configuração de ambiente, não alteração de código, e só vale para o processo usado no teste.
+
+**O que o caso verifica:**
+- a falha por truncamento aparece com mensagem própria, separada de "JSON inválido";
+- a nova tentativa refaz a análise sobre o lote que já está na sessão, sem nova importação;
+- o identificador do lote não muda entre as tentativas.
+
+**Observação de mensagem:** antes da correção, a tela mostrava "JSON inválido do LLM" e só no fim mencionava o truncamento, sem oferecer nova tentativa.
+
+**Evidências:** `tests/evidences/truncamento.01-antes-mensagem-json-invalido.jpg`, `truncamento.02-depois-mensagem-especifica.jpg` e `truncamento.03-log-duas-tentativas.txt`.
 
 ## 4. Procedimento de execução
 
