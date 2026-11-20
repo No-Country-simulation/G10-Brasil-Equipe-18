@@ -170,6 +170,57 @@ def test_le_o_que_foi_gravado(monkeypatch):
     }
 
 
+def test_aplica_edicoes_nos_campos():
+    historias = [{
+        "id": "hist-001",
+        "ativos": [{
+            "id": "testemunho_estruturado",
+            "campos": {"titulo": "Gerado pela IA", "descricao": "Descrição gerada", "citacao": "citação gerada"},
+        }],
+    }]
+    edicoes = {"c:hist-001:testemunho_estruturado:titulo": "Título revisado pelo curador"}
+
+    resultado = svc.aplicar_edicoes(historias, edicoes)
+    campos = resultado[0]["ativos"][0]["campos"]
+
+    assert campos["titulo"] == "Título revisado pelo curador"
+    assert campos["descricao"] == "Descrição gerada"
+    assert campos["citacao"] == "citação gerada"
+    # a lista original não é alterada
+    assert historias[0]["ativos"][0]["campos"]["titulo"] == "Gerado pela IA"
+
+
+def test_ativo_sem_edicao_mantem_o_gerado():
+    historias = [{
+        "id": "hist-001",
+        "ativos": [{"id": "case_sucesso", "campos": {"texto": "Texto gerado"}}],
+    }]
+    resultado = svc.aplicar_edicoes(historias, {"c:outra:ativo:texto": "não é deste ativo"})
+    assert resultado[0]["ativos"][0]["campos"]["texto"] == "Texto gerado"
+
+
+def test_gravacao_guarda_o_texto_editado(monkeypatch):
+    caminho = "lotes/LOTE-1/lote_LOTE-1.json"
+    historias = [{
+        "id": "hist-001",
+        "ativos": [{"id": "case_sucesso", "nome": "Case de sucesso", "campos": {"texto": "Texto da IA"}}],
+    }]
+    armazenamento = ArmazenamentoFalso({caminho: dict(PACOTE_ANTIGO, historias=historias)})
+    monkeypatch.setattr(svc, "_storage", lambda: armazenamento)
+
+    resultado = svc.salvar_decisoes(
+        "LOTE-1", caminho, historias,
+        {"validacao_factual": {}, "status_curadoria": {}, "autorizacao": {},
+         "observacoes": {}, "motivos": {}},
+        edicoes={"c:hist-001:case_sucesso:texto": "Texto revisado pelo curador"},
+    )
+
+    assert resultado["ok"] is True
+    gravado = armazenamento.objetos[caminho]
+    assert gravado["historias"][0]["ativos"][0]["campos"]["texto"] == "Texto revisado pelo curador"
+    assert gravado["evidencias"] == PACOTE_ANTIGO["evidencias"]
+
+
 def test_pacote_sem_bloco_devolve_vazio():
     assert svc.decisoes_do_bloco(PACOTE_ANTIGO) == {}
     assert svc.decisoes_do_bloco(None) == {}

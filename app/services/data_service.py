@@ -582,12 +582,48 @@ def ler_decisoes(caminho):
     return decisoes_do_bloco(conteudo_pacote(caminho))
 
 
-def salvar_decisoes(lote_id, caminho, historias, estado):
+def aplicar_edicoes(historias, edicoes):
+    """Devolve as histórias com os campos editados na sessão aplicados.
+
+    As edições vivem na sessão, em chaves `c:<historia>:<ativo>:<campo>`. O
+    envelope do Card 05 (§4.6) pede os campos estruturados preservados, então
+    o pacote passa a guardar o texto como o curador deixou — sem isso, reabrir
+    um lote devolveria o texto da IA e perderia a revisão.
+    """
+    edicoes = edicoes or {}
+    resultado = []
+    for historia in historias or []:
+        nova = dict(historia)
+        id_historia = historia.get("id")
+        ativos = []
+        for ativo in historia.get("ativos") or []:
+            novo_ativo = dict(ativo)
+            id_ativo = ativo.get("id")
+            campos = dict(ativo.get("campos") or {})
+            editado = False
+            for nome_campo in list(campos):
+                chave = f"c:{id_historia}:{id_ativo}:{nome_campo}"
+                if chave in edicoes and edicoes[chave] is not None:
+                    campos[nome_campo] = str(edicoes[chave])
+                    editado = True
+            # Só mexe no formato quando havia campos ou quando houve edição:
+            # ativo sem campos continua sem o bloco, em vez de ganhar um vazio.
+            if "campos" in ativo or editado:
+                novo_ativo["campos"] = campos
+            ativos.append(novo_ativo)
+        nova["ativos"] = ativos
+        resultado.append(nova)
+    return resultado
+
+
+def salvar_decisoes(lote_id, caminho, historias, estado, edicoes=None):
     """Acrescenta o bloco de curadoria ao pacote gravado e regrava no mesmo caminho.
 
     Lê o pacote antes de escrever, em vez de remontar o conteúdo a partir da
     tela: assim um lote gravado antes deste bloco também aceita decisão nova, e
-    o risco de apagar histórias cai. Devolve {"ok", "motivo", "data"}.
+    o risco de apagar histórias cai. Também grava os campos com as edições do
+    curador, para a revisão não se perder ao reabrir o lote.
+    Devolve {"ok", "motivo", "data"}.
     """
     armazenamento = _storage()
     if armazenamento is None:
@@ -606,6 +642,7 @@ def salvar_decisoes(lote_id, caminho, historias, estado):
     if not isinstance(atual, dict) or not atual:
         return {"ok": False, "motivo": "Pacote não encontrado no bucket: nada foi gravado", "data": None}
 
+    atual["historias"] = aplicar_edicoes(historias, edicoes)
     atual["curadoria"] = montar_bloco_curadoria(lote_id, historias, estado)
     try:
         resultado = armazenamento.salvar_objeto(str(caminho), atual)

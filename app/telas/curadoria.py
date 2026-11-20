@@ -46,6 +46,7 @@ def _persistir():
             "observacoes": ss.observacoes,
             "motivos": ss.motivos,
         },
+        edicoes=dict(ss.get("dados") or {}),
     )
     if resultado.get("ok"):
         ss.erro_curadoria = ""
