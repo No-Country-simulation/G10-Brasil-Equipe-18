@@ -100,6 +100,7 @@ section[data-testid="stSidebar"] .stButton > button[kind="primary"]:hover {
 .chip-yellow {background:#FFF3D6; color:#92400E;}
 .chip-red {background:#FEE2E2; color:#991B1B;}
 .chip-purple {background:#F3E8FF; color:#7C3AED;}
+.chip-blue {background:#DBEAFE; color:#1E40AF;}
 
 .avatar {display:inline-flex; width:36px; height:36px; border-radius:50%; background:#E2E8F0; color:#475569; align-items:center; justify-content:center; font-size:12px; font-weight:600; margin-right:10px; vertical-align:middle;}
 
@@ -176,6 +177,23 @@ def plural(n, singular, plural_):
 
 def chip(texto, tom="gray"):
     return f'<span class="chip chip-{tom}">{esc(texto)}</span>'
+
+
+def rotulo_natureza(valor):
+    """(texto, tom) do selo da natureza DECLARADA dos dados do lote.
+
+    Só reflete o que a pessoa declarou na Importação: nunca deduz por autor,
+    conteúdo, origem ou provedor. Valor ausente ou inválido vira "não informada".
+    Nenhum valor usa verde, para o selo não parecer validação.
+    """
+    from services import data_service as svc
+
+    natureza = svc.normalizar_natureza_dados(valor)
+    if natureza == "ficticios":
+        return "Dados fictícios (declarado)", "yellow"
+    if natureza == "reais":
+        return "Dados reais (declarado)", "blue"
+    return "Natureza não informada", "gray"
 
 
 def avatar(iniciais):
