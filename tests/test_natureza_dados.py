@@ -150,3 +150,32 @@ def test_reiniciar_demonstracao_volta_para_nao_informado():
     next(b for b in at.sidebar.button if b.label == "Reiniciar demonstração").click().run()
     assert not at.exception, at.exception
     assert at.session_state["dados"].get("natureza_dados", "nao_informado") == "nao_informado"
+
+
+def test_reenviar_o_mesmo_arquivo_libera_a_declaracao():
+    conteudo = (
+        b'[{"autor":"Ana","canal":"#geral","tipo":"mensagem",'
+        b'"texto":"Consegui minha primeira vaga como dev."}]'
+    )
+    at = _abrir()
+    at.file_uploader[0].set_value(("lote.json", conteudo, "application/json")).run()
+    assert not at.exception, at.exception
+    lote_1 = at.session_state["lote_id"]
+    _radio(at).set_value("reais").run()
+    at.session_state["natureza_travada"] = True
+    at.run()
+    assert _radio(at).disabled
+
+    # Mesmo arquivo, sem esvaziar o campo: continua o mesmo lote e travado.
+    at.run()
+    assert at.session_state["lote_id"] == lote_1
+    assert _radio(at).disabled
+
+    # Campo esvaziado e o mesmo arquivo reenviado: lote novo, declaração liberada.
+    at.file_uploader[0].set_value(None).run()
+    assert at.session_state["ultimo_upload"] is None
+    at.file_uploader[0].set_value(("lote.json", conteudo, "application/json")).run()
+    assert not at.exception, at.exception
+    assert at.session_state["lote_id"] != lote_1
+    assert at.session_state["dados"]["natureza_dados"] == "nao_informado"
+    assert not _radio(at).disabled
