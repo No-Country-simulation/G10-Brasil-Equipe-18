@@ -199,7 +199,7 @@ Para acelerar ou desacelerar a simulação do Processamento, use a variável `CO
 Na **Importação**, antes do botão "Importar interações", a pessoa declara a natureza dos dados do lote: **Fictícios (exemplo ou teste)**, **Reais (relatos de pessoas)** ou **Não informado** (padrão). O valor é `natureza_dados`, guardado com `campo()` em `ss.dados` e lido por `valor("natureza_dados", "nao_informado")`. Os valores válidos vêm de `svc.NATUREZAS_DADOS`. O contrato e a gravação no pacote estão em `docs/CARD05_CONTRATOS_INTEGRACAO.md`.
 
 - A declaração volta para "Não informado" a cada lote novo e em "Reiniciar demonstração".
-- Depois de clicar em "Importar interações", o controle fica desabilitado para este lote, para o selo sempre mostrar o que foi gravado. Carregar o lote de novo libera a declaração.
+- Depois de clicar em "Importar interações", o controle fica desabilitado para este lote, para o selo sempre mostrar o que foi gravado. Carregar o lote de novo libera a declaração. No upload de arquivo, para reenviar o mesmo arquivo é preciso remover o arquivo do campo antes (isso cria um lote novo).
 - Sem interações carregadas o controle também fica desabilitado, porque carregar um lote apaga a declaração.
 - Nas **Histórias**, o selo mostra o que foi declarado: "Dados fictícios (declarado)" (amarelo), "Dados reais (declarado)" (azul) ou "Natureza não informada" (cinza). Nenhum usa verde, para não parecer validação. O rótulo vem de `rotulo_natureza()` em `app/styles.py`.
 - O selo **nunca deduz** a natureza pelo autor, pelo conteúdo, pela origem (Discord, JSON) nem pelo provedor de análise (Gemini, Cohere, Groq, mock).
