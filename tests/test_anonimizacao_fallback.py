@@ -25,3 +25,14 @@ def test_fallback_preserva_palavras_no_inicio_de_frase(monkeypatch):
     resultado, _ = anonimizacao.anonimizar_texto(texto)
 
     assert resultado == texto
+
+
+def test_fallback_mascara_nome_composto(monkeypatch):
+    monkeypatch.setattr(anonimizacao, "_obter_nlp", lambda: None)
+    texto = "Fizemos tudo em dupla com a Renata Moura."
+
+    resultado, contagem = anonimizacao.anonimizar_texto(texto)
+
+    assert "Renata" not in resultado
+    assert "Moura" not in resultado
+    assert contagem["nome"] == 2

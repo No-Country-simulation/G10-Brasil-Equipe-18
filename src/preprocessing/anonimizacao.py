@@ -8,12 +8,52 @@ from typing import Tuple, Dict
 
 # Lista de exceções conhecidas (termos técnicos e de produtos que não devem virar [NOME])
 EXCECOES_TECNICAS = {
-    "python", "oracle", "streamlit", "github", "discord", "slack", 
+    "python", "oracle", "streamlit", "github", "discord", "slack",
     "sql", "langgraph", "pandas", "pytest", "pydantic", "json", "csv",
     "alura", "docker", "kubernetes", "linux", "aws", "gcp", "azure",
     "git", "fastapi", "react", "node", "javascript", "typescript", "html", "css",
     "api", "apis", "power bi",
 }
+
+# Locais comuns preservados tanto no NER quanto no fallback.
+LOCAIS_CONHECIDOS = {
+    "são paulo", "sao paulo", "rio de janeiro", "brasil", "brasília", "brasilia",
+    "salvador", "curitiba", "belo horizonte", "recife", "fortaleza", "porto alegre",
+    "são", "paulo", "rio", "janeiro", "belo", "horizonte", "porto", "alegre",
+}
+
+# Formas frequentes que o modelo pode rotular como PROPN antes de uma tecnologia.
+VERBOS_ESTUDO = {
+    "estudei", "estudamos", "estudava", "estudar", "estudando",
+    "aprendi", "aprendemos", "aprendeu", "aprender", "aprendendo",
+    "usei", "usamos", "utilizei", "utilizamos", "trabalhei", "trabalhamos",
+}
+
+
+def _eh_local_conhecido(texto: str) -> bool:
+    """Indica se uma entidade corresponde a um local conhecido."""
+    texto_normalizado = re.sub(r"\s+", " ", texto.strip().lower())
+    return texto_normalizado in LOCAIS_CONHECIDOS
+
+
+def _loc_em_contexto_de_pessoa(texto: str, ent) -> bool:
+    """Aceita LOC como pessoa quando o contexto imediato indica companhia."""
+    if _eh_local_conhecido(ent.text):
+        return False
+    prefixo = texto[:ent.start_char].lower()
+    return bool(re.search(r"\bcom\s+(?:(?:a|o)\s+)?$", prefixo))
+
+
+def _eh_termo_tecnico_em_contexto_de_estudo(texto: str) -> bool:
+    """Evita mascarar uma atividade de estudo que o NER tomou por entidade."""
+    palavras = re.findall(r"[^\W\d_]+", texto.lower(), flags=re.UNICODE)
+    if len(palavras) < 2 or palavras[0] not in VERBOS_ESTUDO:
+        return False
+    restante = texto.lower()[len(palavras[0]):]
+    return any(
+        re.search(rf"(?<!\w){re.escape(termo)}(?!\w)", restante)
+        for termo in EXCECOES_TECNICAS
+    )
 
 
 def _eh_inicio_de_frase(palavras: list[str], indice: int) -> bool:
@@ -104,17 +144,25 @@ def anonimizar_texto(texto: str) -> Tuple[str, Dict[str, int]]:
         doc = nlp(texto_anonimo)
         spans_per = []
         for ent in doc.ents:
-            if ent.label_ != "PER":
+            if ent.label_ != "PER" and not (
+                ent.label_ == "LOC" and _loc_em_contexto_de_pessoa(texto_anonimo, ent)
+            ):
                 continue
             txt_limpo = ent.text.strip()
+            txt_lower = txt_limpo.lower()
             # Preserva menções já pseudonimizadas.
-            if txt_limpo.startswith("@membro_") or txt_limpo.startswith("membro_"):
+            if txt_lower.startswith("@membro_") or txt_lower.startswith("membro_"):
                 continue
             # Só entidades com núcleo nominal próprio são tratadas como nomes.
             if ent.root.pos_ != "PROPN":
                 continue
             # Preserva termos técnicos conhecidos, sem inferir siglas por caixa alta.
-            if txt_limpo.lower() in EXCECOES_TECNICAS:
+            if txt_lower in EXCECOES_TECNICAS or _eh_local_conhecido(txt_lower):
+                continue
+            tokens_lower = re.findall(r"[^\W\d_]+", txt_lower, flags=re.UNICODE)
+            if tokens_lower and all(token in EXCECOES_TECNICAS for token in tokens_lower):
+                continue
+            if _eh_termo_tecnico_em_contexto_de_estudo(txt_limpo):
                 continue
             if len(txt_limpo) < 2:
                 continue
@@ -129,10 +177,6 @@ def anonimizar_texto(texto: str) -> Tuple[str, Dict[str, int]]:
         texto_anonimo = "".join(chars)
     else:
         # Fallback de melhor esforço caso o modelo spaCy não esteja disponível
-        locais_conhecidos = {
-            "são", "paulo", "rio", "janeiro", "brasil", "brasilia", "brasília", 
-            "salvador", "curitiba", "belo", "horizonte", "recife", "fortaleza", "porto", "alegre"
-        }
         palavras = texto_anonimo.split()
         palavras_anonimizadas = []
         for i, palavra in enumerate(palavras):
@@ -151,11 +195,11 @@ def anonimizar_texto(texto: str) -> Tuple[str, Dict[str, int]]:
             if _eh_inicio_de_frase(palavras, i):
                 palavras_anonimizadas.append(palavra)
                 continue
-            if palavra_limpa.lower() in locais_conhecidos:
+            if palavra_limpa.lower() in LOCAIS_CONHECIDOS:
                 palavras_anonimizadas.append(palavra)
                 continue
             palavra_anterior = re.sub(r'[^\w]', '', palavras[i-1].lower()) if i > 0 else ""
-            if palavra_anterior == "em" and (palavra_limpa.lower() in locais_conhecidos or (i + 1 < len(palavras) and re.sub(r'[^\w]', '', palavras[i+1].lower()) in locais_conhecidos)):
+            if palavra_anterior == "em" and (palavra_limpa.lower() in LOCAIS_CONHECIDOS or (i + 1 < len(palavras) and re.sub(r'[^\w]', '', palavras[i+1].lower()) in LOCAIS_CONHECIDOS)):
                 palavras_anonimizadas.append(palavra)
                 continue
             if (
