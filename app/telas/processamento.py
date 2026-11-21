@@ -5,7 +5,7 @@ import time
 import streamlit as st
 
 from services import data_service as svc
-from state import contagem_ativos_completa, ir_para, situacao_ativos
+from state import contagem_ativos_completa, ir_para, situacao_ativos, valor
 from styles import caixa, cabecalho, esc, md, topbar
 
 
@@ -238,7 +238,10 @@ def _continuar_processamento(ss, etapas, area):
 
     try:
         pacotes = svc.salvar_no_oci(
-            ss.pacotes_oci or svc.pacotes_do_lote(ss.lote_id), ss.lote_id, ss.historias
+            ss.pacotes_oci or svc.pacotes_do_lote(ss.lote_id),
+            ss.lote_id,
+            ss.historias,
+            natureza_dados=valor("natureza_dados", "nao_informado"),
         )
         ss.pacotes_oci = pacotes
         if _pacotes_confirmados(pacotes):
@@ -360,7 +363,12 @@ def render():
     try:
         if ss.get("dados", {}).get("demo_erro_oci"):
             raise RuntimeError("Falha demonstrativa de gravação no OCI.")
-        pacotes = svc.salvar_no_oci(ss.pacotes_oci or svc.pacotes_do_lote(ss.lote_id), ss.lote_id, ss.historias)
+        pacotes = svc.salvar_no_oci(
+            ss.pacotes_oci or svc.pacotes_do_lote(ss.lote_id),
+            ss.lote_id,
+            ss.historias,
+            natureza_dados=valor("natureza_dados", "nao_informado"),
+        )
         ss.pacotes_oci = pacotes
         if _pacotes_confirmados(pacotes):
             _salvar_cursor_discord_se_confirmado(

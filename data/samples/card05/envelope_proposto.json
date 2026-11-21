@@ -1,5 +1,6 @@
 {
   "versao_proposta": "0.1",
+  "versao_schema": "1.1",
   "natureza_dados": "ficticios",
   "lote": "LOTE-EXEMPLO-CARD05",
   "historias": [
