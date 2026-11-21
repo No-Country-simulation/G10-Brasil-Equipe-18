@@ -190,6 +190,9 @@ def _upload():
                     ss.ultimo_upload = marca
                 except ValueError as erro:
                     st.error(str(erro))
+        else:
+            # Campo esvaziado: reenviar o mesmo arquivo deve criar um lote novo.
+            ss.ultimo_upload = None
         arquivo_status = (
             "carregado com sucesso"
             if ss.arquivo.get("origem") in ("Arquivo CSV", "Arquivo JSON")
