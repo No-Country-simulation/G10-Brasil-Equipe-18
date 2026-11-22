@@ -58,6 +58,9 @@ def _novo_lote(interacoes, nome, tamanho, origem):
     ss.avisos_discord = []
     ss.rejeitadas_discord = []
     definir("f:canal", CANAL_TODOS)
+    # A natureza é declarada por lote: um lote novo nunca herda a do anterior.
+    definir("natureza_dados", "nao_informado")
+    ss.natureza_travada = False
 
 
 def _normalizar_interacoes_discord(interacoes):
@@ -187,6 +190,9 @@ def _upload():
                     ss.ultimo_upload = marca
                 except ValueError as erro:
                     st.error(str(erro))
+        else:
+            # Campo esvaziado: reenviar o mesmo arquivo deve criar um lote novo.
+            ss.ultimo_upload = None
         arquivo_status = (
             "carregado com sucesso"
             if ss.arquivo.get("origem") in ("Arquivo CSV", "Arquivo JSON")
@@ -285,7 +291,35 @@ def _previa():
 def _analisar():
     ss = st.session_state
     ss.proc_status = "novo"
+    ss.natureza_travada = True  # a declaração segue com o lote que vai ser gravado
     ir_para("processamento")
+
+
+_ROTULOS_NATUREZA = {
+    "ficticios": "Fictícios (exemplo ou teste)",
+    "reais": "Reais (relatos de pessoas)",
+    "nao_informado": "Não informado",
+}
+
+
+def _natureza_dos_dados(n):
+    """Declaração da natureza dos dados do lote. Fica antes do botão de importar."""
+    travada = bool(st.session_state.get("natureza_travada"))
+    campo(
+        st.radio,
+        "Natureza dos dados deste lote",
+        "natureza_dados",
+        "nao_informado",
+        options=list(svc.NATUREZAS_DADOS),
+        format_func=lambda v: _ROTULOS_NATUREZA[v],
+        horizontal=True,
+        disabled=travada or n == 0,
+    )
+    if travada:
+        legenda = "Declaração registrada para este lote. Para mudar, carregue o lote de novo."
+    else:
+        legenda = "Declare a natureza dos dados. O selo mostra o que você declarar; nada é deduzido automaticamente."
+    md(f'<span class="cl-muted">{legenda}</span>')
 
 
 def _rodape():
@@ -301,6 +335,7 @@ def _rodape():
         )
     else:
         nota = "Exemplo fictício. Não representa depoimentos reais do Programa ONE."
+    _natureza_dos_dados(n)
     esq, dir_ = st.columns([3, 1])
     with esq:
         md(

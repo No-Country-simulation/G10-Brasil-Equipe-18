@@ -1,7 +1,7 @@
 import streamlit as st
 
-from state import CATEGORIA_TODAS, campo, contagem_ativos_completa, definir, estado_editorial, ir_para, legenda_ativos, resumo_ativos
-from styles import avatar, caixa, cabecalho, chip, esc, md, plural, topbar
+from state import CATEGORIA_TODAS, campo, contagem_ativos_completa, definir, estado_editorial, ir_para, legenda_ativos, resumo_ativos, valor
+from styles import avatar, caixa, cabecalho, chip, esc, md, plural, rotulo_natureza, topbar
 
 
 def _kpi(coluna, rotulo, numero, legenda):
@@ -103,20 +103,10 @@ def render():
             with rel_col:
                 md(f'<div style="text-align:right;"><span class="cl-muted">Relevância</span> '
                    f'<span style="font-size:22px;">{h["relevancia"]}</span> <span class="cl-muted">/ 100</span></div>')
-            # TODO(Jaqueline): Quando o backend fornecer campo de origem individual por história (ex.: h.get("origem_analise")), usar o valor individual.
-            origem_lote = ss.get("proc_origem_analise", "")
-            if origem_lote == "gemini":
-                selo_origem = chip("Origem: Real", "green")
-            elif origem_lote == "mock":
-                selo_origem = chip("Origem: Simulada", "yellow")
-            else:
-                selo_origem = ""
-            chips = chip(h["categoria"]) + chip(f'Sentimento {h["sentimento"].lower()}', "green")
-            if selo_origem:
-                chips += selo_origem
-            md(chips)
-            msg_ficticia = " · mensagem fictícia" if origem_lote == "mock" else ""
-            md(f'<div class="cl-quote"><small>Trecho original{msg_ficticia}</small>"{esc(h["mensagem_original"])}"</div>')
+            # O selo mostra só a natureza declarada na Importação (nunca deduzida).
+            texto_selo, tom_selo = rotulo_natureza(valor("natureza_dados", "nao_informado"))
+            md(chip(h["categoria"]) + chip(f'Sentimento {h["sentimento"].lower()}', "green") + chip(texto_selo, tom_selo))
+            md(f'<div class="cl-quote"><small>Trecho original</small>"{esc(h["mensagem_original"])}"</div>')
             rodape, botao = st.columns([4, 1])
             with rodape:
                 md(f'<b>{len(h["ativos"])} ativos gerados</b> &nbsp;{_status_da_historia(h)}<br>'
