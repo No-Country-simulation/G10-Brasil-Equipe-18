@@ -1,4 +1,4 @@
-# CommunityLab 
+# CommunityLab
 
 ![ONE G10](https://img.shields.io/badge/ONE-G10-00875A?style=for-the-badge)
 ![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white)
@@ -63,7 +63,7 @@ Situação conferida em **22/11/2026**. Código integrado, implantação e aceit
 | Natureza declarada no pacote | PR #62 integrado em `d033d5a` | Pacote principal 1.1 com ficticios/reais/nao_informado; evidencias.json permanece 1.0. |
 | Declaração na Importação e selo nas Histórias | PR #63 integrado em `04ec8c6` | Dependência do #62 resolvida; reteste declaração → pacote OCI → selo pendente. |
 | Fidelidade do exemplo hist-001 | PR #66 integrado em `5cc9e2e` | Descrição e ativo limitados ao que a citação sustenta; citação preservada. |
-| Correção de anonimização | PR #64 aberto, com novos ajustes em `f929124` | Autora relata correções com modelo real; nova revisão e reteste na VM pendentes. Fallback mantém limitações documentadas. |
+| Correção de anonimização | PR #64 integrado em `fcc077e`, após aprovação de Tissiany | Revisora relatou 3.682 testes aprovados e verificações locais com modelo real e fallback. O fallback apresentou falsos positivos em palavras comuns, cidades e termos técnicos. Implantação e reteste na VM pendentes. |
 | Cases de sucesso — Card 14 | PR #67 aberto para revisão | Proposta extrativa; 3.709 testes locais aprovados. Sem validação real de IA/OCI nesta entrega. |
 | Testemunhos estruturados — Card 13 | PR #68 aberto para revisão, baseado no #67 | Título, descrição e citação rastreados; 3.729 testes locais incluindo os cases. Integrar #67 antes de ajustar a base do #68 para main. |
 | Recuperação editorial em nova sessão | Pendente, sem PR identificado na última conferência | Consulta ao JSON não comprova restauração completa de textos editados e decisões. |
@@ -170,8 +170,10 @@ O plano está em [CATP_TEST_PLAN.md](docs/CATP_TEST_PLAN.md) e o histórico docu
 
 - Há evidências de análise, citações, edição, controles humanos e gravação/consulta OCI em lotes fictícios.
 - Permanecem pendentes a consolidação dos três cenários, dos formatos principais, dos vínculos de origem e da recuperação editorial em nova sessão.
-- A anonimização teve dois defeitos reportados com spaCy carregado: nome fictício sem máscara e trecho técnico mascarado indevidamente. O PR #64 propõe correção; testes locais não substituem o reteste na versão implantada.
-- O caso de truncamento com seis interações é acompanhado na issue #58 e no PR #61.
+- A correção de anonimização do PR #64 foi integrada em `fcc077e`, após aprovação de Tissiany. A revisora relatou 3.682 testes aprovados e verificações locais com modelo spaCy real e fallback forçado.
+- Os nomes testados foram mascarados. No fallback, foram observados falsos positivos em palavras comuns, cidades e termos técnicos, como “Estudei SQL”, “Porto Alegre” e “Cloud Foundations”.
+- Esses resultados locais não garantem anonimização completa nem substituem implantação e reteste pela interface.
+- O caso de truncamento com seis interações é acompanhado na issue #58 e no PR #61, já integrado. Reteste na versão implantada permanece pendente.
 - **Nenhum aceite geral do MVP é declarado neste README.**
 
 Não interpretar commits, screenshots ou testes locais isolados como homologação automática.
@@ -219,7 +221,8 @@ Usar somente dados fictícios ou autorizados e manter explícito o modo demonstr
 - [x] Integrar conferência de citações, rótulos dos provedores e nova tentativa após truncamento (#59, #60 e #61).
 - [x] Integrar natureza declarada dos dados no pacote e nas telas (#62 e #63).
 - [x] Corrigir a descrição do exemplo hist-001 conforme a citação (#66).
-- [ ] Revisar os novos ajustes de anonimização (#64) e retestar após implantação.
+- [x] Revisar e integrar os ajustes de anonimização (#64).
+- [ ] Confirmar implantação do #64 e retestar anonimização pela interface, incluindo as limitações do fallback.
 - [ ] Revisar e integrar cases (#67) e testemunhos (#68), respeitando a dependência #67 → #68.
 - [ ] Confirmar SHA e saúde da versão consolidada implantada na VM.
 - [ ] Retestar citações, provedores, truncamento, natureza declarada e persistência editorial pela interface.
@@ -241,4 +244,3 @@ A licença será definida pela equipe, conforme as regras do Hackathon e a estra
 **CommunityLab — Histórias que inspiram. Inteligência que transforma.**  
 Hackathon ONE G10 — Oracle Next Education & Alura · Equipe 18  
 **Prazo exibido na plataforma No Country na evidência de 20/11:** 22 de novembro de 2026, às 23h59. Fuso da plataforma a confirmar.
-
