@@ -10,7 +10,7 @@
 **Detector Inteligente de Histórias de Sucesso e Testemunhos com IA**  
 **Hackathon ONE G10 — Equipe 18 | Oracle Next Education + Alura | Simulação No Country**
 
-> **Situação em 21/11/2026:** fluxo demonstrado com dados fictícios, análise por LLM e armazenamento real na OCI. Apresentação do Demo Day aprovada pelo grupo. **Homologação funcional do MVP ainda pendente.** Integrações, revisões e retestes são acompanhados separadamente.
+> **Situação em 22/11/2026:** fluxo demonstrado com dados fictícios, análise por LLM e armazenamento real na OCI. Apresentação do Demo Day aprovada pelo grupo. **Homologação funcional do MVP ainda pendente.** Integrações, revisões e retestes são acompanhados separadamente.
 
 ---
 
@@ -62,8 +62,8 @@ Situação conferida em **21/11/2026**. Código integrado, implantação e aceit
 | Resposta truncada e nova tentativa | PR #61 aberto | Trata MAX_TOKENS especificamente; não garante sucesso na tentativa seguinte. |
 | Natureza declarada dos dados no pacote | PR #62 aberto | Envelope proposto 1.1, com `ficticios`, `reais` ou `nao_informado`. Ainda não é formato integrado à main. |
 | Declaração na Importação e selo nas Histórias | PR #63 aberto, baseado na branch do #62 | Após integrar #62, ajustar a base para main e reconferir a integração. Luciene aprovou contra a base atual. |
-| Correção de anonimização | PR #64 aberto | Trata nome composto rotulado como local e máscara indevida de “Estudei SQL”. Integração, deploy e reteste pendentes. |
-| Testemunhos, cases e recuperação editorial em nova sessão | Pendentes de conclusão/validação integrada | Recuperar o JSON original não comprova restauração completa do lote e das decisões. |
+| Correção de anonimização | PR #64 aberto, com ajustes solicitados na revisão | Os dois casos originais foram corrigidos no teste local, mas surgiu regressão: “Paulo” sozinho deixou de ser mascarado. Também foi registrado “Bianca Ferraz” sem máscara na VM e na branch. Correção e reteste pendentes. |
+| Testemunhos, cases e recuperação editorial em nova sessão | Pendentes de conclusão/validação integrada | A recuperação completa do lote pelo Histórico ainda não tem PR aberto. Recuperar o JSON original não comprova restauração dos textos editados e das decisões. |
 | Apresentação final | Aprovada pelo grupo, Card 25 concluído | Aceite da apresentação não encerra a homologação do MVP (Card 23). |
 
 Os resultados de suítes informados nos PRs pertencem às respectivas versões e ambientes. Não devem ser somados nem apresentados como uma única execução da versão implantada.
