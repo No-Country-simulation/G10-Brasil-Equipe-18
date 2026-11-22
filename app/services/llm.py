@@ -350,7 +350,7 @@ def _normalizar(historias: list, interacoes: list) -> list:
         for ativo in hist.get("ativos") or []:
             if not isinstance(ativo, dict) or not ativo.get("id"):
                 continue
-            if str(ativo["id"]) == "case_sucesso":
+            if str(ativo["id"]) in ("case_sucesso", "testemunho_estruturado"):
                 continue  # Validado separadamente, depois das citações.
             campos = ativo.get("campos") or {}
             if not isinstance(campos, dict) or not any(str(v).strip() for v in campos.values()):
@@ -418,10 +418,23 @@ def _normalizar(historias: list, interacoes: list) -> list:
             ativos.append(case)
         else:
             ULTIMOS_AVISOS.append(f"{identificador}: {motivo_case}")
-        # Uma história sem case permanece revisável, inclusive sem outros ativos.
-        if not ativos and cases:
-            pass
-        elif not ativos:
+        from services.testemunhos import preparar_testemunho
+        testemunhos = [a for a in (hist.get("ativos") or [])
+                       if isinstance(a, dict) and a.get("id") == "testemunho_estruturado"]
+        motivo_testemunho = "Modelo não retornou testemunho; revisar suficiência das evidências."
+        testemunho = None
+        if len(testemunhos) == 1 and base and citacoes:
+            testemunho, motivo_testemunho = preparar_testemunho(
+                testemunhos[0], original, citacoes, id_interacao
+            )
+        elif len(testemunhos) > 1:
+            motivo_testemunho = "Modelo retornou testemunhos duplicados para a mesma história."
+        if testemunho:
+            ativos.append(testemunho)
+        else:
+            ULTIMOS_AVISOS.append(f"{identificador}: {motivo_testemunho}")
+        # Formatos principais recusados não apagam uma história revisável.
+        if not ativos and not cases and not testemunhos:
             motivos.append("Sem ativo gerado: nao ha conteudo para publicar.")
 
         if motivos:
@@ -455,6 +468,7 @@ def _normalizar(historias: list, interacoes: list) -> list:
                 "fatos": fatos,
                 "ativos": ativos,
                 "case_pendente": motivo_case if case is None else "",
+                "testemunho_pendente": motivo_testemunho if testemunho is None else "",
                 "tipo_insight": classificacao["tipo_insight"],
                 "topicos": classificacao["topicos"],
                 "justificativa": classificacao["justificativa"],

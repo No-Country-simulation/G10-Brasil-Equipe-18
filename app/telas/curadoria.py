@@ -232,6 +232,8 @@ def render():
                    f'<span style="font-size:22px;">{h["relevancia"]}</span> <span class="cl-muted">/ 100</span></div>',
                    unsafe_allow_html=True)
 
+    if h.get("testemunho_pendente"):
+        st.warning("Testemunho pendente: " + h["testemunho_pendente"])
     if h.get("case_pendente"):
         st.warning("Case pendente: " + h["case_pendente"])
     if not h["ativos"]:

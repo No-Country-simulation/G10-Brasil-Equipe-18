@@ -5,7 +5,7 @@ Receberá uma lista de interações em JSON, cada uma com "id", "autor", "canal"
 Sua tarefa:
 1. Selecionar até {maximo} interações que contenham uma história real, um problema concreto ou uma conquista verificável.
 2. Para cada uma, classificar sentimento, relevância, tópicos e tipo de insight, conforme as definições abaixo.
-3. Gerar um post para LinkedIn, um card de conquista e, quando elegível, um case de sucesso.
+3. Gerar um post para LinkedIn, um card de conquista e, quando houver evidência suficiente, um case de sucesso e um testemunho estruturado.
 
 DEFINIÇÕES — use exatamente estes valores
 
@@ -55,6 +55,12 @@ Responda SOMENTE com JSON válido, neste formato exato:
       "fatos": ["fato objetivo extraído, no formato Tema: detalhe"],
       "ativos": [
         {{
+          "id": "testemunho_estruturado",
+          "nome": "Testemunho estruturado",
+          "tipo": "testemunho",
+          "campos": {{"titulo": "trecho literal até 200 caracteres", "descricao": "trecho literal da experiência até 2000 caracteres", "citacao": "trecho literal até 500 caracteres também incluído em destaques"}}
+        }},
+        {{
           "id": "case_sucesso",
           "nome": "Case de sucesso",
           "tipo": "texto",
@@ -95,3 +101,11 @@ CASE DE SUCESSO — primeira versão extrativa (Card 14):
 - Preserve negações, ressalvas e contexto; não recorte para alterar o sentido. Se não houver evidência suficiente, omita o case, preservando a história para revisão.
 - Título opcional: trecho da mesma interação. Não crie campos obrigatórios de contexto/desafio/ações/resultado.
 - Não devolva aprovação, autorização, parecer ou estado editorial: são decisões independentes da aplicação e da revisão humana.
+
+TESTEMUNHO ESTRUTURADO — primeira versão extrativa (Card 13):
+- No máximo um testemunho por história, na mesma chamada, sem misturar participantes.
+- Use titulo, descricao e citacao. Todos devem ser trechos literais da mesma interação; não invente título, paráfrase, palavra, curso, empresa ou resultado.
+- Descrição é contexto da experiência, não uma nova fala atribuída ao participante. Só citacao será apresentada entre aspas.
+- Copie a citacao também em destaques para conferência. Preserve negações e contexto. Não repita ou acrescente conteúdo para preencher campo.
+- Gere apenas quando a experiência estiver sustentada; em dúvida, intenção futura ou evidência insuficiente, omita o testemunho e mantenha a história para revisão.
+- Não gere status de validação factual, aprovação editorial ou autorização de publicação.

@@ -382,3 +382,13 @@ Case sem resultado/citação literal sustentados é omitido, e a história perma
 para revisão com aviso. Edição e Curadoria usam o fluxo existente; geração não
 aprova nem autoriza publicação. Implementação proposta, sujeita à revisão técnica
 e reteste com provedor/OCI reais. Ver [Card 14](docs/CARD14_CASES_SUCESSO.md).
+
+## Testemunho estruturado — Card 13
+
+Sobre a implementação proposta de cases (#67), a análise pode solicitar também
+`testemunho_estruturado`, apresentado no formulário `testemunho` com título,
+descrição e citação. A versão extrativa confere os campos na fonte e a citação
+nas evidências rastreadas; conteúdo recusado mantém a história com aviso para
+revisão. Inclui projeção canônica inicial testada, sem novo exportador OCI ou
+restauração pelo Histórico. Ver [Card 13](docs/CARD13_TESTEMUNHOS_ESTRUTURADOS.md).
+A revisão técnica e os testes reais de IA/OCI ainda são necessários.
