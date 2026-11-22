@@ -222,6 +222,7 @@ def avisos_validacao_ids():
 # ---------- Análise ----------
 ORIGEM_ANALISE = "mock"   # "gemini" quando a análise real responde
 ULTIMO_ERRO = ""          # preenchido quando a análise real falha
+ULTIMO_ERRO_TRUNCADO = False  # True quando a falha foi corte por limite de saída
 
 
 ULTIMO_ERRO_OCI = ""
@@ -301,7 +302,7 @@ def _data_br(iso: str) -> str:
 
 def analisar(interacoes):
     """Analisa o lote com o provedor de LLM; falhas não viram histórias fictícias."""
-    global ORIGEM_ANALISE, ULTIMO_ERRO
+    global ORIGEM_ANALISE, ULTIMO_ERRO, ULTIMO_ERRO_TRUNCADO
     try:
         from . import llm  # import local: evita custo quando não usado
     except ImportError:  # pragma: no cover - execução como pacote vs. script
@@ -311,11 +312,13 @@ def analisar(interacoes):
         historias = llm.analisar(interacoes)
         ORIGEM_ANALISE = llm.ULTIMO_PROVEDOR or "gemini"
         ULTIMO_ERRO = ""
+        ULTIMO_ERRO_TRUNCADO = False
         print(f"[analise] concluída: {len(historias)} histórias", flush=True)
         return historias
     except Exception as erro:  # rede, chave ausente, JSON inválido
         ULTIMO_ERRO = str(erro)
         ORIGEM_ANALISE = "erro"
+        ULTIMO_ERRO_TRUNCADO = isinstance(erro, getattr(llm, "ErroRespostaTruncada", ()))
         print(f"[analise] FALHOU: {ULTIMO_ERRO}", flush=True)
         raise RuntimeError(f"Análise real falhou: {erro}") from erro
 

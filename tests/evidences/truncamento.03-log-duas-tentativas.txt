@@ -1,0 +1,3 @@
+Evidência do tratamento de resposta truncada (#58) — 20/11/2026
+App local, porta 8505, branch fix/analise-truncada.
+Limite reduzido de propósito para reproduzir: LLM_MAX_OUTPUT_T...[truncated]

@@ -63,7 +63,7 @@ def test_erro_json_inclui_metadados_sem_expor_resposta_ou_payload(monkeypatch):
                 modelo="gemini-teste",
                 fallback_usado=False,
                 erro_primario="",
-                finish_reason="MAX_TOKENS",
+                finish_reason="STOP",
             )
 
     monkeypatch.setattr(llm_provider, "LLMProvider", ProviderFake)
@@ -83,7 +83,7 @@ def test_erro_json_inclui_metadados_sem_expor_resposta_ou_payload(monkeypatch):
     mensagem = str(erro.value)
     assert "provedor=gemini" in mensagem
     assert "modelo=gemini-teste" in mensagem
-    assert "finish_reason=MAX_TOKENS" in mensagem
+    assert "finish_reason=STOP" in mensagem
     assert f"resposta_chars={len(resposta_invalida)}" in mensagem
     assert "linha=1" in mensagem and "coluna=" in mensagem
     assert resposta_invalida not in mensagem
