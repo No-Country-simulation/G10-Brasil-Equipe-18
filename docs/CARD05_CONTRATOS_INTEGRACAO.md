@@ -135,7 +135,24 @@ Mapeamento editorial proposto: rascunho e ajustes → pendente; aprovado → apr
 Validação factual, decisão editorial e autorização são independentes. No app atual: pendente/validada/insuficiente/contradicao; rascunho/ajustes/aprovado/rejeitado; nao_registrada/registrada. Preservar separadamente essas dimensões; um status editorial aprovado não libera publicação sozinho.
 
 ## 6. Pacote do lote e OCI
-O caminho observado em salvar_no_oci contém versao_schema, lote, gerado_em, origem_analise, historias e evidencias. Ativos atuais estão dentro das histórias no formato de apresentação. Isso não é um documento AtivoGerado canônico.
+O caminho observado em salvar_no_oci contém versao_schema, lote, gerado_em, origem_analise, natureza_dados, historias e evidencias. Ativos atuais estão dentro das histórias no formato de apresentação. Isso não é um documento AtivoGerado canônico.
+
+### 6.1 Natureza dos dados
+
+A natureza dos dados é declarada na importação e gravada no pacote do lote, para o selo da interface poder mostrar o que foi declarado.
+
+| Aspecto | Definição |
+|---|---|
+| Campo | `natureza_dados`, na raiz do pacote (nível do lote, não por ativo) |
+| Valores | `ficticios`, `reais`, `nao_informado` — minúsculo e sem acento, como os demais valores do contrato |
+| Padrão | `nao_informado` |
+| Lote antigo | Ausência do campo é lida como `nao_informado`, sem migração |
+| Valor inválido | Cai no padrão, em vez de ser gravado como veio |
+| Quem escreve | Tela de Importação, via `valor("natureza_dados", "nao_informado")` |
+| Quem lê | Selo na tela de Histórias, e qualquer leitor do pacote |
+| Dedução | Nenhuma: a natureza não é inferida do autor, do texto ou do provedor |
+
+O campo novo mudou o formato do envelope: o pacote passou de `versao_schema` 1.0 para **1.1**. As tabelas 4.2 e 4.3 continuam em 1.0 porque tratam do AtivoGerado canônico, que não mudou.
 
 O OCI usa organização por lote. A propriedade opcional oci_object_path do schema de ativo exige ativos/AAAA-MM-DD/arquivo.json. Os dois conceitos não são equivalentes:
 - não preencher essa propriedade com um caminho que viole o padrão;
@@ -151,7 +168,7 @@ Em data/samples/card05/:
 - entrada_app.json e entrada_app.csv: duas mensagens fictícias equivalentes para os IDs 1 e 2.
 - interacoes_canonicas.json: mesmos relatos com datas sintéticas explícitas e campos do schema canônico; não é entrada direta do app.
 - ativos_canonicos.json: um testemunho e um case validados contra o schema atual.
-- envelope_proposto.json: preserva histórias, projeções do front, vínculos e controles humanos. Não importar como pacote real já suportado.
+- envelope_proposto.json: preserva histórias, projeções do front, vínculos e controles humanos, e traz `natureza_dados` com `versao_schema` 1.1. Não importar como pacote real já suportado.
 
 Dados inventados exclusivamente para demonstração; textos editoriais redigidos manualmente para a especificação, sem chamada a LLM. Nenhuma autorização real, gravação OCI ou processamento real está implícito.
 

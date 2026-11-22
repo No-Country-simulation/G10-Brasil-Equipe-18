@@ -342,7 +342,22 @@ def listar_pacotes():
     ]
 
 
-def salvar_no_oci(pacotes, lote_id, historias=None):
+NATUREZAS_DADOS = ("ficticios", "reais", "nao_informado")
+NATUREZA_DADOS_PADRAO = "nao_informado"
+
+
+def normalizar_natureza_dados(valor):
+    """Devolve a natureza declarada, ou o padrao quando ausente/invalida.
+
+    A ausencia nao e erro: lote antigo, gravado antes deste campo, e lido como
+    "nao informado" — o mesmo que a tela mostra. Valor fora da lista tambem cai
+    no padrao, porque o selo so pode afirmar o que foi declarado.
+    """
+    texto = str(valor or "").strip().lower()
+    return texto if texto in NATUREZAS_DADOS else NATUREZA_DADOS_PADRAO
+
+
+def salvar_no_oci(pacotes, lote_id, historias=None, natureza_dados=None):
     """Grava os pacotes do lote no bucket.
 
     O caminho e montado pelo backend a partir do lote e do nome do arquivo,
@@ -350,6 +365,10 @@ def salvar_no_oci(pacotes, lote_id, historias=None):
     Sem credencial, nada e gravado: o item volta como falha de simulacao.
     Sem conteudo, nada e gravado: o item volta como falha, para nao salvar
     um arquivo apenas com metadados.
+
+    `natureza_dados` e a declaracao feita na importacao (ficticios, reais ou
+    nao_informado). Ausente ou invalida, entra o padrao `nao_informado`: o selo
+    so afirma o que foi declarado, nunca deduz do autor, do texto ou do provedor.
     """
     if historias is None:
         return [
@@ -382,10 +401,11 @@ def salvar_no_oci(pacotes, lote_id, historias=None):
     historias = list(historias)
 
     conteudo = {
-        "versao_schema": "1.0",
+        "versao_schema": "1.1",
         "lote": lote_id,
         "gerado_em": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "origem_analise": ORIGEM_ANALISE,
+        "natureza_dados": normalizar_natureza_dados(natureza_dados),
         "historias": historias,
         "evidencias": [
             {"id_interacao": c.get("id_interacao"), "texto": c.get("texto")}
