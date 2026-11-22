@@ -1,4 +1,4 @@
-# CommunityLab 
+# CommunityLab
 
 ![ONE G10](https://img.shields.io/badge/ONE-G10-00875A?style=for-the-badge)
 ![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white)
@@ -48,23 +48,26 @@ A rodada demonstrada em 20/11 usou três mensagens fictícias: o Gemini retornou
 
 ## 📌 Estado das entregas
 
-Situação conferida em **21/11/2026**. Código integrado, implantação e aceite funcional são etapas distintas.
+Situação conferida em **22/11/2026**. Código integrado, implantação e aceite funcional são etapas distintas.
 
 | Componente | Situação | Evidência / limite |
 |---|---|---|
-| Análise com LLM | Fluxo demonstrado com Gemini e Cohere | Provedores configuráveis: Gemini, Cohere e Groq. Falha técnica não deve produzir histórias fictícias como resultado real. |
-| OCI Object Storage | Gravação, leitura e regravação sem duplicidade comprovadas nos casos registrados | PR #43 e rodadas posteriores. Evidências de privacidade do bucket, IAM e condições Always Free continuam no Card 18. |
-| Curadoria persistida | PR #57 integrado à main em `4beccce` | Grava decisões e campos editados; parecer acompanha o status vigente. Reteste funcional após deploy pendente. |
-| VM OCI | Registro de Luciene em 21/11: SHA `4beccce`, contêiner saudável e spaCy carregado sem fallback | Disponibilidade não equivale a aceite funcional. |
+| Análise com LLM | Fluxo demonstrado com Gemini e Cohere | Gemini, Cohere e Groq configuráveis. Falha técnica não deve produzir histórias fictícias como resultado real. |
+| OCI Object Storage | Gravação, leitura e regravação sem duplicidade comprovadas nos casos registrados | PR #43. Evidências de bucket privado, IAM e condições gratuitas continuam no Card 18. |
+| Curadoria persistida | PR #57 integrado em `4beccce` | Grava decisões e campos editados; reteste funcional após implantação pendente. |
+| VM OCI | Última evidência registrada: `4beccce`, contêiner saudável e spaCy sem fallback | Implantação das integrações posteriores ainda não confirmada. |
 | Horário no Histórico | PR #56 integrado | Exibição em São Paulo; instantes e identificadores UTC preservados. |
-| Conferência por citação nas telas | PR #59 aberto | Revisão anterior executou 18 testes diretos; reteste visual pendente. |
-| Rótulo de análise real para Gemini/Cohere/Groq | PR #60 aberto | Origem da análise não determina natureza dos dados. |
-| Resposta truncada e nova tentativa | PR #61 aberto | Trata MAX_TOKENS especificamente; não garante sucesso na tentativa seguinte. |
-| Natureza declarada dos dados no pacote | PR #62 aberto | Envelope proposto 1.1, com `ficticios`, `reais` ou `nao_informado`. Ainda não é formato integrado à main. |
-| Declaração na Importação e selo nas Histórias | PR #63 aberto, baseado na branch do #62 | Após integrar #62, ajustar a base para main e reconferir a integração. Luciene aprovou contra a base atual. |
-| Correção de anonimização | PR #64 aberto, com ajustes solicitados na revisão | Os dois casos originais foram corrigidos no teste local, mas surgiu regressão: “Paulo” sozinho deixou de ser mascarado. Também foi registrado “Bianca Ferraz” sem máscara na VM e na branch. Correção e reteste pendentes. |
-| Testemunhos, cases e recuperação editorial em nova sessão | Pendentes de conclusão/validação integrada | A recuperação completa do lote pelo Histórico ainda não tem PR aberto. Recuperar o JSON original não comprova restauração dos textos editados e das decisões. |
-| Apresentação final | Aprovada pelo grupo, Card 25 concluído | Aceite da apresentação não encerra a homologação do MVP (Card 23). |
+| Conferência por citação nas telas | PR #59 integrado em `d703feb` | Conferência por origem e revalidação após edição; reteste visual na VM pendente. |
+| Rótulo de análise real | PR #60 integrado em `b6ff760` | Reconhece Gemini/Cohere/Groq. Provedor não determina natureza dos dados; reteste na VM pendente. |
+| Resposta truncada e nova tentativa | PR #61 integrado em `f6dd880` | Trata MAX_TOKENS e permite nova tentativa sobre o mesmo lote. Reteste na VM pendente; não garante sucesso da tentativa seguinte. |
+| Natureza declarada no pacote | PR #62 integrado em `d033d5a` | Pacote principal 1.1 com ficticios/reais/nao_informado; evidencias.json permanece 1.0. |
+| Declaração na Importação e selo nas Histórias | PR #63 integrado em `04ec8c6` | Dependência do #62 resolvida; reteste declaração → pacote OCI → selo pendente. |
+| Fidelidade do exemplo hist-001 | PR #66 integrado em `5cc9e2e` | Descrição e ativo limitados ao que a citação sustenta; citação preservada. |
+| Correção de anonimização | PR #64 integrado em `fcc077e`, após aprovação de Tissiany | Revisora relatou 3.682 testes aprovados e verificações locais com modelo real e fallback. O fallback apresentou falsos positivos em palavras comuns, cidades e termos técnicos. Implantação e reteste na VM pendentes. |
+| Cases de sucesso — Card 14 | PR #67 aberto para revisão | Proposta extrativa; 3.709 testes locais aprovados. Sem validação real de IA/OCI nesta entrega. |
+| Testemunhos estruturados — Card 13 | PR #68 aberto para revisão, baseado no #67 | Título, descrição e citação rastreados; 3.729 testes locais incluindo os cases. Integrar #67 antes de ajustar a base do #68 para main. |
+| Recuperação editorial em nova sessão | Pendente, sem PR identificado na última conferência | Consulta ao JSON não comprova restauração completa de textos editados e decisões. |
+| Apresentação final | Aprovada pelo grupo; Card 25 concluído | Não encerra a homologação funcional do MVP, acompanhada no Card 23. |
 
 Os resultados de suítes informados nos PRs pertencem às respectivas versões e ambientes. Não devem ser somados nem apresentados como uma única execução da versão implantada.
 
@@ -167,8 +170,10 @@ O plano está em [CATP_TEST_PLAN.md](docs/CATP_TEST_PLAN.md) e o histórico docu
 
 - Há evidências de análise, citações, edição, controles humanos e gravação/consulta OCI em lotes fictícios.
 - Permanecem pendentes a consolidação dos três cenários, dos formatos principais, dos vínculos de origem e da recuperação editorial em nova sessão.
-- A anonimização teve dois defeitos reportados com spaCy carregado: nome fictício sem máscara e trecho técnico mascarado indevidamente. O PR #64 propõe correção; testes locais não substituem o reteste na versão implantada.
-- O caso de truncamento com seis interações é acompanhado na issue #58 e no PR #61.
+- A correção de anonimização do PR #64 foi integrada em `fcc077e`, após aprovação de Tissiany. A revisora relatou 3.682 testes aprovados e verificações locais com modelo spaCy real e fallback forçado.
+- Os nomes testados foram mascarados. No fallback, foram observados falsos positivos em palavras comuns, cidades e termos técnicos, como “Estudei SQL”, “Porto Alegre” e “Cloud Foundations”.
+- Esses resultados locais não garantem anonimização completa nem substituem implantação e reteste pela interface.
+- O caso de truncamento com seis interações é acompanhado na issue #58 e no PR #61, já integrado. Reteste na versão implantada permanece pendente.
 - **Nenhum aceite geral do MVP é declarado neste README.**
 
 Não interpretar commits, screenshots ou testes locais isolados como homologação automática.
@@ -213,10 +218,17 @@ Usar somente dados fictícios ou autorizados e manter explícito o modo demonstr
 - [x] Disponibilizar fluxo demonstrável com análise por LLM e armazenamento OCI.
 - [x] Integrar persistência de decisões de curadoria no pacote (#57).
 - [x] Preparar e obter aprovação do grupo para a apresentação final (Card 25).
-- [ ] Revisar e integrar os PRs abertos, respeitando a dependência #62 → #63.
-- [ ] Corrigir e retestar anonimização na versão implantada (#64).
-- [ ] Validar contratos, Testemunho estruturado e Case de sucesso.
+- [x] Integrar conferência de citações, rótulos dos provedores e nova tentativa após truncamento (#59, #60 e #61).
+- [x] Integrar natureza declarada dos dados no pacote e nas telas (#62 e #63).
+- [x] Corrigir a descrição do exemplo hist-001 conforme a citação (#66).
+- [x] Revisar e integrar os ajustes de anonimização (#64).
+- [ ] Confirmar implantação do #64 e retestar anonimização pela interface, incluindo as limitações do fallback.
+- [ ] Revisar e integrar cases (#67) e testemunhos (#68), respeitando a dependência #67 → #68.
+- [ ] Confirmar SHA e saúde da versão consolidada implantada na VM.
+- [ ] Retestar citações, provedores, truncamento, natureza declarada e persistência editorial pela interface.
+- [ ] Validar contratos e os formatos principais com IA e OCI reais, usando dados fictícios.
 - [ ] Validar recuperação completa de textos e decisões em nova sessão.
+- [ ] Completar as evidências de configuração OCI do Card 18.
 - [ ] Consolidar CATP, evidências e aceite expresso no Card 23.
 - [ ] Conciliar README, documentação do front, diagrama e relatório com a implementação.
 - [ ] Conferir os arquivos e links finais enviados à plataforma.
@@ -232,4 +244,3 @@ A licença será definida pela equipe, conforme as regras do Hackathon e a estra
 **CommunityLab — Histórias que inspiram. Inteligência que transforma.**  
 Hackathon ONE G10 — Oracle Next Education & Alura · Equipe 18  
 **Prazo exibido na plataforma No Country na evidência de 20/11:** 22 de novembro de 2026, às 23h59. Fuso da plataforma a confirmar.
-
