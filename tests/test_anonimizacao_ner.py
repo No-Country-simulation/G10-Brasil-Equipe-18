@@ -93,6 +93,21 @@ def test_ner_mascara_nome_proprio_em_caixa_alta(monkeypatch):
     assert contagem["nome"] == 1
 
 
+@pytest.mark.parametrize("produto", ["Oracle Cloud", "GitHub Actions"])
+def test_ner_preserva_produtos_com_nome_composto(monkeypatch, produto):
+    texto = f"Usamos {produto} para automatizar o projeto."
+    monkeypatch.setattr(
+        anonimizacao,
+        "_obter_nlp",
+        lambda: _NLPFalso([(produto, "PROPN")]),
+    )
+
+    resultado, contagem = anonimizacao.anonimizar_texto(texto)
+
+    assert resultado == texto
+    assert contagem["nome"] == 0
+
+
 def test_ner_preserva_termo_tecnico_apos_verbo_de_estudo(monkeypatch):
     texto = "júnior! Estudei SQL e Power BI"
     monkeypatch.setattr(

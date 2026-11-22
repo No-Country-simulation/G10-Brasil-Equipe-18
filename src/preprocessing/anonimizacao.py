@@ -12,7 +12,7 @@ EXCECOES_TECNICAS = {
     "sql", "langgraph", "pandas", "pytest", "pydantic", "json", "csv",
     "alura", "docker", "kubernetes", "linux", "aws", "gcp", "azure",
     "git", "fastapi", "react", "node", "javascript", "typescript", "html", "css",
-    "api", "apis", "power bi",
+    "api", "apis", "power bi", "oracle cloud", "github actions",
 }
 
 # Locais comuns preservados tanto no NER quanto no fallback.
@@ -31,12 +31,21 @@ LOCAIS_CONHECIDOS_MULTIPALAVRA = frozenset(
 
 # Preposições e locuções que introduzem um nome de pessoa imediatamente à frente.
 # "a" sozinho fica de fora porque costuma preceder lugares ("fui a Paris").
-# "à" (a + a) e "com a/o" são padrões de pessoa no português do Brasil.
+# "à" (a + a) e "com a/o" são padrões frequentes no português do Brasil.
 _CONTEXTO_PESSOA = re.compile(
     r"\b("
     r"com|à|pela|pelo|e a|e o|junto com|junto da|junto do"
     r")(\s+(?:a|o))?\s*$"
 )
+_CONTEXTO_PESSOA_APOS = re.compile(
+    r"^\s*(?:(?:me|nos|a gente|o time|a equipe)\s+)?"
+    r"(?:ajudou|ajudaram|orientou|orientaram|ensinou|ensinaram|"
+    r"indicou|indicaram|revisou|revisaram|apoiou|apoiaram|"
+    r"acompanhou|acompanharam|mentora|mentorou|recomendou|"
+    r"convidou|chamou|participou|contribuiu)\b",
+    re.IGNORECASE,
+)
+_PARTICULAS_NOME = frozenset({"da", "das", "de", "do", "dos", "e"})
 
 # Formas frequentes que o modelo pode rotular como PROPN antes de uma tecnologia.
 VERBOS_ESTUDO = {
@@ -203,41 +212,143 @@ def anonimizar_texto(texto: str) -> Tuple[str, Dict[str, int]]:
         # Fallback de melhor esforço caso o modelo spaCy não esteja disponível
         palavras = texto_anonimo.split()
         palavras_anonimizadas = []
-        for i, palavra in enumerate(palavras):
-            palavra_limpa = re.sub(r'[^\w@]', '', palavra)
-            if palavra_limpa.startswith("@membro_") or palavra_limpa.startswith("membro_"):
-                palavras_anonimizadas.append(palavra)
-                continue
-            palavra_seguinte = (
-                re.sub(r"[^\w]", "", palavras[i + 1]).lower()
-                if i + 1 < len(palavras)
-                else ""
-            )
-            if palavra_limpa.lower() == "power" and palavra_seguinte == "bi":
-                palavras_anonimizadas.append(palavra)
-                continue
-            if _eh_inicio_de_frase(palavras, i):
-                palavras_anonimizadas.append(palavra)
-                continue
-            if palavra_limpa.lower() in LOCAIS_CONHECIDOS:
-                palavras_anonimizadas.append(palavra)
-                continue
-            palavra_anterior = re.sub(r'[^\w]', '', palavras[i-1].lower()) if i > 0 else ""
-            if palavra_anterior == "em" and (palavra_limpa.lower() in LOCAIS_CONHECIDOS or (i + 1 < len(palavras) and re.sub(r'[^\w]', '', palavras[i+1].lower()) in LOCAIS_CONHECIDOS)):
-                palavras_anonimizadas.append(palavra)
-                continue
+        i = 0
+        while i < len(palavras):
+            palavra = palavras[i]
+            palavra_limpa = re.sub(r"^[^\w@]+|[^\w@]+$", "", palavra)
+            palavra_lower = palavra_limpa.lower()
             if (
-                i > 0 
-                and palavra_limpa 
-                and palavra_limpa[0].isupper() 
-                and palavra_limpa.lower() not in EXCECOES_TECNICAS
-                and not palavra_limpa.isupper()
+                not palavra_limpa
+                or palavra_lower.startswith("@membro_")
+                or palavra_lower.startswith("membro_")
+                or re.fullmatch(r"\[[A-Z_]+\][.,;:!?]*", palavra) is not None
             ):
-                palavra_substituida = palavra.replace(palavra_limpa, '[NOME]')
-                palavras_anonimizadas.append(palavra_substituida)
-                contagem["nome"] += 1
-            else:
                 palavras_anonimizadas.append(palavra)
+                i += 1
+                continue
+
+            if (
+                palavra_lower == "power"
+                and i + 1 < len(palavras)
+                and re.sub(r"[^\w@]", "", palavras[i + 1]).lower()
+                == "bi"
+            ):
+                palavras_anonimizadas.extend(palavras[i:i + 2])
+                i += 2
+                continue
+
+            prefixo = " ".join(palavras[:i]).lower()
+            contexto_anterior = bool(_CONTEXTO_PESSOA.search(prefixo))
+            inicio_frase = _eh_inicio_de_frase(palavras, i)
+            e_capitalizada = (
+                palavra_limpa[0].isupper()
+                and (not palavra_limpa.isupper() or contexto_anterior)
+            )
+            if not e_capitalizada:
+                palavras_anonimizadas.append(palavra)
+                i += 1
+                continue
+
+            # Agrupa nomes compostos, inclusive partículas como "da" e "de".
+            fim = i + 1
+            componentes = [palavra_limpa]
+            while fim < len(palavras):
+                if re.search(r"[.,!?;:]$", palavras[fim - 1]):
+                    break
+                proxima = re.sub(r"^[^\w@]+|[^\w@]+$", "", palavras[fim])
+                proxima_lower = proxima.lower()
+                if proxima_lower in _PARTICULAS_NOME:
+                    if fim + 1 >= len(palavras):
+                        break
+                    seguinte = re.sub(
+                        r"^[^\w@]+|[^\w@]+$", "", palavras[fim + 1]
+                    )
+                    proxima_continuacao = (
+                        re.sub(r"[^\w@]", "", palavras[fim + 2]).lower()
+                        if fim + 2 < len(palavras)
+                        else ""
+                    )
+                    if (
+                        proxima_lower == "e"
+                        and (
+                            seguinte.lower() in EXCECOES_TECNICAS
+                            or f"{seguinte.lower()} {proxima_continuacao}"
+                            in EXCECOES_TECNICAS
+                        )
+                    ):
+                        break
+                    if (
+                        not seguinte
+                        or not seguinte[0].isupper()
+                        or (seguinte.isupper() and not contexto_anterior)
+                    ):
+                        break
+                    componentes.extend((proxima, seguinte))
+                    fim += 2
+                    continue
+                if (
+                    proxima
+                    and proxima[0].isupper()
+                    and (
+                        not proxima.isupper()
+                        or proxima_lower in EXCECOES_TECNICAS
+                        or contexto_anterior
+                    )
+                ):
+                    componentes.append(proxima)
+                    fim += 1
+                    continue
+                break
+
+            nome = " ".join(componentes)
+            componentes_nome = [
+                componente.lower()
+                for componente in componentes
+                if componente.lower() not in _PARTICULAS_NOME
+            ]
+            nome_composto = len(componentes_nome) > 1
+            contexto_depois = (
+                inicio_frase
+                and _CONTEXTO_PESSOA_APOS.match(" ".join(palavras[fim:])) is not None
+            )
+            local_conhecido = _eh_local_conhecido(nome)
+            local_como_nome = (
+                len(componentes_nome) == 1
+                and local_conhecido
+                and (contexto_anterior or contexto_depois)
+            )
+            termo_tecnico = (
+                nome.lower() in EXCECOES_TECNICAS
+                or all(
+                    componente in EXCECOES_TECNICAS
+                    for componente in componentes_nome
+                )
+            )
+            deve_mascarar = (
+                contexto_anterior
+                or contexto_depois
+                or (not inicio_frase and e_capitalizada)
+                or (inicio_frase and nome_composto)
+            )
+
+            if (
+                (local_conhecido and not local_como_nome)
+                or termo_tecnico
+                or not deve_mascarar
+            ):
+                palavras_anonimizadas.extend(palavras[i:fim])
+                i = fim
+                continue
+
+            prefixo_token = palavra[:palavra.find(palavra_limpa)]
+            ultima_palavra = palavras[fim - 1]
+            ultima_limpa = re.sub(r"^[^\w@]+|[^\w@]+$", "", ultima_palavra)
+            sufixo_token = ultima_palavra[
+                ultima_palavra.rfind(ultima_limpa) + len(ultima_limpa):
+            ]
+            palavras_anonimizadas.append(f"{prefixo_token}[NOME]{sufixo_token}")
+            contagem["nome"] += 1
+            i = fim
         texto_anonimo = " ".join(palavras_anonimizadas)
 
     return texto_anonimo, contagem
