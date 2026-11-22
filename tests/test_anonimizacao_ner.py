@@ -142,8 +142,8 @@ def test_ner_preserva_loc_sem_contexto_de_pessoa(monkeypatch, texto, local):
     assert contagem["nome"] == 0
 
 
-def test_modelo_real_mascara_nome_loc_e_preserva_estudei_sql(monkeypatch):
-    import spacy
+def test_modelo_real_mascara_nomes_e_preserva_termos_tecnicos_e_locais(monkeypatch):
+    spacy = pytest.importorskip("spacy")
 
     try:
         nlp = spacy.load("pt_core_news_sm")
@@ -152,14 +152,27 @@ def test_modelo_real_mascara_nome_loc_e_preserva_estudei_sql(monkeypatch):
 
     monkeypatch.setattr(anonimizacao, "_obter_nlp", lambda: nlp)
 
-    texto_nome = "Fizemos tudo em dupla com a Renata Moura"
-    nome_anonimizado, _ = anonimizacao.anonimizar_texto(texto_nome)
-    texto_per = "Conversei com Renata Medeiros ontem"
-    per_anonimizado, _ = anonimizacao.anonimizar_texto(texto_per)
+    casos_nomes = [
+        (
+            "Fizemos tudo em dupla com a Renata Moura",
+            "Fizemos tudo em dupla com a [NOME]",
+        ),
+        ("Conversei com Paulo ontem.", "Conversei com [NOME] ontem."),
+        (
+            "Agradeço muito à Bianca Ferraz, que revisou todo o código com a gente.",
+            "Agradeço muito à [NOME], que revisou todo o código com a gente.",
+        ),
+        ("Conversei com Renata Medeiros ontem", "Conversei com [NOME] ontem"),
+    ]
+    for texto, esperado in casos_nomes:
+        anonimizado, _ = anonimizacao.anonimizar_texto(texto)
+        assert anonimizado == esperado
+
     texto_tecnico = "júnior! Estudei SQL e Power BI"
     tecnico_anonimizado, contagem = anonimizacao.anonimizar_texto(texto_tecnico)
+    texto_local = "Fizemos um encontro em São Paulo"
+    local_anonimizado, _ = anonimizacao.anonimizar_texto(texto_local)
 
-    assert nome_anonimizado == "Fizemos tudo em dupla com a [NOME]"
-    assert per_anonimizado == "Conversei com [NOME] ontem"
     assert tecnico_anonimizado == texto_tecnico
     assert contagem["nome"] == 0
+    assert local_anonimizado == texto_local
