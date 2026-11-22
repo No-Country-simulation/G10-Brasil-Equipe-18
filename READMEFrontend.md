@@ -6,9 +6,11 @@ Situação documental conferida em **22/11/2026**. Código integrado à main, im
 
 Os exemplos fornecidos para demonstração usam dados fictícios. Na Importação, a natureza de cada lote é declarada como fictícios, reais ou não informado. Essa declaração não é deduzida pelo provedor de IA nem comprova anonimização.
 
-A correção de anonimização do PR #64 foi integrada à main em `fcc077e`. A implantação dessa correção e o reteste pela interface continuam pendentes.
+A correção de anonimização do PR #64 foi integrada à main em `fcc077e`. O PR #67, de cases de sucesso, foi integrado em `07ae36c`. Implantação e retestes da versão consolidada continuam pendentes.
 
-A geração de cases de sucesso (PR #67) e de testemunhos estruturados (PR #68) está em revisão. A recuperação editorial completa em nova sessão e os retestes da versão consolidada na VM continuam pendentes.
+O PR #68, de testemunhos estruturados, permanece em revisão, agora com base main. O commit complementar `016c12d` trata as recusas de citações literais relatadas na revisão. Nova revisão e repetição dos casos com IA real continuam pendentes.
+
+A recuperação editorial completa em nova sessão também permanece pendente.
 
 > Os conteúdos gerados são rascunhos sujeitos à revisão humana. Aprovação editorial e autorização para publicação são controles separados. Nada é publicado automaticamente.
 
@@ -44,7 +46,7 @@ O CommunityLab utiliza visual limpo, com navegação lateral escura e destaques 
 | Dashboard | Apresenta contagens e atalhos de navegação. Não equivale ao painel analítico avançado previsto no Card 22. |
 | Importação | Recebe CSV, JSON colado ou mensagens do Discord, conforme configuração. Exibe prévia, filtro por canal, avisos de IDs e declaração da natureza do lote. |
 | Histórias | Apresenta histórias detectadas, categorias, relevância e acesso ao Estúdio. Exibe a natureza declarada dos dados. |
-| Estúdio de Conteúdo | Permite consultar evidências e editar os campos dos ativos disponíveis. A presença dos formatos principais depende da versão integrada. |
+| Estúdio de Conteúdo | Permite consultar evidências e editar os campos dos ativos disponíveis. |
 | Curadoria | Permite validar fatos, decidir editorialmente e registrar autorização de publicação. |
 | Histórico | Lista pacotes persistidos no OCI, permite visualizar o JSON e baixar os objetos disponíveis. |
 
@@ -375,29 +377,62 @@ Permanecem pendentes:
 
 - Reteste funcional da persistência na versão consolidada.
 - Recuperação completa dos textos editados e das decisões em nova sessão.
-- Validação integrada dos novos formatos após revisão e integração dos PRs #67 e #68.
+- Validação integrada dos cases do #67.
+- Revisão, integração e validação dos testemunhos do #68.
 
 ## Formatos de ativos
 
-A interface possui suporte a campos editáveis conforme o tipo de ativo recebido. Isso não significa que todos os formatos tenham geração integrada e homologada.
+A interface possui suporte a campos editáveis conforme o tipo de ativo recebido. Implementação, implantação e homologação de cada formato são etapas distintas.
 
 | Formato | Situação em 22/11/2026 |
 |---|---|
 | Post para LinkedIn e card de conquista | Presentes no fluxo existente; sujeitos à revisão de fidelidade e curadoria. |
-| Case de sucesso | Implementação extrativa proposta no PR #67, em revisão. |
-| Testemunho estruturado | Implementação proposta no PR #68, em revisão e baseada no #67. |
+| Case de sucesso | PR #67 integrado em `07ae36c`; implantação e validação integrada pendentes. |
+| Testemunho estruturado | PR #68 em revisão, com base main e correção complementar em `016c12d`. |
 
-### Case de sucesso — PR #67
+### Case de sucesso — Card 14 / PR #67
 
-A proposta utiliza trechos da fonte para compor o texto, com vínculo a resultados e citações.
+A análise pode solicitar um case na mesma chamada dos formatos existentes.
 
-Os testes locais não substituem a validação com IA e OCI reais. A verificação literal não comprova, sozinha, a fidelidade contextual da narrativa.
+A primeira versão utiliza narrativa extrativa: trechos da fonte, sem paráfrase livre, em `campos.texto`, com título opcional como metadado e vínculo à interação de origem.
+
+Case sem resultado ou citação literal sustentados é omitido. A história permanece para revisão com aviso.
+
+Edição e Curadoria utilizam o fluxo existente. A geração não aprova o conteúdo nem autoriza publicação.
+
+O PR #67 foi aprovado por Jaqueline e integrado à main em `07ae36c`. Os testes locais não substituem a validação com provedor e OCI reais.
+
+A verificação literal não comprova, sozinha, a fidelidade contextual da narrativa.
+
+Consulte a [documentação do Card 14](docs/CARD14_CASES_SUCESSO.md).
+
+### História preservada sem ativos
+
+A revisão do #67 identificou um problema visual: uma história sem ativos pode aparecer com o indicador “Rejeitado”, porque a avaliação de todos os estados sobre uma lista vazia retorna verdadeiro.
+
+Esse indicador não representa uma decisão humana registrada.
+
+O achado foi classificado como não bloqueante para a integração do #67. A correção da interface para mostrar “Sem ativos gerados” ou omitir o indicador continua pendente nesta referência.
 
 ### Testemunho estruturado — PR #68
 
 A proposta organiza título, descrição e citação com rastreabilidade à fonte.
 
-O PR #68 depende do #67. Após integrar o #67, é necessário ajustar a base do #68 para main e reconferir a alteração.
+Após a integração do #67, a base do #68 foi ajustada para main.
+
+Jaqueline relatou quatro recusas de testemunhos em duas rodadas com IA real, causadas pela exigência de igualdade exata entre a citação do testemunho e uma evidência conferida da história.
+
+O commit complementar `016c12d` propõe:
+
+- Tolerar diferenças de espaços e pontuação final na comparação com a evidência.
+- Aceitar citação literal ampliada que contenha a evidência inteira.
+- Manter a exigência de existência do trecho na fonte e de correspondência da interação.
+- Recusar trechos menores que cortem a evidência, inclusive os casos de negação cobertos pelos testes.
+- Preservar a recusa de conteúdo inventado ou atribuído a outra origem.
+
+Marcus informou **34 testes específicos** e **3.744 testes da suíte completa** aprovados nessa versão. Essas execuções não fizeram chamadas reais à IA ou OCI.
+
+A correção aguarda nova revisão e repetição dos casos com modelo real. O CATP-008 não é aprovado automaticamente por esses testes locais.
 
 O helper de conversão canônica não deve ser apresentado como exportação automática já integrada.
 
@@ -423,6 +458,7 @@ app/
     prompt_analise.txt
     conferencia_citacao.py
     oci_storage.py
+    cases.py
   mocks/
     mock_data.py
 src/
@@ -436,7 +472,7 @@ requirements-front.txt
 
 A estrutura acima destaca os componentes principais; não é uma listagem completa do repositório.
 
-Os módulos propostos nos PRs #67 e #68 devem ser considerados parte da main somente após integração.
+O módulo `cases.py` foi integrado pelo #67. Os arquivos de testemunhos do #68 devem ser considerados parte da main somente após sua integração.
 
 ## Modo demonstração
 
@@ -478,7 +514,9 @@ Resultados de testes pertencem à versão e ao ambiente em que foram executados.
 - A conferência de citações não comprova a fidelidade do ativo inteiro.
 - O #64 está integrado, mas a implantação e o reteste pela interface continuam pendentes.
 - O fallback de anonimização pode mascarar palavras comuns, cidades e termos técnicos indevidamente.
-- Cases e testemunhos dos PRs #67 e #68 aguardam revisão e validação integrada.
+- Cases do #67 estão integrados, mas ainda dependem de implantação e validação integrada.
+- O indicador de história sem ativos pode mostrar uma rejeição que não foi decidida por uma pessoa; correção de interface pendente.
+- Testemunhos do #68 e sua correção de citações aguardam nova revisão e validação com IA real.
 - A recuperação editorial completa em nova sessão continua pendente.
 - A nota de exemplo fictício da Importação ainda depende da origem do lote.
 - “Copiar texto” disponibiliza um bloco com o recurso de cópia do Streamlit.

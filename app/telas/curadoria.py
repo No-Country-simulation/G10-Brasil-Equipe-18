@@ -177,6 +177,8 @@ def _coluna_rascunhos(h, ativo, status):
     hid, aid = h["id"], ativo["id"]
     editavel = status in ["rascunho", "ajustes"]
     if ativo["tipo"] == "texto":
+        if ativo.get("titulo"):
+            st.caption(ativo["titulo"])
         campo(st.text_area, "Texto do case" if "Case" in ativo["nome"] else "Texto",
               _chave(hid, aid, "texto"), ativo["campos"]["texto"], height=240, disabled=not editavel)
         texto_atual = valor(_chave(hid, aid, "texto"), "")
@@ -230,6 +232,12 @@ def render():
         c.markdown(f'<div style="text-align:right;"><span class="cl-muted">Relevância</span> '
                    f'<span style="font-size:22px;">{h["relevancia"]}</span> <span class="cl-muted">/ 100</span></div>',
                    unsafe_allow_html=True)
+
+    if h.get("case_pendente"):
+        st.warning("Case pendente: " + h["case_pendente"])
+    if not h["ativos"]:
+        st.info("História preservada para revisão; nenhum ativo elegível disponível.")
+        return
 
     esq, dir_ = st.columns([2, 1])
     nomes = [a_["nome"] for a_ in h["ativos"]]
