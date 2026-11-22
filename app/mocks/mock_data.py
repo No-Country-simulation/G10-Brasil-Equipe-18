@@ -157,7 +157,7 @@ HISTORIAS = [
              "variacoes": [{
                  "titulo": "Recomeço profissional na tecnologia",
                  "descricao": "Camila Santos decidiu mudar de carreira após 10 anos no setor de varejo. Concluiu a formação no Programa ONE e deu início à sua jornada na área tech, demonstrando que nunca é tarde para recomeçar.",
-                 "citacao": "Concluí a formação e comecei minha transição para tecnologia."
+                 "citacao": "concluí a formação e comecei minha transição para tecnologia."
              }],
              "fontes": [
                  {"afirmacao": "Camila trabalhou 10 anos no varejo", "fato": "Trajetória: 10 anos no varejo", "trecho": "Depois de 10 anos no varejo,"},

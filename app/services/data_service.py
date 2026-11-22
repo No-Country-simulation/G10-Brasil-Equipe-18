@@ -13,6 +13,7 @@ import json
 from datetime import datetime, timedelta, timezone
 
 from mocks import mock_data as m
+from services import conferencia_citacao as _conf
 
 CAMPOS_OBRIGATORIOS = ("autor", "canal", "texto")
 
@@ -94,6 +95,53 @@ def id_interacao(interacao, posicao_1indexed):
     """
     id_lote = interacao.get("id")
     return id_lote if isinstance(id_lote, int) and id_lote >= 1 else posicao_1indexed
+
+
+# ---------- Conferência de citação ----------
+# A regra fica em services/conferencia_citacao.py. Aqui só resolvemos qual
+# interação é a origem, para as telas não importarem o módulo direto.
+MOTIVO_LITERAL = _conf.MOTIVO_LITERAL
+MOTIVO_ANONIMIZADO = _conf.MOTIVO_ANONIMIZADO
+MOTIVO_SEM_ID = "ID não informado"
+MOTIVO_INDISPONIVEL = "Conferência indisponível"
+MOTIVO_VARIAS_ORIGENS = "Conferência indisponível (mais de uma origem)"
+
+
+def _id_valido(valor):
+    return isinstance(valor, int) and not isinstance(valor, bool) and valor >= 1
+
+
+def conferencia_da_citacao(citacao, interacoes):
+    """Confere uma citação contra o texto da interação indicada pelo seu id_interacao.
+
+    Devolve (confere, motivo, id_interacao). confere é True ou False quando a
+    conferência rodou, e None quando não deu para conferir (sem ID válido ou
+    interação fora do lote). None nunca deve ser exibido como conferido.
+    """
+    id_int = (citacao or {}).get("id_interacao")
+    if not _id_valido(id_int):
+        return None, MOTIVO_SEM_ID, None
+    original = next(
+        (i.get("texto", "") for i in (interacoes or []) if i.get("_id_efetivo") == id_int),
+        None,
+    )
+    if original is None:
+        return None, MOTIVO_INDISPONIVEL, id_int
+    confere, motivo = _conf.conferir_citacao(citacao.get("texto", ""), original)
+    return confere, motivo, id_int
+
+
+def conferencia_da_citacao_do_ativo(texto, historia, interacoes):
+    """Confere a citação editável de um ativo, que não traz id_interacao próprio.
+
+    A origem é interacoes_origem da história. Com mais de uma origem não há
+    como saber contra qual conferir, então o resultado fica indisponível.
+    """
+    origens = (historia or {}).get("interacoes_origem") or []
+    if len(origens) > 1:
+        return None, MOTIVO_VARIAS_ORIGENS, None
+    id_int = origens[0] if origens else None
+    return conferencia_da_citacao({"texto": texto, "id_interacao": id_int}, interacoes)
 
 
 # ---------- Ingestão ----------
