@@ -27,6 +27,21 @@ VISUAL = {
 
 ATRASO = float(os.environ.get("COMMUNITYLAB_DELAY", "0.9"))
 
+# Provedores de LLM que podem responder a análise (ResultadoLLM.provedor).
+PROVEDORES_REAIS = ("gemini", "cohere", "groq")
+
+
+def rotulo_ambiente(origem):
+    """Rótulo do Ambiente no resumo do lote.
+
+    "Análise real" diz que a IA rodou de verdade, não que os dados são reais.
+    """
+    if origem == "mock":
+        return "Demonstração"
+    if origem in PROVEDORES_REAIS:
+        return "Análise real"
+    return "Não confirmado"
+
 
 def _retry():
     st.session_state.proc_status = "retry"
@@ -154,7 +169,7 @@ def _desenhar(etapas, botoes):
                     situacao = situacao_ativos(contagem, "aguardando gravação")
             else:
                 situacao = "Ativos ainda não gerados"
-            ambiente = "Demonstração" if demonstrativo else "Análise real" if origem == "gemini" else "Não confirmado"
+            ambiente = rotulo_ambiente(origem)
             md(
                 '<b style="font-size:17px;">Resumo do lote</b>'
                 '<hr style="margin:10px 0;border:none;border-top:1px solid #EEF0F4;">'
