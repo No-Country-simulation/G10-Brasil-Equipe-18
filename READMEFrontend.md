@@ -6,6 +6,8 @@ Situação documental conferida em **22/11/2026**. Código integrado à main, im
 
 Os exemplos fornecidos para demonstração usam dados fictícios. Na Importação, a natureza de cada lote é declarada como fictícios, reais ou não informado. Essa declaração não é deduzida pelo provedor de IA nem comprova anonimização.
 
+A correção de anonimização do PR #64 foi integrada à main em `fcc077e`. A implantação dessa correção e o reteste pela interface continuam pendentes.
+
 A geração de cases de sucesso (PR #67) e de testemunhos estruturados (PR #68) está em revisão. A recuperação editorial completa em nova sessão e os retestes da versão consolidada na VM continuam pendentes.
 
 > Os conteúdos gerados são rascunhos sujeitos à revisão humana. Aprovação editorial e autorização para publicação são controles separados. Nada é publicado automaticamente.
@@ -281,13 +283,28 @@ Na resposta, o texto de origem e as citações são vinculados à interação co
 
 Na imagem Docker, o modelo `pt_core_news_sm` é instalado e validado durante o build. Sem o modelo disponível, há fallback heurístico de melhor esforço.
 
+### Correção integrada — PR #64
+
+O PR #64 foi aprovado por Tissiany e integrado à main em `fcc077e`.
+
+A revisora relatou:
+
+- **3.682 testes aprovados** no head `f929124`.
+- Verificações locais com modelo spaCy real e fallback forçado.
+- Mascaramento dos nomes testados: Paulo, Bianca Ferraz, Renata Moura, Carolina Teixeira e Bruno Carvalho.
+- Preservação dos locais e termos técnicos testados no caminho com o modelo real.
+
+Esses resultados pertencem à revisão local da branch. Não comprovam que a correção já está implantada ou homologada pela interface.
+
 ### Limitações
 
 - A anonimização não deve ser tratada como garantia de remoção de todos os dados pessoais.
-- O PR #64 contém novos ajustes que aguardam revisão.
-- A autora relatou correções com modelo spaCy real; a revisão independente e o reteste na VM continuam pendentes.
-- O fallback possui limitações, inclusive em nomes isolados no início de frases.
+- O fallback mascarou os nomes isolados testados, mas apresentou falsos positivos em palavras comuns, cidades e termos técnicos.
+- Exemplos observados pela revisora incluem “Estudei SQL”, “Porto Alegre” e “Cloud Foundations”.
+- Os resultados dos casos testados não devem ser generalizados para todos os nomes, termos ou contextos.
 - A declaração de dados reais ou fictícios não comprova que a anonimização foi suficiente.
+- Para uso de mensagens reais, é necessário confirmar a disponibilidade do modelo ou encaminhar o conteúdo para revisão humana antes do envio ao provedor.
+- Implantação do #64 e reteste pela interface continuam pendentes.
 
 Para demonstração e retestes, utilize dados fictícios.
 
@@ -459,7 +476,8 @@ Resultados de testes pertencem à versão e ao ambiente em que foram executados.
 - Falhas dos provedores são apresentadas como erro, sem substituição por histórias fictícias.
 - A nova tentativa após truncamento pode falhar novamente.
 - A conferência de citações não comprova a fidelidade do ativo inteiro.
-- A anonimização possui limitações; os ajustes do PR #64 aguardam revisão.
+- O #64 está integrado, mas a implantação e o reteste pela interface continuam pendentes.
+- O fallback de anonimização pode mascarar palavras comuns, cidades e termos técnicos indevidamente.
 - Cases e testemunhos dos PRs #67 e #68 aguardam revisão e validação integrada.
 - A recuperação editorial completa em nova sessão continua pendente.
 - A nota de exemplo fictício da Importação ainda depende da origem do lote.
