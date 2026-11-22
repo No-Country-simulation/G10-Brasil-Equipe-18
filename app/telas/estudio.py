@@ -101,6 +101,11 @@ def _coluna_conteudo(h):
     """Coluna direita: conteúdo gerado pela IA."""
     hid = h["id"]
     
+    if h.get("case_pendente"):
+        st.warning("Case pendente: " + h["case_pendente"])
+    if not h["ativos"]:
+        st.info("História preservada para revisão; nenhum ativo elegível disponível.")
+        return
     with st.container(border=True):
         md('<div style="font-size:18px; font-weight:600; margin-bottom:12px;">Conteúdo gerado pela IA</div>')
         
@@ -138,6 +143,8 @@ def _coluna_conteudo(h):
             st.caption(f"{len(titulo) + len(frase)} caracteres no total")
             copiavel = f"{titulo}\n{frase}"
         elif ativo["tipo"] == "texto":
+            if ativo.get("titulo"):
+                st.caption(ativo["titulo"])
             texto_campo = ativo["campos"].get("texto", "")
             campo(st.text_area, "Texto do case", _chave(hid, aid, "texto"), texto_campo, height=300)
             texto = valor(_chave(hid, aid, "texto"), "")

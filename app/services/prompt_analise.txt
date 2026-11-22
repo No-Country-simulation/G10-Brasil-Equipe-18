@@ -5,7 +5,7 @@ Receberá uma lista de interações em JSON, cada uma com "id", "autor", "canal"
 Sua tarefa:
 1. Selecionar até {maximo} interações que contenham uma história real, um problema concreto ou uma conquista verificável.
 2. Para cada uma, classificar sentimento, relevância, tópicos e tipo de insight, conforme as definições abaixo.
-3. Gerar dois ativos: um post para LinkedIn e um card de conquista.
+3. Gerar um post para LinkedIn, um card de conquista e, quando elegível, um case de sucesso.
 
 DEFINIÇÕES — use exatamente estes valores
 
@@ -55,6 +55,12 @@ Responda SOMENTE com JSON válido, neste formato exato:
       "fatos": ["fato objetivo extraído, no formato Tema: detalhe"],
       "ativos": [
         {{
+          "id": "case_sucesso",
+          "nome": "Case de sucesso",
+          "tipo": "texto",
+          "campos": {{"texto": "trechos literais da interação, em ordem, separados por parágrafo", "titulo": "trecho literal de até 200 caracteres; opcional"}}
+        }},
+        {{
           "id": "post_linkedin",
           "nome": "Post para LinkedIn",
           "tipo": "texto",
@@ -80,3 +86,12 @@ Regras obrigatórias:
 - "confianca" entre 0.0 e 1.0; abaixo de 0.6 o item vai para revisão prioritária.
 - Se nenhuma interação tiver potencial, devolva {{"historias": []}}.
 - Não escreva nada antes ou depois do JSON.
+
+CASE DE SUCESSO — primeira versão extrativa (Card 14):
+- Gere no máximo um case por história, na mesma resposta; não faça síntese entre participantes.
+- Só gere quando a própria interação relatar resultado ou avanço concreto em conquista profissional, projeto de destaque ou superação. Dúvida, intenção e plano futuro sem avanço não bastam.
+- Em resultados, copie literalmente o trecho que sustenta esse avanço. Inclua esse trecho e ao menos um destaque literal na narrativa.
+- campos.texto é narrativa em texto único: copie trechos completos, na ordem original. Pode separar recortes por duas quebras de linha. Não parafraseie, não acrescente conectivos, datas, números, contexto ou causalidade.
+- Preserve negações, ressalvas e contexto; não recorte para alterar o sentido. Se não houver evidência suficiente, omita o case, preservando a história para revisão.
+- Título opcional: trecho da mesma interação. Não crie campos obrigatórios de contexto/desafio/ações/resultado.
+- Não devolva aprovação, autorização, parecer ou estado editorial: são decisões independentes da aplicação e da revisão humana.

@@ -372,3 +372,13 @@ Pacote salvo no OCI (listagem):
    ```bash
    streamlit run app/main.py
    ```
+
+## Case de sucesso — Card 14
+
+A análise pode solicitar um case na mesma chamada dos formatos existentes.
+A primeira versão propõe narrativa extrativa (trechos da fonte, sem paráfrase
+livre), em `campos.texto`, com título opcional como metadado e vínculo à interação.
+Case sem resultado/citação literal sustentados é omitido, e a história permanece
+para revisão com aviso. Edição e Curadoria usam o fluxo existente; geração não
+aprova nem autoriza publicação. Implementação proposta, sujeita à revisão técnica
+e reteste com provedor/OCI reais. Ver [Card 14](docs/CARD14_CASES_SUCESSO.md).

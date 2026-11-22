@@ -350,6 +350,8 @@ def _normalizar(historias: list, interacoes: list) -> list:
         for ativo in hist.get("ativos") or []:
             if not isinstance(ativo, dict) or not ativo.get("id"):
                 continue
+            if str(ativo["id"]) == "case_sucesso":
+                continue  # Validado separadamente, depois das citações.
             campos = ativo.get("campos") or {}
             if not isinstance(campos, dict) or not any(str(v).strip() for v in campos.values()):
                 continue
@@ -368,8 +370,6 @@ def _normalizar(historias: list, interacoes: list) -> list:
             motivos.append("Sem autor informado.")
         if not original:
             motivos.append("Sem mensagem original informada.")
-        if not ativos:
-            motivos.append("Sem ativo gerado: nao ha conteudo para publicar.")
 
         classificacao, motivos_classificacao = _campos_classificacao(hist)
         motivos.extend(motivos_classificacao)
@@ -403,6 +403,27 @@ def _normalizar(historias: list, interacoes: list) -> list:
         if not citacoes:
             motivos.append("Sem citacao literal: nenhum destaque existe no texto original.")
 
+        from services.cases import preparar_case
+        cases = [a for a in (hist.get("ativos") or [])
+                 if isinstance(a, dict) and a.get("id") == "case_sucesso"]
+        motivo_case = "Modelo não retornou case; revisar suficiência das evidências."
+        case = None
+        if len(cases) == 1 and base and citacoes:
+            case, motivo_case = preparar_case(
+                cases[0], original, resultados, citacoes, id_interacao
+            )
+        elif len(cases) > 1:
+            motivo_case = "Modelo retornou cases duplicados para a mesma história."
+        if case:
+            ativos.append(case)
+        else:
+            ULTIMOS_AVISOS.append(f"{identificador}: {motivo_case}")
+        # Uma história sem case permanece revisável, inclusive sem outros ativos.
+        if not ativos and cases:
+            pass
+        elif not ativos:
+            motivos.append("Sem ativo gerado: nao ha conteudo para publicar.")
+
         if motivos:
             _registrar_recusa(identificador, motivos)
             continue
@@ -433,6 +454,7 @@ def _normalizar(historias: list, interacoes: list) -> list:
                 "destaques": [c["texto"] for c in citacoes],
                 "fatos": fatos,
                 "ativos": ativos,
+                "case_pendente": motivo_case if case is None else "",
                 "tipo_insight": classificacao["tipo_insight"],
                 "topicos": classificacao["topicos"],
                 "justificativa": classificacao["justificativa"],
