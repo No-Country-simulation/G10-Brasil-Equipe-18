@@ -22,6 +22,22 @@ LOCAIS_CONHECIDOS = {
     "são", "paulo", "rio", "janeiro", "belo", "horizonte", "porto", "alegre",
 }
 
+# No caminho do spaCy (NER) preserva apenas locais de mais de uma palavra.
+# Palavras soltas (ex.: "paulo", "rio") ficam apenas no fallback, que compara
+# palavra por palavra e precisa delas para evitar falsos positivos.
+LOCAIS_CONHECIDOS_MULTIPALAVRA = frozenset(
+    local for local in LOCAIS_CONHECIDOS if " " in local
+)
+
+# Preposições e locuções que introduzem um nome de pessoa imediatamente à frente.
+# "a" sozinho fica de fora porque costuma preceder lugares ("fui a Paris").
+# "à" (a + a) e "com a/o" são padrões de pessoa no português do Brasil.
+_CONTEXTO_PESSOA = re.compile(
+    r"\b("
+    r"com|à|pela|pelo|e a|e o|junto com|junto da|junto do"
+    r")(\s+(?:a|o))?\s*$"
+)
+
 # Formas frequentes que o modelo pode rotular como PROPN antes de uma tecnologia.
 VERBOS_ESTUDO = {
     "estudei", "estudamos", "estudava", "estudar", "estudando",
@@ -30,18 +46,26 @@ VERBOS_ESTUDO = {
 }
 
 
+def _normalizar_texto(texto: str) -> str:
+    return re.sub(r"\s+", " ", texto.strip().lower())
+
+
 def _eh_local_conhecido(texto: str) -> bool:
     """Indica se uma entidade corresponde a um local conhecido."""
-    texto_normalizado = re.sub(r"\s+", " ", texto.strip().lower())
-    return texto_normalizado in LOCAIS_CONHECIDOS
+    return _normalizar_texto(texto) in LOCAIS_CONHECIDOS
+
+
+def _eh_local_conhecido_multipalavra(texto: str) -> bool:
+    """Indica se uma entidade corresponde a um local conhecido de mais de uma palavra."""
+    return _normalizar_texto(texto) in LOCAIS_CONHECIDOS_MULTIPALAVRA
 
 
 def _loc_em_contexto_de_pessoa(texto: str, ent) -> bool:
     """Aceita LOC como pessoa quando o contexto imediato indica companhia."""
-    if _eh_local_conhecido(ent.text):
+    if _eh_local_conhecido_multipalavra(ent.text):
         return False
     prefixo = texto[:ent.start_char].lower()
-    return bool(re.search(r"\bcom\s+(?:(?:a|o)\s+)?$", prefixo))
+    return bool(_CONTEXTO_PESSOA.search(prefixo))
 
 
 def _eh_termo_tecnico_em_contexto_de_estudo(texto: str) -> bool:
@@ -157,7 +181,7 @@ def anonimizar_texto(texto: str) -> Tuple[str, Dict[str, int]]:
             if ent.root.pos_ != "PROPN":
                 continue
             # Preserva termos técnicos conhecidos, sem inferir siglas por caixa alta.
-            if txt_lower in EXCECOES_TECNICAS or _eh_local_conhecido(txt_lower):
+            if txt_lower in EXCECOES_TECNICAS or _eh_local_conhecido_multipalavra(txt_limpo):
                 continue
             tokens_lower = re.findall(r"[^\W\d_]+", txt_lower, flags=re.UNICODE)
             if tokens_lower and all(token in EXCECOES_TECNICAS for token in tokens_lower):
