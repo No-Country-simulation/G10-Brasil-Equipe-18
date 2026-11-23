@@ -6,7 +6,7 @@ import streamlit as st
 
 from mocks import mock_data as m
 from services import data_service as svc
-from state import campo, definir, ir_para, valor
+from state import campo, definir, ir_para, resetar_lote, valor
 from styles import caixa, cabecalho, chip, esc, md, topbar
 
 # Modo demonstração: lê diretamente da variável de ambiente (evita import pesado de src/)
@@ -66,6 +66,86 @@ def _dialogo_json(caminho):
     st.caption("Os ativos são rascunhos e aguardam revisão humana.")
 
 
+# Chaves de tela que pertencem ao lote e não podem sobrar ao reabrir outro.
+_PREFIXOS_DADOS_DO_LOTE = ("c:", "f:cat", "f:rel", "f:canal", "aba")
+_PREFIXOS_WIDGETS_DO_LOTE = ("w::c:", "w::f:cat", "w::f:rel", "w::f:canal", "w::aba", "validacao_", "aut_")
+
+
+def aplicar_lote_recuperado(ss, lote):
+    """Troca o lote da sessão pelo lote recuperado do bucket.
+
+    Não analisa nada: só preenche o estado com o que veio do pacote. Deve rodar
+    num callback (on_click), antes de os widgets serem desenhados.
+    """
+    resetar_lote(ss)
+    # resetar_lote não limpa estas chaves; sem isso sobrariam interações do lote anterior.
+    ss.interacoes = []
+    ss.ultimo_upload = None
+    ss.avisos_discord = []
+    ss.rejeitadas_discord = []
+    ss.mostrar_copia = False
+    for chave in [k for k in ss.dados if str(k).startswith(_PREFIXOS_DADOS_DO_LOTE)]:
+        del ss.dados[chave]
+    # Os widgets da Curadoria são "validacao_<hist>:<ativo>"; o ":" evita apagar
+    # o estado "validacao_factual", que não é widget.
+    for chave in [k for k in list(ss.keys()) if str(k).startswith(_PREFIXOS_WIDGETS_DO_LOTE) and ":" in str(k)]:
+        del ss[chave]
+
+    ss.lote_id = lote["lote_id"]
+    ss.historias = lote["historias"]
+    ss.arquivo = {"nome": f"Lote {lote['lote_id']} reaberto do Histórico", "tamanho": "", "origem": "Histórico (OCI)"}
+    ss.proc_status = "concluido"
+    ss.proc_etapas = ["concluida"] * 6
+    ss.proc_origem_analise = lote.get("origem_analise") or ""
+    ss.pacotes_oci = list(lote["pacotes"])
+    ss.dados["natureza_dados"] = lote["natureza_dados"]
+    ss["w::natureza_dados"] = lote["natureza_dados"]  # o widget da Importação espelha este valor
+    ss.natureza_travada = True
+
+    for chave, decisao in lote["decisoes"].items():
+        status = decisao["status_curadoria"]
+        ss.validacao_factual[chave] = decisao["validacao_factual"]
+        ss.status_curadoria[chave] = status
+        ss.autorizacao[chave] = decisao["autorizacao"]
+        # O parecer volta para o campo do status gravado (observação ou motivo).
+        campo_parecer = svc.campo_do_parecer(status)
+        if decisao["parecer"] and campo_parecer == "observacoes":
+            ss.observacoes[chave] = decisao["parecer"]
+        elif decisao["parecer"] and campo_parecer == "motivos":
+            ss.motivos[chave] = decisao["parecer"]
+
+
+def _reabrir_lote(caminho):
+    """Callback do botão: se a leitura falhar, a sessão atual fica como estava."""
+    ss = st.session_state
+    lote = svc.recuperar_lote(caminho)
+    if not lote.get("ok"):
+        ss.erro_reabertura = lote.get("motivo") or "Não foi possível reabrir o lote."
+        return
+    aplicar_lote_recuperado(ss, lote)
+    ss.erro_reabertura = ""
+    ss.aviso_reabertura = " ".join(lote["avisos"])
+    ss.toast = f"Lote {lote['lote_id']} reaberto. Nenhuma análise foi repetida."
+    ir_para("curadoria")
+
+
+@_dialogo("Reabrir este lote?")
+def _dialogo_reabrir(caminho, lote):
+    ss = st.session_state
+    st.write(f"O lote atual da sessão ({ss.lote_id}) será substituído pelo lote {lote}.")
+    if ss.get("erro_curadoria"):
+        caixa("red", "<b>Há decisões que não foram gravadas no bucket.</b><br>"
+                     "Se você continuar, elas serão perdidas.")
+    else:
+        st.caption("As decisões já gravadas no bucket não são apagadas.")
+    c1, c2 = st.columns(2)
+    if c1.button("Cancelar", key="reabrir_cancelar"):
+        st.rerun()
+    if c2.button("Reabrir lote", type="primary", key="reabrir_confirmar",
+                 on_click=_reabrir_lote, args=(caminho,)):
+        st.rerun()
+
+
 def _tentar_de_novo(indice):
     ss = st.session_state
     ss.pacotes_oci[indice] = svc.reenviar_pacote(ss.pacotes_oci[indice])
@@ -100,7 +180,7 @@ def _tabela(pacotes):
         visiveis = [(i, p) for i, p in enumerate(pacotes) if p["status"] == "falhou"]
     else:
         visiveis = list(enumerate(pacotes))
-    larguras = [3.4, 1.1, 1.5, 0.9, 1.7, 2.6]
+    larguras = [2.8, 1.0, 1.3, 0.8, 1.5, 4.2]
     cab = st.columns(larguras)
     for col, titulo in zip(cab, ["Caminho do objeto", "Lote", "Data", "Tamanho", "Status", "Ações"]):
         col.markdown(f'<span class="cl-muted">{titulo}</span>', unsafe_allow_html=True)
@@ -113,9 +193,16 @@ def _tabela(pacotes):
         c[3].markdown(f'<span class="cl-muted">{p["tamanho"] or "–"}</span>', unsafe_allow_html=True)
         if p["status"] == "salvo":
             c[4].markdown(chip("Salvo com sucesso", "green"), unsafe_allow_html=True)
-            a1, a2 = c[5].columns(2)
+            a1, a2, a3 = c[5].columns(3)
             if a1.button("</> Ver JSON", key=f"ver_{p['caminho']}"):
                 _dialogo_json(p["caminho"])
+            if "evidencia" not in p["caminho"]:  # só o pacote principal carrega as histórias
+                if ss.historias:
+                    if a3.button("↺ Reabrir lote", key=f"reabrir_{p['caminho']}"):
+                        _dialogo_reabrir(p["caminho"], p["lote"])
+                else:
+                    a3.button("↺ Reabrir lote", key=f"reabrir_{p['caminho']}",
+                              on_click=_reabrir_lote, args=(p["caminho"],))
             dados_download = svc.conteudo_pacote(p["caminho"])
             if dados_download is None:
                 a2.caption("indisponível")
@@ -161,6 +248,9 @@ def render():
         vistos.add(chave)
         unicos.append(pacote)
     pacotes = unicos
+    if ss.get("erro_reabertura"):
+        caixa("red", f"<b>Não foi possível reabrir o lote</b><br>{esc(ss.erro_reabertura)}<br>"
+                     "O lote que estava aberto na sessão foi mantido.")
     motivo_erro = svc.erro_armazenamento()
     # Em modo demonstração (MODO_DEMONSTRACAO), oculta erro de credencial
     # Fora do modo demonstração, mostra erro de credencial explicitamente
