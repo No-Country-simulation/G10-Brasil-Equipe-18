@@ -106,6 +106,7 @@ Regras de uso:
 - Se houver mais de um pacote principal do mesmo lote, abre o mais recente e avisa.
 - Se a leitura falhar, a sessão atual é mantida e a tela mostra o motivo. Nenhum dado fictício é usado no lugar.
 - Pacote fora do formato do app (por exemplo, o teste antigo `TESTE-001`, com `id_historia` e sem `ativos`) é recusado, com a sessão intacta. Cada história precisa ter `id` e `ativos` em lista. Se só parte das histórias estiver fora do formato, o pacote inteiro é recusado: descartar essas histórias as apagaria do bucket na próxima decisão.
+- O Histórico guarda a lista de pacotes na sessão e só consulta o bucket ao entrar vindo de outra tela, depois de uma gravação ou ao clicar em **↻ Atualizar**. Cancelar, filtrar e reabrir não consultam a lista de novo. O botão **⬇ Baixar** de cada linha abre o diálogo do JSON (que tem o botão de baixar) e só lê o objeto no clique.
 - O diálogo de confirmação fecha ao cancelar e ao reabrir. O rodapé do Histórico informa que o pacote guarda histórias, trechos citados e rascunhos, não as mensagens originais.
 
 A função de serviço é `recuperar_lote` em `app/services/data_service.py`.
