@@ -768,7 +768,7 @@ Não some contagens de suítes diferentes nem apresente testes locais como homol
 - Os campos editados e as citações/fontes originais podem divergir no pacote; o tratamento contratual precisa ser explicitado.
 - Os avisos Case pendente e Testemunho pendente podem aparecer mesmo quando não gerar o formato é uma resposta adequada.
 - Os motivos desses avisos incluem linguagem técnica e nomes de campos; sua apresentação precisa ser melhorada para a pessoa que faz curadoria.
-- O Histórico já era lento antes da reabertura de lote: a tabela lê cada pacote do bucket para montar o botão de baixar (cerca de 0,5 s por objeto, ~40 s por execução com 71 objetos no OCI real). Cliques feitos enquanto a tabela ainda carrega, inclusive o Cancelar do diálogo, esperam essa execução terminar. O ajuste de desempenho será tratado em outra entrega.
+- O Histórico consulta o bucket uma vez por execução para listar os pacotes (cerca de 2,7 s no OCI real). O botão **⬇ Baixar** de cada linha abre o diálogo do JSON, que já traz o botão de baixar, e só lê o objeto no clique. Antes, a tabela lia todos os objetos a cada execução (cerca de 0,5 s por objeto, ~40 s com 71 objetos). Cliques feitos enquanto a lista ainda carrega esperam essa execução. Ainda não há cache da lista de pacotes; isso fica para outra entrega.
 - Em lote reaberto pelo Histórico, as interações originais não voltam (KPI "—" e conferência de citações indisponível); a reabertura ainda precisa ser conferida com o OCI real.
 - A nota de exemplo fictício da Importação ainda depende da origem do lote.
 - O chip Exemplo de demonstração nas evidências pode aparecer independentemente da natureza declarada e do provedor real.
