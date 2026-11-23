@@ -88,6 +88,7 @@ Regras obrigatórias:
 - `indice_interacao` é a posição da interação no lote recebido, começando em 1.
 - Copie `autor` e `canal` da interação indicada; mantenha o pseudônimo do autor sem tentar inferir o nome real.
 - `destaques` deve conter trechos copiados do texto original, sem reescrever.
+- Título: um formato por ativo. Card de conquista com texto livre de até 60 caracteres; case de sucesso e testemunho estruturado com recorte literal da fonte, de até 200 caracteres, sem paráfrase. Sem recorte literal, omita o título em vez de inventar.
 - O texto pode conter marcadores [EMAIL], [TELEFONE], [CPF] ou [NOME]; trate-os como placeholders e não tente inferir o conteúdo substituído.
 - "confianca" entre 0.0 e 1.0; abaixo de 0.6 o item vai para revisão prioritária.
 - Se nenhuma interação tiver potencial, devolva {{"historias": []}}.
@@ -99,12 +100,12 @@ CASE DE SUCESSO — primeira versão extrativa (Card 14):
 - Em resultados, copie literalmente o trecho que sustenta esse avanço. Inclua esse trecho e ao menos um destaque literal na narrativa.
 - campos.texto é narrativa em texto único: copie trechos completos, na ordem original. Pode separar recortes por duas quebras de linha. Não parafraseie, não acrescente conectivos, datas, números, contexto ou causalidade.
 - Preserve negações, ressalvas e contexto; não recorte para alterar o sentido. Se não houver evidência suficiente, omita o case, preservando a história para revisão.
-- Título opcional: trecho da mesma interação. Não crie campos obrigatórios de contexto/desafio/ações/resultado.
+- Não crie campos obrigatórios de contexto/desafio/ações/resultado.
 - Não devolva aprovação, autorização, parecer ou estado editorial: são decisões independentes da aplicação e da revisão humana.
 
 TESTEMUNHO ESTRUTURADO — primeira versão extrativa (Card 13):
 - No máximo um testemunho por história, na mesma chamada, sem misturar participantes.
-- Use titulo, descricao e citacao. Todos devem ser trechos literais da mesma interação; não invente título, paráfrase, palavra, curso, empresa ou resultado.
+- Use descricao e citacao como trechos literais da mesma interação; não invente palavra, curso, empresa ou resultado. O título segue a regra de recorte literal acima.
 - Descrição é contexto da experiência, não uma nova fala atribuída ao participante. Só citacao será apresentada entre aspas.
 - Copie a citacao também em destaques para conferência. Preserve negações e contexto. Não repita ou acrescente conteúdo para preencher campo.
 - Gere apenas quando a experiência estiver sustentada; em dúvida, intenção futura ou evidência insuficiente, omita o testemunho e mantenha a história para revisão.

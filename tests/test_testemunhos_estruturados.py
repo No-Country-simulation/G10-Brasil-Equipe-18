@@ -10,7 +10,7 @@ from jsonschema import Draft202012Validator, FormatChecker
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "app"))
 from services import llm, llm_provider, data_service as svc
-from services.testemunhos import converter_testemunho_canonico
+from services.testemunhos import converter_testemunho_canonico, preparar_testemunho
 
 CENARIOS = [
     ("conquista_profissional", "Estudei por oito meses. Consegui minha primeira vaga como analista."),
@@ -54,7 +54,7 @@ def test_tres_categorias_e_projecao_canonica(tipo, texto):
     assert canonico["status_revisao"] == "pendente"
 
 
-@pytest.mark.parametrize("campo", ["titulo", "descricao", "citacao"])
+@pytest.mark.parametrize("campo", ["descricao", "citacao"])
 @pytest.mark.parametrize("valor", [None, "", "Concluiu um curso na Oracle e ganhou 50%."])
 def test_campos_incompletos_ou_inventados_preservam_historia(campo, valor):
     h, fonte = dados(*CENARIOS[0])
@@ -62,6 +62,71 @@ def test_campos_incompletos_ou_inventados_preservam_historia(campo, valor):
     saida = normalizar(h, fonte)
     assert len(saida) == 1 and saida[0]["ativos"] == []
     assert saida[0]["testemunho_pendente"]
+
+
+@pytest.mark.parametrize("titulo", [
+    None,
+    "",
+    "Concluiu um curso na Oracle e ganhou 50%.",   # estilo Cohere: parafraseado
+    "a" * 201,
+])
+def test_titulo_invalido_e_derivado_da_citacao_sem_perder_o_testemunho(titulo):
+    h, fonte = dados(*CENARIOS[0])
+    h["ativos"][0]["campos"]["titulo"] = titulo
+    historia = normalizar(h, fonte)[0]
+
+    assert [a["id"] for a in historia["ativos"]] == ["testemunho_estruturado"]
+    assert historia["testemunho_pendente"] == ""
+    ativo = historia["ativos"][0]
+    assert ativo["campos"]["titulo"] == ativo["campos"]["citacao"]
+    canonico = converter_testemunho_canonico(ativo, "ativo_001", "2026-11-23T12:00:00Z")
+    assert canonico["titulo"] == ativo["campos"]["citacao"]
+
+
+def test_titulo_literal_diferente_da_citacao_e_preservado():
+    h, fonte = dados(*CENARIOS[0])
+    h["ativos"][0]["campos"]["titulo"] = "Estudei por oito meses."
+    ativo = normalizar(h, fonte)[0]["ativos"][0]
+
+    assert ativo["campos"]["titulo"] == "Estudei por oito meses."
+    assert ativo["campos"]["citacao"] == "Consegui minha primeira vaga como analista."
+
+
+def test_titulo_derivado_corta_em_palavra_inteira():
+    frase = "Aprendi a trabalhar em equipe durante o projeto. "
+    citacao = (frase * 6).strip()          # 281 caracteres: acima do limite de 200
+    fonte = citacao + " Consegui a vaga."
+    ativo, erro = preparar_testemunho(
+        {"campos": {"titulo": "", "descricao": citacao, "citacao": citacao}},
+        fonte,
+        [{"texto": citacao, "id_interacao": 41}],
+        41,
+    )
+
+    assert erro == ""
+    titulo = ativo["campos"]["titulo"]
+    assert titulo == citacao[:200].rsplit(" ", 1)[0]
+    assert len(titulo) <= 200 and titulo in fonte and not titulo.endswith(" ")
+
+
+@pytest.mark.parametrize("separador", ["\n", "\t"])
+def test_titulo_derivado_trata_quebra_de_linha_e_tabulacao_como_limite(separador):
+    palavras = ["Aprendi", "a", "trabalhar", "em", "equipe", "durante", "o", "projeto,"] * 8
+    citacao = separador.join(palavras)          # sem espaços: só o separador testado
+    fonte = citacao + separador + "Consegui a vaga."
+    ativo, erro = preparar_testemunho(
+        {"campos": {"titulo": "", "descricao": citacao, "citacao": citacao}},
+        fonte,
+        [{"texto": citacao, "id_interacao": 41}],
+        41,
+    )
+
+    assert erro == ""
+    titulo = ativo["campos"]["titulo"]
+    assert len(titulo) <= 200
+    assert titulo in citacao                      # recorte literal da citação, preservado
+    assert citacao[len(titulo)] == separador      # cortou no limite, não no meio da palavra
+
 
 
 def test_citacao_literal_mas_nao_conferida_e_recusada():
