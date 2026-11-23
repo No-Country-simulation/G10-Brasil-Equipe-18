@@ -37,11 +37,14 @@ def render():
     
     col1, col2, col3 = st.columns(3)
     
+    # Lote reaberto do Histórico: o pacote não guarda as interações, e "0" seria falso.
+    sem_interacoes = bool(ss.historias) and not ss.interacoes
     with col1:
         _kpi_card(
             "Interações importadas",
-            len(ss.interacoes),
-            f"{plural(num_canais, 'canal', 'canais')} · Lote {ss.lote_id}",
+            "—" if sem_interacoes else len(ss.interacoes),
+            f"Não guardadas no pacote · Lote {ss.lote_id}" if sem_interacoes
+            else f"{plural(num_canais, 'canal', 'canais')} · Lote {ss.lote_id}",
             "neutro"
         )
     

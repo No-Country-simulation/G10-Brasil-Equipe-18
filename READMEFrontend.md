@@ -12,7 +12,7 @@ Os exemplos fornecidos para demonstração usam dados fictícios. Na Importaçã
 
 | Entrega | Situação |
 |---|---|
-| Persistência de decisões e campos editados — #57 | Integrada; recuperação editorial completa em nova sessão continua pendente. |
+| Persistência de decisões e campos editados — #57 | Integrada. A reabertura do lote pelo Histórico foi implementada e testada com bucket simulado; falta conferir com o OCI real. |
 | Conferência de citações — #59 | Integrada ao Estúdio e à Curadoria. |
 | Identificação do ambiente de análise — #60 | Integrada; identifica processamento/provedor, não a natureza das mensagens. |
 | Tratamento de resposta truncada — #61 | Integrado, com nova tentativa sobre o mesmo lote. |
@@ -69,7 +69,7 @@ O CommunityLab utiliza navegação lateral escura e destaques em violeta.
 | Histórias | Apresenta histórias detectadas, categorias, relevância, natureza declarada dos dados e acesso ao Estúdio. |
 | Estúdio de Conteúdo | Permite consultar evidências e editar os campos dos ativos disponíveis. |
 | Curadoria | Permite validar fatos, decidir editorialmente e registrar autorização de publicação. |
-| Histórico | Lista pacotes persistidos no OCI, permite visualizar o JSON e baixar os objetos disponíveis. |
+| Histórico | Lista pacotes persistidos no OCI, permite visualizar o JSON, baixar os objetos disponíveis e reabrir um lote salvo para continuar a revisão. |
 
 ### Fluxo de trabalho
 
@@ -80,8 +80,35 @@ O CommunityLab utiliza navegação lateral escura e destaques em violeta.
 5. Editar rascunhos no Estúdio.
 6. Registrar decisões na Curadoria.
 7. Consultar os pacotes no Histórico.
+8. Se precisar, reabrir um lote salvo pelo Histórico e continuar a revisão.
 
-Consultar ou baixar um pacote no Histórico não significa restaurar automaticamente o lote completo para edição em uma nova sessão.
+### Reabrir um lote pelo Histórico
+
+Cada pacote principal da tabela tem o botão **Reabrir**. Ele lê o pacote salvo no bucket e leva para a Curadoria, sem repetir a análise pela IA.
+
+O que volta do pacote:
+
+- as histórias, com os textos já editados (campos estruturados do testemunho e do case);
+- as três dimensões da Curadoria de cada ativo (validação factual, status editorial e autorização);
+- o parecer, no campo certo: observação para **Ajustes solicitados** e motivo para **Rejeitado**;
+- a natureza declarada dos dados e a origem da análise;
+- os contadores, calculados a partir desses estados.
+
+O que não volta:
+
+- as **interações originais**: o pacote guarda só as histórias e os trechos citados. Em lote reaberto, o KPI de interações mostra "—" e a conferência de citações informa "Conferência indisponível: a mensagem original não é guardada no pacote". Guardar as interações anonimizadas exigiria mudar o contrato do pacote e depende de acordo com a equipe.
+
+Regras de uso:
+
+- Com um lote já aberto na sessão, o sistema pede confirmação antes de substituí-lo. Se houver decisão não gravada no bucket, o aviso é mais forte.
+- Tudo do lote anterior sai da sessão: decisões, edições, filtros, interações e pacotes. A decisão seguinte é gravada no pacote do lote reaberto.
+- Lote antigo (schema 1.0) ou sem decisões gravadas abre com tudo pendente, em rascunho e sem autorização, com um aviso na Curadoria. A natureza ausente aparece como "não informada".
+- Se houver mais de um pacote principal do mesmo lote, abre o mais recente e avisa.
+- Se a leitura falhar, a sessão atual é mantida e a tela mostra o motivo. Nenhum dado fictício é usado no lugar.
+- Pacote fora do formato do app (por exemplo, o teste antigo `TESTE-001`, com `id_historia` e sem `ativos`) é recusado, com a sessão intacta. Cada história precisa ter `id` e `ativos` em lista. Se só parte das histórias estiver fora do formato, o pacote inteiro é recusado: descartar essas histórias as apagaria do bucket na próxima decisão.
+- O diálogo de confirmação fecha ao cancelar e ao reabrir. Com a tabela ainda carregando, o clique espera a execução em andamento (ver Limitações). O rodapé do Histórico informa que o pacote guarda histórias, trechos citados e rascunhos, não as mensagens originais.
+
+A função de serviço é `recuperar_lote` em `app/services/data_service.py`.
 
 ### Histórias sem ativos
 
@@ -108,7 +135,7 @@ A interface possui três controles independentes:
 - A conferência de citações não substitui a avaliação contextual e factual do ativo inteiro.
 - A ação **Regenerar** alterna entre variações já disponíveis. Não realiza uma nova chamada ao LLM; sem variações, mantém o conteúdo.
 
-O #57 integrou a persistência de decisões e campos editados no pacote. O reteste funcional da versão consolidada e a recuperação editorial completa em nova sessão permanecem pendentes.
+O #57 integrou a persistência de decisões e campos editados no pacote. O reteste funcional da versão consolidada permanece pendente. A recuperação em nova sessão está descrita em [Reabrir um lote pelo Histórico](#reabrir-um-lote-pelo-histórico).
 
 ## Como executar
 
@@ -459,14 +486,15 @@ O rótulo visual “OCI Always Free” não comprova a modalidade ou o consumo d
 
 O #57 integrou a gravação de decisões de curadoria e campos editados.
 
-Isso não equivale à recuperação completa do lote para continuar a edição em outra sessão.
+O botão **Reabrir** do Histórico reconstrói a sessão a partir do pacote: histórias, textos editados, decisões e pareceres. Os testes automatizados usam um bucket simulado e cobrem o cenário do CATP-022 (pedir ajuste, abrir sessão nova, reabrir pelo Histórico e ver a observação no mesmo ativo). Consultar o JSON salvo, por si só, não comprova a reconstrução; ela deve ser conferida na interface com o OCI real.
 
-A hidratação da curadoria depende da existência das histórias na sessão. Consultar o JSON salvo não comprova que textos, histórias e decisões foram reconstruídos para edição.
+As interações originais não são guardadas no pacote e, por isso, não voltam ao reabrir.
 
 Permanecem pendentes:
 
 - Reteste funcional da persistência na versão consolidada.
-- Recuperação completa dos textos editados e das decisões em nova sessão.
+- Conferência da reabertura de lote na interface com o OCI real (os testes automatizados usam bucket simulado).
+- Decisão da equipe sobre guardar as interações anonimizadas no pacote.
 - Validação integrada dos cases e testemunhos na VM.
 - Verificação de leitura de lotes antigos com os campos opcionais novos.
 
@@ -632,7 +660,7 @@ O helper exige título preenchido, embora o contrato canônico o trate como opci
 
 O reteste positivo dos casos corrigidos não encerra automaticamente o CATP-008 nem a homologação do MVP.
 
-Permanecem pendentes a validação na implantação consolidada, os demais cenários aplicáveis, OCI e recuperação editorial em nova sessão.
+Permanecem pendentes a validação na implantação consolidada, os demais cenários aplicáveis, OCI e a conferência da reabertura de lote com o OCI real.
 
 Consulte a [documentação do Card 13](docs/CARD13_TESTEMUNHOS_ESTRUTURADOS.md). As contagens históricas e a descrição anterior da igualdade de citações nesse documento também precisam ser conciliadas com `016c12d`.
 
@@ -740,7 +768,8 @@ Não some contagens de suítes diferentes nem apresente testes locais como homol
 - Os campos editados e as citações/fontes originais podem divergir no pacote; o tratamento contratual precisa ser explicitado.
 - Os avisos Case pendente e Testemunho pendente podem aparecer mesmo quando não gerar o formato é uma resposta adequada.
 - Os motivos desses avisos incluem linguagem técnica e nomes de campos; sua apresentação precisa ser melhorada para a pessoa que faz curadoria.
-- A recuperação editorial completa em nova sessão continua pendente.
+- O Histórico consulta o bucket uma vez por execução para listar os pacotes (cerca de 2,7 s no OCI real). O botão **⬇ Baixar** de cada linha abre o diálogo do JSON, que já traz o botão de baixar, e só lê o objeto no clique. Antes, a tabela lia todos os objetos a cada execução (cerca de 0,5 s por objeto, ~40 s com 71 objetos). Cliques feitos enquanto a lista ainda carrega esperam essa execução. Ainda não há cache da lista de pacotes; isso fica para outra entrega.
+- Em lote reaberto pelo Histórico, as interações originais não voltam (KPI "—" e conferência de citações indisponível); a reabertura ainda precisa ser conferida com o OCI real.
 - A nota de exemplo fictício da Importação ainda depende da origem do lote.
 - O chip Exemplo de demonstração nas evidências pode aparecer independentemente da natureza declarada e do provedor real.
 - O expansor Modo demonstração possui pendência de estilo e legibilidade.
