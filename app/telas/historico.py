@@ -203,13 +203,10 @@ def _tabela(pacotes):
                 else:
                     a3.button("↺ Reabrir", key=f"reabrir_{p['caminho']}",
                               on_click=_reabrir_lote, args=(p["caminho"],))
-            dados_download = svc.conteudo_pacote(p["caminho"])
-            if dados_download is None:
-                a2.caption("indisponível")
-            else:
-                a2.download_button("⬇ Baixar", data=json.dumps(dados_download, ensure_ascii=False, indent=2),
-                                   file_name=p["caminho"].split("/")[-1], mime="application/json",
-                                   key=f"dl_{p['caminho']}")
+            # Não lê o objeto durante a renderização: uma leitura por linha deixava a
+            # tela lenta. O diálogo lê só no clique e já traz o botão de baixar.
+            if a2.button("⬇ Baixar", key=f"dl_{p['caminho']}"):
+                _dialogo_json(p["caminho"])
         else:
             c[4].markdown(chip("Falhou", "red"), unsafe_allow_html=True)
             c[5].button("↻ Tentar novamente", key=f"retry_{p['caminho']}", on_click=_tentar_de_novo, args=(i,))

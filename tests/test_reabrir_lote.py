@@ -64,8 +64,10 @@ class Bucket:
     def __init__(self, objetos):
         self.objetos = {k: json.loads(json.dumps(v)) for k, v in objetos.items()}
         self.gravacoes = []
+        self.n_ler = 0
 
     def ler_objeto(self, caminho):
+        self.n_ler += 1
         if caminho not in self.objetos:
             raise FileNotFoundError(caminho)
         return json.loads(json.dumps(self.objetos[caminho]))
@@ -514,3 +516,32 @@ def test_pacote_invalido_na_tela_preserva_a_sessao_e_nenhuma_tela_quebra(bucket,
         at.session_state["f:rel"] = 0
         at.run()
         assert not at.exception, f"{pagina}: {at.exception}"
+
+
+# ---------- desempenho: o Histórico não lê cada pacote ao renderizar ----------
+
+def test_renderizar_o_historico_nao_le_nenhum_objeto(bucket):
+    b = bucket({f"ativos/L{i}/pacote-distribuicao.json": _pacote(f"L{i}") for i in range(12)})
+    at = _abrir_historico()
+    assert not at.exception, at.exception
+    assert b.n_ler == 0  # antes: 1 leitura por linha, só para montar o botão de baixar
+
+
+def test_cancelar_o_dialogo_tambem_nao_le_objetos(bucket):
+    b = bucket({CAMINHO_A: _pacote("LOTE-A"), CAMINHO_B: _pacote("LOTE-B")})
+    at = _abrir_historico(historias=copy.deepcopy(HISTORIAS), lote_id="LOTE-A")
+    at.button(key=f"reabrir_{CAMINHO_B}").click().run()
+    at.button(key="reabrir_cancelar").click().run()
+    assert not at.exception, at.exception
+    assert b.n_ler == 0
+
+
+def test_baixar_abre_o_dialogo_e_le_o_objeto_uma_vez(bucket):
+    b = bucket({CAMINHO_A: _pacote("LOTE-A"), CAMINHO_B: _pacote("LOTE-B")})
+    at = _abrir_historico()
+    assert b.n_ler == 0
+    at.button(key=f"dl_{CAMINHO_B}").click().run()
+    assert not at.exception, at.exception
+    assert b.n_ler == 1
+    assert any("LOTE-B" in c.value for c in at.code)  # o JSON do pacote clicado
+    assert not any("LOTE-A" in c.value for c in at.code)
