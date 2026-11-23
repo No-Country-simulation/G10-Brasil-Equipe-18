@@ -687,6 +687,15 @@ def _pasta_do_lote(caminho):
     return partes[1] if len(partes) >= 2 else ""
 
 
+def _historia_no_formato_do_app(historia):
+    """Mínimo que as telas exigem: dict com "id" e "ativos" em lista."""
+    return (
+        isinstance(historia, dict)
+        and historia.get("id") not in (None, "")
+        and isinstance(historia.get("ativos"), list)
+    )
+
+
 def recuperar_lote(caminho):
     """Lê um lote salvo no bucket e devolve o que a sessão precisa para reabri-lo.
 
@@ -720,6 +729,19 @@ def recuperar_lote(caminho):
         return falha(ULTIMO_ERRO_OCI or "Não foi possível ler o pacote no bucket.")
     if not isinstance(conteudo, dict) or not isinstance(conteudo.get("historias"), list):
         return falha("O pacote está em formato inesperado: não há lista de histórias.")
+
+    # Recusa o pacote inteiro se alguma história não tem o formato do app: as
+    # telas usam "id" e "ativos", e descartar histórias aqui as apagaria do
+    # bucket na próxima decisão (salvar_decisoes regrava a lista inteira).
+    invalidas = [h for h in conteudo["historias"] if not _historia_no_formato_do_app(h)]
+    if invalidas:
+        total = len(conteudo["historias"])
+        if len(invalidas) == total:
+            return falha("Este pacote não tem histórias no formato do app e não pode ser reaberto.")
+        return falha(
+            f"Este pacote tem {len(invalidas)} de {total} histórias fora do formato do app "
+            "e não pode ser reaberto."
+        )
 
     decisoes = decisoes_do_bloco(conteudo)
     if not decisoes:

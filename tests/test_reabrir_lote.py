@@ -440,3 +440,77 @@ def test_rodape_do_historico_nao_afirma_que_guarda_as_mensagens_originais(bucket
     assert ("Os pacotes guardam as histórias, os trechos citados e os rascunhos, "
             "não as mensagens originais. Nada é publicado automaticamente.") in html
     assert "e as mensagens de origem" not in html
+
+
+# ---------- pacote fora do formato do app ----------
+
+CAMINHO_TESTE = "ativos/TESTE-001/pacote-distribuicao.json"
+# Formato real do TESTE-001 (teste antigo de OCI): "id_historia" e sem "ativos".
+PACOTE_TESTE_001 = {
+    "lote_id": "TESTE-001",
+    "gerado_em": "2026-10-22T00:00:00Z",
+    "historias": [
+        {"id_historia": "historia_001", "tipo": "conquista_profissional",
+         "citacoes": [{"texto": "Conquistei minha primeira vaga", "id_interacao": 1}]},
+        {"id_historia": "historia_002", "tipo": "superacao"},
+    ],
+}
+
+
+def _historia_valida(hid="hist-009"):
+    return {"id": hid, "ativos": []}
+
+
+@pytest.mark.parametrize("historias", [
+    PACOTE_TESTE_001["historias"],
+    [{"autor": "Sem id", "ativos": []}],
+    [{"id": "hist-009", "ativos": "não é lista"}],
+    [{"id": "hist-009", "ativos": None}],
+    ["texto solto"],
+    [_historia_valida(), {"id_historia": "x"}],  # mistura: recusa o pacote inteiro
+])
+def test_pacote_fora_do_formato_do_app_e_recusado(bucket, historias):
+    pacote = _pacote("TESTE-001")
+    pacote["historias"] = historias
+    bucket({CAMINHO_TESTE: pacote})
+    lote = svc.recuperar_lote(CAMINHO_TESTE)
+    assert lote["ok"] is False
+    assert "formato do app" in lote["motivo"] and "não pode ser reaberto" in lote["motivo"]
+    assert "historias" not in lote
+
+
+def test_lista_vazia_de_historias_continua_valida(bucket):
+    bucket({CAMINHO_B: _pacote("LOTE-B", historias=[])})
+    assert svc.recuperar_lote(CAMINHO_B)["ok"] is True
+
+
+def test_pacote_invalido_na_tela_preserva_a_sessao_e_nenhuma_tela_quebra(bucket, sem_ia):
+    bucket({CAMINHO_TESTE: PACOTE_TESTE_001})
+    historias_a = copy.deepcopy(HISTORIAS)
+    decisoes_a = {H1T: "ajustes", H2C: "rejeitado"}
+    at = _abrir_historico(
+        historias=historias_a, lote_id="LOTE-A", status_curadoria=dict(decisoes_a),
+        observacoes={H1T: "obs do A"}, motivos={H2C: "motivo do A"},
+        validacao_factual={H1T: "validada"}, autorizacao={H2T: "registrada"},
+    )
+    at.button(key=f"reabrir_{CAMINHO_TESTE}").click().run()
+    at.button(key="reabrir_confirmar").click().run()
+    assert not at.exception, at.exception
+
+    assert at.session_state["lote_id"] == "LOTE-A"
+    assert at.session_state["historias"] == historias_a
+    assert at.session_state["status_curadoria"] == decisoes_a
+    assert at.session_state["observacoes"] == {H1T: "obs do A"}
+    assert at.session_state["motivos"] == {H2C: "motivo do A"}
+    assert at.session_state["validacao_factual"] == {H1T: "validada"}
+    assert at.session_state["autorizacao"] == {H2T: "registrada"}
+    assert at.session_state["pagina"] == "historico"
+    texto = _textos(at)
+    assert "Não foi possível reabrir o lote" in texto
+    assert "Este pacote não tem histórias no formato do app e não pode ser reaberto." in texto
+
+    for pagina in ("historias", "estudio", "curadoria", "dashboard", "importacao", "historico"):
+        at.session_state["pagina"] = pagina
+        at.session_state["f:rel"] = 0
+        at.run()
+        assert not at.exception, f"{pagina}: {at.exception}"
