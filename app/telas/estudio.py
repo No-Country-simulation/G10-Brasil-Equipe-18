@@ -149,7 +149,8 @@ def _coluna_conteudo(h):
             if ativo.get("titulo"):
                 st.caption(ativo["titulo"])
             texto_campo = ativo["campos"].get("texto", "")
-            campo(st.text_area, "Texto do case", _chave(hid, aid, "texto"), texto_campo, height=300)
+            rotulo_texto = "Texto do case" if "Case" in ativo["nome"] else "Texto"  # mesma regra da Curadoria
+            campo(st.text_area, rotulo_texto, _chave(hid, aid, "texto"), texto_campo, height=300)
             texto = valor(_chave(hid, aid, "texto"), "")
             st.caption(f"{len(texto)} caracteres")
             copiavel = texto

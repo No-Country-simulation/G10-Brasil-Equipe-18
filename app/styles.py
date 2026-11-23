@@ -179,6 +179,17 @@ def chip(texto, tom="gray"):
     return f'<span class="chip chip-{tom}">{esc(texto)}</span>'
 
 
+# Provedores de LLM que podem responder a análise (ResultadoLLM.provedor) e o
+# nome que a interface mostra. É o único lugar com essa lista.
+PROVEDORES_NOMES = {"gemini": "Gemini", "cohere": "Cohere", "groq": "Groq"}
+
+
+def nome_provedor(origem):
+    """Nome do provedor para exibir. Origem desconhecida volta capitalizada; vazia, vazio."""
+    origem = origem or ""
+    return PROVEDORES_NOMES.get(origem, origem.title())
+
+
 def rotulo_natureza(valor):
     """(texto, tom) do selo da natureza DECLARADA dos dados do lote.
 

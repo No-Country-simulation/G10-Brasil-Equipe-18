@@ -95,7 +95,7 @@ def test_edicao_do_card_chega_na_curadoria():
 def test_edicao_do_post_chega_na_curadoria():
     at = _abrir("estudio", [ATIVO_POST])
 
-    _campo(at.text_area, "Texto do case").input("Post editado no Estúdio").run()
+    _campo(at.text_area, "Texto").input("Post editado no Estúdio").run()
 
     _enviar_para_curadoria(at)
 
@@ -144,12 +144,12 @@ def test_regenerar_na_curadoria_sem_variacoes_nao_quebra_e_mantem_o_texto():
 
 def test_segundo_envio_leva_a_nova_edicao_para_a_curadoria():
     at = _abrir("estudio", [ATIVO_POST])
-    _campo(at.text_area, "Texto do case").input("Primeira edição").run()
+    _campo(at.text_area, "Texto").input("Primeira edição").run()
     _enviar_para_curadoria(at)
     assert "Primeira edição" in _valores(at.text_area)
 
     at.sidebar.button(key="nav_estudio").click().run()
-    _campo(at.text_area, "Texto do case").input("Segunda edição").run()
+    _campo(at.text_area, "Texto").input("Segunda edição").run()
     _enviar_para_curadoria(at)
 
     valores = _valores(at.text_area)

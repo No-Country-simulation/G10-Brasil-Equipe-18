@@ -214,7 +214,7 @@ As credenciais pertencem às configurações do aplicativo, nunca ao repositóri
 O Processamento apresenta um dos rótulos:
 
 - **Demonstração**
-- **Análise real**
+- **Análise real (Gemini)**, **Análise real (Cohere)** ou **Análise real (Groq)**, conforme o provedor que respondeu
 - **Não confirmado**
 
 O rótulo identifica o processamento/provedor utilizado. Ele não determina se as mensagens são reais ou fictícias e não comprova sua anonimização.
