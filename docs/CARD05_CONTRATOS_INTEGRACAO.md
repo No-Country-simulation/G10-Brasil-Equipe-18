@@ -48,7 +48,7 @@ Upload usa UTF-8 (aceita BOM), CSV com csv.DictReader e JSON com json.loads. Uma
 | tipo canônico (editorial) | testemunho_estruturado | case_sucesso |
 | tipo do front (formulário) | testemunho | texto |
 | campos no front | titulo, descricao, citacao | texto |
-| titulo canônico | Título editorial, opcional no schema | Título editorial, opcional no schema |
+| titulo canônico | Título editorial, opcional no schema | Título editorial, opcional no schema; metadado na raiz do ativo, exibido como legenda |
 | texto canônico | Descrição + duas quebras + citação entre aspas | Narrativa em texto único |
 | vínculo | interacoes_origem e evidências conferidas | interacoes_origem e evidências conferidas |
 
@@ -77,7 +77,7 @@ Upload usa UTF-8 (aceita BOM), CSV com csv.DictReader e JSON com json.loads. Uma
 | **id_ativo** (canônico) / `id` (front) | `id`: `case_sucesso` (chave local) | `id_ativo`: `ativo_002` (ID único do lote) | Gerado pela aplicação | ID único dentro do lote, sem colisão | Aprovado - IDs separados por contexto |
 | **tipo** | `texto` (tipo de formulário) | `case_sucesso` (tipo editorial) | Normalizado pela aplicação | Validação contra schema canônico | **Post LinkedIn e Card mantêm seus tipos editoriais próprios** |
 | **nome** | `"Case de sucesso"` (rótulo UI) | Não presente no schema canônico | Interface do usuário | Exibição no Estúdio/Curadoria | Aprovado - apenas para apresentação |
-| **titulo** | Não presente no formulário atual | `titulo` (string, opcional no schema) | Pode ser gerado por LLM | **Decidir se será metadado ou incorporado ao texto** | **Pendente de decisão** - evitar duplicação |
+| **titulo** | Metadado na raiz do ativo (`titulo`), exibido como legenda acima do texto no Estúdio e na Curadoria; não editável nesta versão | `titulo` (string, opcional no schema) | Trecho literal da fonte, escolhido na geração do case | Não é incorporado ao `texto` (sem duplicação); lote antigo sem `titulo` continua válido | **Aprovado** - decisão confirmada pelo Marcus em 22/11 (PR #67) |
 | **texto** | `campos.texto` (editável) | `texto` (string, obrigatório) | Gerado por LLM, editável no Estúdio | Preservação após edição | Aprovado - narrativa em texto único |
 | **interacoes_origem** | Não editável (metadado exibido) | `interacoes_origem` (array de int) | Vínculo estabelecido na análise | Rastreabilidade completa | Aprovado - vínculo preservado |
 | **status_revisao** | Não presente (usa controles separados) | `status_revisao: "pendente"` | Iniciado pela aplicação | Mapeamento: rascunho/ajustes → pendente | **Pendente** - envelope deve preservar estados detalhados |
@@ -96,7 +96,7 @@ Upload usa UTF-8 (aceita BOM), CSV com csv.DictReader e JSON com json.loads. Uma
 | Post para LinkedIn | `post_linkedin` | `texto` ou `card` (a definir) | Formato de tela não altera classificação editorial |
 | Card de conquista | `card_conquista` | `card` | Preserva estrutura visual específica |
 
-**Proposta de mapeamento, ainda não adaptador implementado.** Preservar dados estruturados de título/descrição/citação no envelope de apresentação; não tentar recuperar campos perdidos dividindo texto livre. Ao salvar edições, atualizar também a projeção canônica. No case, o formulário atual só edita texto: conferir se o título será exibido como metadado ou incorporado ao conteúdo sem duplicação. Não declarar essa decisão de interface concluída.
+**Proposta de mapeamento, ainda não adaptador implementado.** Preservar dados estruturados de título/descrição/citação no envelope de apresentação; não tentar recuperar campos perdidos dividindo texto livre. Ao salvar edições, atualizar também a projeção canônica. No case, o título é metadado na raiz do ativo, exibido como legenda e separado do texto, sem edição nesta versão (decisão confirmada em 22/11, PR #67); o formulário edita apenas o texto.
 
 O schema canônico de ativo tem additionalProperties=false. Não acrescentar campos, id_historia, lote ou estados próprios ao objeto AtivoGerado sem revisão versionada. Esses dados podem ficar num envelope explicitamente separado.
 
@@ -179,7 +179,7 @@ python scripts/validar_exemplos_card05.py
 O validador checa schemas reais do repositório, citações e vínculos, projeções propostas e três rejeições essenciais. As verificações isoladas de ingestão, descritas no relatório, usaram as funções da main com importações externas removidas; não são um teste E2E do Streamlit.
 
 ## 8. Pendências e condição de conclusão
-1. Jaqueline/Tissiany validarem o mapeamento editorial/formulário, representação do título do case e fonte dos IDs.
+1. Jaqueline/Tissiany validarem o mapeamento editorial/formulário e fonte dos IDs.
 2. Definir a compatibilidade da entrada canônica versus simplificada, incluindo IDs CSV, booleanos e datas ausentes.
 3. Decidir o envelope de persistência e o caminho OCI, com Luciene.
 4. Implementar/testar adaptadores e demonstrar exemplos de ida/volta sem perder campos ou trocar origens.
