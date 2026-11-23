@@ -146,16 +146,6 @@ def _dialogo_reabrir(caminho, lote):
         st.rerun()
 
 
-def _pedir_confirmacao(caminho, lote):
-    """Marca que o diálogo deve abrir. O marcador é de uso único (ver render).
-
-    Abrir o diálogo direto pelo retorno do botão faz o botão de fora do
-    fragmento continuar verdadeiro na execução completa que o "Cancelar"
-    dispara, e o diálogo reabre em vez de fechar.
-    """
-    st.session_state.reabrir_pedido = {"caminho": caminho, "lote": lote}
-
-
 def _tentar_de_novo(indice):
     ss = st.session_state
     ss.pacotes_oci[indice] = svc.reenviar_pacote(ss.pacotes_oci[indice])
@@ -208,8 +198,8 @@ def _tabela(pacotes):
                 _dialogo_json(p["caminho"])
             if "evidencia" not in p["caminho"]:  # só o pacote principal carrega as histórias
                 if ss.historias:
-                    a3.button("↺ Reabrir lote", key=f"reabrir_{p['caminho']}",
-                              on_click=_pedir_confirmacao, args=(p["caminho"], p["lote"]))
+                    if a3.button("↺ Reabrir lote", key=f"reabrir_{p['caminho']}"):
+                        _dialogo_reabrir(p["caminho"], p["lote"])
                 else:
                     a3.button("↺ Reabrir lote", key=f"reabrir_{p['caminho']}",
                               on_click=_reabrir_lote, args=(p["caminho"],))
@@ -261,9 +251,6 @@ def render():
     if ss.get("erro_reabertura"):
         caixa("red", f"<b>Não foi possível reabrir o lote</b><br>{esc(ss.erro_reabertura)}<br>"
                      "O lote que estava aberto na sessão foi mantido.")
-    pedido = ss.pop("reabrir_pedido", None)  # uso único: só a execução do clique abre o diálogo
-    if pedido:
-        _dialogo_reabrir(pedido["caminho"], pedido["lote"])
     motivo_erro = svc.erro_armazenamento()
     # Em modo demonstração (MODO_DEMONSTRACAO), oculta erro de credencial
     # Fora do modo demonstração, mostra erro de credencial explicitamente
