@@ -118,7 +118,7 @@ def aplicar_lote_recuperado(ss, lote):
 def _reabrir_lote(caminho):
     """Callback do botão: se a leitura falhar, a sessão atual fica como estava."""
     ss = st.session_state
-    lote = svc.recuperar_lote(caminho, pacotes=ss.get("historico_pacotes"))
+    lote = svc.recuperar_lote(caminho)
     if not lote.get("ok"):
         ss.erro_reabertura = lote.get("motivo") or "Não foi possível reabrir o lote."
         return
@@ -159,45 +159,11 @@ def _pedir_confirmacao(caminho, lote):
 def _tentar_de_novo(indice):
     ss = st.session_state
     ss.pacotes_oci[indice] = svc.reenviar_pacote(ss.pacotes_oci[indice])
-    ss.historico_atualizar = True  # houve gravação: a lista precisa ser consultada de novo
     ss.toast = "Pacote salvo no OCI."
-
-
-def _atualizar():
-    st.session_state.historico_atualizar = True
 
 
 def _reconectar():
     definir("demo_estado_oci", "Normal")
-    _atualizar()
-
-
-def _carregar_pacotes():
-    """Lista de pacotes do Histórico, consultada no bucket só quando preciso.
-
-    Cada clique (Cancelar, Reabrir, filtro) roda a tela de novo, e a consulta
-    custa segundos. Por isso a lista fica na sessão e o bucket só é consultado
-    ao entrar vindo de outra tela, depois de uma gravação ou ao atualizar.
-    O Streamlit descarta o estado do filtro quando a tela deixa de aparecer, e
-    isso indica a entrada vindo de outra tela.
-    """
-    ss = st.session_state
-    entrou = "w::f:oci" not in ss
-    pedido = ss.pop("historico_atualizar", False)
-    if entrou or pedido or ss.get("historico_pacotes") is None:
-        pacotes = svc.listar_pacotes()
-        if not pacotes:
-            pacotes = ss.pacotes_oci
-        vistos = set()
-        unicos = []
-        for pacote in pacotes:
-            chave = pacote.get("caminho")
-            if chave in vistos:
-                continue
-            vistos.add(chave)
-            unicos.append(pacote)
-        ss.historico_pacotes = unicos
-    return ss.historico_pacotes
 
 
 def _metricas(bucket, lotes, legenda_lotes, ultima, legenda_ultima, skeleton=False):
@@ -217,10 +183,7 @@ def _metricas(bucket, lotes, legenda_lotes, ultima, legenda_ultima, skeleton=Fal
 
 def _tabela(pacotes):
     ss = st.session_state
-    f1, f2 = st.columns([5, 1])
-    with f1:
-        filtro = campo(st.radio, "Filtro", "f:oci", "Todos", options=FILTROS, horizontal=True, label_visibility="collapsed")
-    f2.button("↻ Atualizar", key="historico_atualizar_btn", on_click=_atualizar)
+    filtro = campo(st.radio, "Filtro", "f:oci", "Todos", options=FILTROS, horizontal=True, label_visibility="collapsed")
     if filtro == "Salvos":
         visiveis = [(i, p) for i, p in enumerate(pacotes) if p["status"] == "salvo"]
     elif filtro == "Com erro":
@@ -250,10 +213,13 @@ def _tabela(pacotes):
                 else:
                     a3.button("↺ Reabrir lote", key=f"reabrir_{p['caminho']}",
                               on_click=_reabrir_lote, args=(p["caminho"],))
-            # Sem ler o objeto aqui: 71 leituras por execução deixavam a tela lenta.
-            # O diálogo lê só quando a pessoa clica e já traz o botão de baixar.
-            if a2.button("⬇ Baixar", key=f"dl_{p['caminho']}"):
-                _dialogo_json(p["caminho"])
+            dados_download = svc.conteudo_pacote(p["caminho"])
+            if dados_download is None:
+                a2.caption("indisponível")
+            else:
+                a2.download_button("⬇ Baixar", data=json.dumps(dados_download, ensure_ascii=False, indent=2),
+                                   file_name=p["caminho"].split("/")[-1], mime="application/json",
+                                   key=f"dl_{p['caminho']}")
         else:
             c[4].markdown(chip("Falhou", "red"), unsafe_allow_html=True)
             c[5].button("↻ Tentar novamente", key=f"retry_{p['caminho']}", on_click=_tentar_de_novo, args=(i,))
@@ -280,7 +246,18 @@ def render():
 
     # Fonte principal e o bucket: recarregar a pagina nao pode esconder o que
     # ja foi gravado. A sessao serve de apoio quando o bucket esta vazio.
-    pacotes = _carregar_pacotes()
+    pacotes = svc.listar_pacotes()
+    if not pacotes:
+        pacotes = ss.pacotes_oci
+    vistos = set()
+    unicos = []
+    for pacote in pacotes:
+        chave = pacote.get("caminho")
+        if chave in vistos:
+            continue
+        vistos.add(chave)
+        unicos.append(pacote)
+    pacotes = unicos
     if ss.get("erro_reabertura"):
         caixa("red", f"<b>Não foi possível reabrir o lote</b><br>{esc(ss.erro_reabertura)}<br>"
                      "O lote que estava aberto na sessão foi mantido.")

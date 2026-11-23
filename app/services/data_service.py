@@ -696,12 +696,8 @@ def _historia_no_formato_do_app(historia):
     )
 
 
-def recuperar_lote(caminho, pacotes=None):
+def recuperar_lote(caminho):
     """Lê um lote salvo no bucket e devolve o que a sessão precisa para reabri-lo.
-
-    `pacotes` é a lista de pacotes do bucket que a tela já tem (formato de
-    listar_pacotes). Sem ela, o bucket é consultado de novo para achar os
-    pacotes do mesmo lote.
 
     Só lê: nunca chama a IA nem grava. O pacote não guarda as interações
     originais, então elas não voltam. Lote antigo (1.0), sem natureza ou sem
@@ -718,7 +714,7 @@ def recuperar_lote(caminho, pacotes=None):
     # principal na pasta, vale o mais recente.
     pasta = _pasta_do_lote(caminho)
     irmaos = [
-        p for p in (listar_pacotes() if pacotes is None else pacotes)
+        p for p in listar_pacotes()
         if p.get("status") == "salvo" and _pasta_do_lote(p.get("caminho")) == pasta
     ]
     principais = [p for p in irmaos if _eh_pacote_principal(p.get("caminho"))]
