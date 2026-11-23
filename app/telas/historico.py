@@ -198,10 +198,10 @@ def _tabela(pacotes):
                 _dialogo_json(p["caminho"])
             if "evidencia" not in p["caminho"]:  # só o pacote principal carrega as histórias
                 if ss.historias:
-                    if a3.button("↺ Reabrir lote", key=f"reabrir_{p['caminho']}"):
+                    if a3.button("↺ Reabrir", key=f"reabrir_{p['caminho']}"):
                         _dialogo_reabrir(p["caminho"], p["lote"])
                 else:
-                    a3.button("↺ Reabrir lote", key=f"reabrir_{p['caminho']}",
+                    a3.button("↺ Reabrir", key=f"reabrir_{p['caminho']}",
                               on_click=_reabrir_lote, args=(p["caminho"],))
             dados_download = svc.conteudo_pacote(p["caminho"])
             if dados_download is None:
