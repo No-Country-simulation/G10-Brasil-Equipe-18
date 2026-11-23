@@ -678,6 +678,101 @@ def ler_decisoes(caminho):
     return decisoes_do_bloco(conteudo_pacote(caminho))
 
 
+def _eh_pacote_principal(caminho):
+    return bool(caminho) and "evidencia" not in str(caminho)
+
+
+def _pasta_do_lote(caminho):
+    partes = str(caminho).split("/")
+    return partes[1] if len(partes) >= 2 else ""
+
+
+def _historia_no_formato_do_app(historia):
+    """Mínimo que as telas exigem: dict com "id" e "ativos" em lista."""
+    return (
+        isinstance(historia, dict)
+        and historia.get("id") not in (None, "")
+        and isinstance(historia.get("ativos"), list)
+    )
+
+
+def recuperar_lote(caminho):
+    """Lê um lote salvo no bucket e devolve o que a sessão precisa para reabri-lo.
+
+    Só lê: nunca chama a IA nem grava. O pacote não guarda as interações
+    originais, então elas não voltam. Lote antigo (1.0), sem natureza ou sem
+    bloco de curadoria, abre com os padrões e um aviso, sem inventar dados.
+    Falha vira {"ok": False, "motivo": ...}.
+    """
+    falha = lambda motivo: {"ok": False, "motivo": motivo}  # noqa: E731
+
+    if not _eh_pacote_principal(caminho):
+        return falha("Este objeto não é o pacote principal do lote.")
+
+    avisos = []
+    # O caminho é fixo por lote; se mesmo assim houver mais de um pacote
+    # principal na pasta, vale o mais recente.
+    pasta = _pasta_do_lote(caminho)
+    irmaos = [
+        p for p in listar_pacotes()
+        if p.get("status") == "salvo" and _pasta_do_lote(p.get("caminho")) == pasta
+    ]
+    principais = [p for p in irmaos if _eh_pacote_principal(p.get("caminho"))]
+    if len(principais) > 1:
+        escolhido = max(principais, key=lambda p: p.get("salvo_em") or "")
+        if escolhido["caminho"] != caminho:
+            caminho = escolhido["caminho"]
+        avisos.append("Há mais de um pacote deste lote; foi aberto o mais recente.")
+
+    conteudo = conteudo_pacote(caminho)
+    if conteudo is None:
+        return falha(ULTIMO_ERRO_OCI or "Não foi possível ler o pacote no bucket.")
+    if not isinstance(conteudo, dict) or not isinstance(conteudo.get("historias"), list):
+        return falha("O pacote está em formato inesperado: não há lista de histórias.")
+
+    # Recusa o pacote inteiro se alguma história não tem o formato do app: as
+    # telas usam "id" e "ativos", e descartar histórias aqui as apagaria do
+    # bucket na próxima decisão (salvar_decisoes regrava a lista inteira).
+    invalidas = [h for h in conteudo["historias"] if not _historia_no_formato_do_app(h)]
+    if invalidas:
+        total = len(conteudo["historias"])
+        if len(invalidas) == total:
+            return falha("Este pacote não tem histórias no formato do app e não pode ser reaberto.")
+        return falha(
+            f"Este pacote tem {len(invalidas)} de {total} histórias fora do formato do app "
+            "e não pode ser reaberto."
+        )
+
+    decisoes = decisoes_do_bloco(conteudo)
+    if not decisoes:
+        avisos.append(
+            "Este lote não tem decisões de curadoria gravadas. "
+            "Tudo abre como pendente, em rascunho e sem autorização."
+        )
+    versao = str(conteudo.get("versao_schema") or "")
+    pacotes = [
+        {"caminho": p["caminho"], "lote": p.get("lote"), "data": p.get("data"),
+         "tamanho": p.get("tamanho"), "status": "salvo", "persistencia": "real",
+         "salvo_em": p.get("salvo_em")}
+        for p in irmaos
+        if p["caminho"] == caminho or not _eh_pacote_principal(p["caminho"])
+    ]
+    if not any(p["caminho"] == caminho for p in pacotes):
+        pacotes.insert(0, {"caminho": caminho, "lote": pasta, "status": "salvo", "persistencia": "real"})
+    return {
+        "ok": True,
+        "motivo": None,
+        "lote_id": str(conteudo.get("lote") or pasta),
+        "versao_schema": versao,
+        "origem_analise": str(conteudo.get("origem_analise") or ""),
+        "natureza_dados": normalizar_natureza_dados(conteudo.get("natureza_dados")),
+        "historias": conteudo["historias"],
+        "decisoes": decisoes,
+        "pacotes": pacotes,
+        "avisos": avisos,
+    }
+
+
 def aplicar_edicoes(historias, edicoes):
     """Devolve as histórias com os campos editados na sessão aplicados.
 

@@ -54,7 +54,10 @@ def render():
 
     c1, c2, c3 = st.columns(3)
     n_canais = len({i['canal'] for i in ss.interacoes})
-    _kpi(c1, "Interações analisadas", len(ss.interacoes), f"{plural(n_canais, 'canal', 'canais')} no lote {ss.lote_id}")
+    if ss.interacoes:
+        _kpi(c1, "Interações analisadas", len(ss.interacoes), f"{plural(n_canais, 'canal', 'canais')} no lote {ss.lote_id}")
+    else:  # lote reaberto do Histórico: o pacote não guarda as interações
+        _kpi(c1, "Interações analisadas", "—", f"Não guardadas no pacote · lote {ss.lote_id}")
     _kpi(c2, "Histórias detectadas", len(historias), f"{len(categorias)} categorias identificadas")
     _kpi(c3, "Ativos gerados", total_ativos, legenda_ativos(contagem))
 
