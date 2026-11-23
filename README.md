@@ -155,7 +155,6 @@ Os diretórios relevantes incluem:
 ```text
 README.md
 READMEFrontend.md          # documentação específica do front-end, quando disponível
-requirements-front.txt     # dependências do front-end
 app/                       # Streamlit, telas, estado, serviços e mocks
 src/                       # módulos do pipeline, conforme PRs integrados
 docs/

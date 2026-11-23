@@ -145,7 +145,7 @@ source .venv/bin/activate
 Instale as dependências da interface:
 
 ```bash
-python -m pip install -r requirements-front.txt
+python -m pip install -e .
 ```
 
 Inicie a aplicação:
@@ -668,7 +668,6 @@ docs/
 tests/
 .streamlit/
   config.toml
-requirements-front.txt
 pyproject.toml
 Dockerfile
 ```
