@@ -26,6 +26,9 @@ def _revisar(hid):
 def _status_da_historia(h):
     ss = st.session_state
     estados = [estado_editorial(f"{h['id']}:{a['id']}", ss.status_curadoria, ss.status_ativos) for a in h["ativos"]]
+    if not estados:
+        # all([]) é verdadeiro: sem este caso, a falta de ativos viraria "Rejeitado".
+        return chip("Sem ativos gerados", "gray")
     if any(e in ("rascunho", "ajustes") for e in estados):
         return chip("Revisão humana pendente", "yellow")
     if all(e == "rejeitado" for e in estados):

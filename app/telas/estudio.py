@@ -101,6 +101,8 @@ def _coluna_conteudo(h):
     """Coluna direita: conteúdo gerado pela IA."""
     hid = h["id"]
     
+    if h.get("testemunho_pendente"):
+        st.warning("Testemunho pendente: " + h["testemunho_pendente"])
     if h.get("case_pendente"):
         st.warning("Case pendente: " + h["case_pendente"])
     if not h["ativos"]:

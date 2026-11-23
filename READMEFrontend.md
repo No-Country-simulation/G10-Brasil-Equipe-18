@@ -2,21 +2,42 @@
 
 Interface do CommunityLab integrada à análise por LLM, à curadoria humana e ao OCI Object Storage. Permite importar interações, consultar histórias detectadas, editar rascunhos e registrar decisões de curadoria.
 
-Situação documental conferida em **22/11/2026**. Código integrado à main, implantação na VM e homologação funcional são etapas distintas.
+Situação documental conferida em **22/11/2026**. Código integrado à main, implantação e homologação funcional são etapas distintas.
 
 Os exemplos fornecidos para demonstração usam dados fictícios. Na Importação, a natureza de cada lote é declarada como fictícios, reais ou não informado. Essa declaração não é deduzida pelo provedor de IA nem comprova anonimização.
 
-A correção de anonimização do PR #64 foi integrada à main em `fcc077e`. O PR #67, de cases de sucesso, foi integrado em `07ae36c`. Implantação e retestes da versão consolidada continuam pendentes.
+> Os conteúdos gerados são rascunhos sujeitos à revisão humana. Validação factual, aprovação editorial e autorização para publicação são controles separados. Nada é publicado automaticamente.
 
-O PR #68, de testemunhos estruturados, permanece em revisão, agora com base main. O commit complementar `016c12d` trata as recusas de citações literais relatadas na revisão. Nova revisão e repetição dos casos com IA real continuam pendentes.
+## Estado das integrações e da implantação
 
-A recuperação editorial completa em nova sessão também permanece pendente.
+| Entrega | Situação |
+|---|---|
+| Persistência de decisões e campos editados — #57 | Integrada; recuperação editorial completa em nova sessão continua pendente. |
+| Conferência de citações — #59 | Integrada ao Estúdio e à Curadoria. |
+| Identificação do ambiente de análise — #60 | Integrada; identifica processamento/provedor, não a natureza das mensagens. |
+| Tratamento de resposta truncada — #61 | Integrado, com nova tentativa sobre o mesmo lote. |
+| Natureza dos dados — #62 e #63 | Integrada ao pacote e à interface. |
+| Correção de anonimização — #64 | Integrada em `fcc077e` e implantada na VM conforme registro de Luciene. |
+| Cases de sucesso — #67 | Integrados em `07ae36c`. |
+| Testemunhos estruturados e correção de citações — #68 | Integrados em `a4ca159`, incluindo a correção `016c12d`. |
+| Indicador de história sem ativos — #73 | Integrado em `d33de32`; apresenta “Sem ativos gerados”, em cinza. |
 
-> Os conteúdos gerados são rascunhos sujeitos à revisão humana. Aprovação editorial e autorização para publicação são controles separados. Nada é publicado automaticamente.
+### Última implantação confirmada
+
+Luciene informou uma implantação em **22/11/2026, às 19h28, horário de Brasília**, com:
+
+- SHA `fcc077e`, correspondente ao merge do #64.
+- Container em execução e com saúde `healthy`.
+- Modelo `pt_core_news_sm` carregado.
+- Teste resumido de anonimização com resultado OK, com texto mascarado.
+
+Esse registro não inclui os merges posteriores de cases, testemunhos e indicador de história sem ativos.
+
+A implantação consolidada dessas entregas e seus retestes pela interface continuam pendentes. O teste resumido de máscara não equivale à homologação completa da anonimização.
 
 ## Identidade visual
 
-O CommunityLab utiliza visual limpo, com navegação lateral escura e destaques em violeta.
+O CommunityLab utiliza navegação lateral escura e destaques em violeta.
 
 ### Paleta de cores
 
@@ -34,7 +55,7 @@ O CommunityLab utiliza visual limpo, com navegação lateral escura e destaques 
 ### Diretrizes
 
 - Fonte Inter.
-- Textos naturais, diretos e compreensíveis.
+- Textos diretos e compreensíveis.
 - Cards com bordas suaves e cantos arredondados.
 - Cores acompanhadas de rótulos e explicações.
 - A paleta e as diretrizes visuais não substituem uma auditoria de acessibilidade.
@@ -43,24 +64,32 @@ O CommunityLab utiliza visual limpo, com navegação lateral escura e destaques 
 
 | Módulo | Comportamento |
 |---|---|
-| Dashboard | Apresenta contagens e atalhos de navegação. Não equivale ao painel analítico avançado previsto no Card 22. |
-| Importação | Recebe CSV, JSON colado ou mensagens do Discord, conforme configuração. Exibe prévia, filtro por canal, avisos de IDs e declaração da natureza do lote. |
-| Histórias | Apresenta histórias detectadas, categorias, relevância e acesso ao Estúdio. Exibe a natureza declarada dos dados. |
+| Dashboard | Apresenta contagens e atalhos. Não equivale ao painel analítico avançado previsto no Card 22. |
+| Importação | Recebe CSV, JSON colado ou mensagens do Discord, conforme configuração. Apresenta prévia, filtro por canal, avisos de IDs e declaração da natureza do lote. |
+| Histórias | Apresenta histórias detectadas, categorias, relevância, natureza declarada dos dados e acesso ao Estúdio. |
 | Estúdio de Conteúdo | Permite consultar evidências e editar os campos dos ativos disponíveis. |
 | Curadoria | Permite validar fatos, decidir editorialmente e registrar autorização de publicação. |
 | Histórico | Lista pacotes persistidos no OCI, permite visualizar o JSON e baixar os objetos disponíveis. |
 
 ### Fluxo de trabalho
 
-1. Importar interações.
-2. Declarar a natureza dos dados.
-3. Processar o lote com o provedor configurado.
+1. Carregar as interações.
+2. Declarar a natureza dos dados antes de confirmar a importação.
+3. Importar e processar o lote.
 4. Consultar histórias e evidências.
 5. Editar rascunhos no Estúdio.
 6. Registrar decisões na Curadoria.
 7. Consultar os pacotes no Histórico.
 
-Consultar um pacote no Histórico não significa restaurar automaticamente o lote completo para edição em uma nova sessão.
+Consultar ou baixar um pacote no Histórico não significa restaurar automaticamente o lote completo para edição em uma nova sessão.
+
+### Histórias sem ativos
+
+Uma história preservada sem ativos apresenta o indicador cinza **Sem ativos gerados**.
+
+A ausência de ativos não é apresentada como rejeição editorial. O #73 corrigiu a avaliação de uma lista vazia de estados, que anteriormente produzia o indicador “Rejeitado”.
+
+A correção preserva os estados de revisão humana pendente, rejeição e revisão concluída quando existem ativos.
 
 ## Curadoria humana
 
@@ -77,13 +106,15 @@ A interface possui três controles independentes:
 - O indicador **Liberado para publicação** depende de validação factual, aprovação editorial e autorização registrada.
 - Nenhum conteúdo é publicado automaticamente.
 - A conferência de citações não substitui a avaliação contextual e factual do ativo inteiro.
-- A ação **Regenerar** alterna entre variações já disponíveis. Não realiza uma nova chamada ao LLM; sem variações, não altera o conteúdo.
+- A ação **Regenerar** alterna entre variações já disponíveis. Não realiza uma nova chamada ao LLM; sem variações, mantém o conteúdo.
 
-O PR #57 integrou a persistência de decisões e campos editados no pacote. O reteste funcional da versão consolidada na VM continua pendente.
+O #57 integrou a persistência de decisões e campos editados no pacote. O reteste funcional da versão consolidada e a recuperação editorial completa em nova sessão permanecem pendentes.
 
 ## Como executar
 
-Pré-requisito: Python 3.10 ou superior, com dependências compatíveis com a versão utilizada.
+Pré-requisito: **Python 3.11 ou superior**, com dependências compatíveis com a versão utilizada.
+
+O `pyproject.toml` exige Python `>=3.11`. A imagem Docker utiliza `python:3.11-slim`.
 
 Na raiz do repositório:
 
@@ -125,10 +156,12 @@ python -m streamlit run app/main.py
 
 O endereço local padrão é `http://localhost:8501`.
 
-A execução integrada também depende da configuração dos provedores e do armazenamento. Para implantação em VM Oracle com Docker, consulte:
+A execução integrada também depende da configuração dos provedores e do armazenamento.
 
-- [Guia de implantação na VM Oracle](docs/DEPLOYMENT_ORACLE_VM.md)
+Consulte:
+
 - [Instruções gerais de execução](COMO_RODAR.md)
+- [Guia de implantação na VM Oracle](docs/DEPLOYMENT_ORACLE_VM.md)
 
 ## Configuração dos provedores de LLM
 
@@ -161,11 +194,34 @@ Substitua os exemplos pelos modelos compatíveis com o adaptador e disponíveis 
 - O arquivo `.streamlit/secrets.toml` deve permanecer fora do versionamento.
 - O prompt está em `app/services/prompt_analise.txt`.
 - Configurar um provedor não comprova sua validação funcional no ambiente implantado.
-- O rótulo de análise real identifica o provedor utilizado; não determina se as mensagens são reais ou fictícias.
+
+### Streamlit Community Cloud
+
+No gerenciamento do aplicativo:
+
+1. Abra **Settings**.
+2. Acesse **Secrets**.
+3. Informe as chaves e os modelos necessários no formato TOML.
+4. Clique em **Save**.
+5. Se necessário, utilize **Reboot**.
+
+Os nomes e a posição dos controles podem variar conforme a interface do serviço.
+
+As credenciais pertencem às configurações do aplicativo, nunca ao repositório.
+
+### Identificação do ambiente de análise
+
+O Processamento apresenta um dos rótulos:
+
+- **Demonstração**
+- **Análise real**
+- **Não confirmado**
+
+O rótulo identifica o processamento/provedor utilizado. Ele não determina se as mensagens são reais ou fictícias e não comprova sua anonimização.
 
 ### Respostas truncadas
 
-O PR #61 integrou tratamento específico para respostas encerradas com `MAX_TOKENS`.
+O #61 integrou tratamento específico para respostas encerradas com `MAX_TOKENS`.
 
 A interface permite nova tentativa sobre o mesmo lote. Pode ser necessário reduzir o lote ou ajustar `LLM_MAX_OUTPUT_TOKENS`.
 
@@ -173,18 +229,19 @@ A nova tentativa não garante sucesso, e aumentar o limite depende das condiçõ
 
 ## Natureza declarada dos dados
 
-Na Importação, antes de iniciar o processamento, a pessoa declara:
+Na Importação, antes de confirmar o lote, a pessoa declara:
 
-| Valor | Rótulo |
+| Valor | Rótulo na interface |
 |---|---|
-| `ficticios` | Fictícios — exemplo ou teste |
-| `reais` | Reais — relatos de pessoas |
+| `ficticios` | Fictícios (exemplo ou teste) |
+| `reais` | Reais (relatos de pessoas) |
 | `nao_informado` | Não informado |
 
 ### Comportamento
 
 - O padrão é **Não informado**.
 - Um lote novo não herda a declaração do lote anterior.
+- Reiniciar a demonstração também retorna a declaração ao padrão.
 - Sem interações carregadas, o controle fica desabilitado.
 - Após clicar em **Importar interações**, a declaração fica travada para aquele lote.
 - Para alterar a declaração, carregue um lote novo.
@@ -200,7 +257,15 @@ Nenhum desses selos usa verde como indicação de validação.
 
 A natureza não é inferida pelo autor, conteúdo, origem do arquivo, Discord ou provedor de análise.
 
-**Limitação conhecida:** a nota “Exemplo fictício…” na Importação ainda depende da origem do lote, embora a declaração seja independente.
+O valor é preservado como `natureza_dados` no pacote principal. Consulte o [contrato de integração](docs/CARD05_CONTRATOS_INTEGRACAO.md).
+
+### Rótulos demonstrativos ainda pendentes de alinhamento
+
+A nota “Exemplo fictício…” da Importação ainda depende da origem do lote, embora a declaração seja independente.
+
+O componente de evidências citadas utiliza `modo_demonstracao=True` por padrão, e as telas não substituem esse valor. Por isso, o chip **Exemplo de demonstração** também pode aparecer com análise real e dados declarados como reais.
+
+Esses rótulos não devem ser usados como prova da natureza dos dados. O alinhamento com a declaração do lote permanece pendente.
 
 ## Rastreabilidade das interações
 
@@ -217,7 +282,9 @@ Cada interação recebe um ID efetivo antes dos filtros.
 
 A regra está centralizada em `calcular_ids_efetivos()` de `app/services/data_service.py`.
 
-### Exemplo
+### Exemplo de entrada
+
+Os registros abaixo são fictícios:
 
 ```json
 [
@@ -239,6 +306,17 @@ A regra está centralizada em `calcular_ids_efetivos()` de `app/services/data_se
 
 O primeiro registro utiliza o ID 101. O segundo utiliza o ID efetivo 2, correspondente à posição original.
 
+Uma colisão entre um ID explícito e um ID derivado da posição também provoca rejeição do lote.
+
+### Exibição dos IDs
+
+- **Importação:** coluna ID na prévia das interações.
+- **Estúdio e Curadoria:** ID da interação nos metadados, separado do lote.
+- **Evidências citadas:** identificação “interação nº N”.
+- **Origem sem ID válido:** apresentação “ID não informado”, em vez de “ID 0”.
+
+As regras possuem cobertura em `tests/test_front_ids.py`.
+
 ## Conferência de citações
 
 Cada citação é conferida contra a interação indicada pelo seu `id_interacao`.
@@ -248,7 +326,7 @@ A regra está em `app/services/conferencia_citacao.py`. As telas utilizam as fun
 | Resultado | Apresentação | Significado |
 |---|---|---|
 | Trecho literal conferido | Verde | O trecho corresponde ao texto da interação, sem marcador. |
-| Compatível com anonimização | Azul | A parte não mascarada corresponde ao original; o dado ocultado não é conferido. |
+| Compatível com anonimização · a parte mascarada não é conferida | Azul | A parte não mascarada corresponde ao original; o dado ocultado não é conferido. |
 | Não confere | Amarelo, com motivo | O trecho apresenta incompatibilidade com a fonte. |
 | Conferência indisponível | Neutro | A interação não está disponível ou a origem é ambígua. |
 | ID não informado | Neutro | O ID está ausente ou inválido. |
@@ -256,16 +334,17 @@ A regra está em `app/services/conferencia_citacao.py`. As telas utilizam as fun
 ### Onde aparece
 
 - Nas evidências citadas do Estúdio e da Curadoria.
-- Abaixo do campo de citação editável, com revalidação após alterações.
+- Abaixo do campo Citação editável do testemunho, com revalidação após alterações.
 
 O campo editável utiliza a origem da história. Quando há mais de uma origem ou nenhuma origem disponível, a conferência não adivinha qual utilizar.
 
 ### Limites da conferência
 
-- O resultado é individual por citação.
+- O resultado é individual por citação; não existe selo geral de fidelidade por ativo.
 - O azul não representa aprovação factual.
 - Um termo mascarado indevidamente pode ser considerado compatível com anonimização.
 - A presença literal de um trecho não comprova que toda a narrativa respeita o contexto.
+- A conferência do campo Citação não equivale à conferência de todos os campos editáveis.
 - Nenhum resultado autoriza publicação.
 
 ## Preparação textual e anonimização
@@ -283,36 +362,45 @@ O autor também é pseudonimizado antes do envio. Valores já no formato esperad
 
 Na resposta, o texto de origem e as citações são vinculados à interação correspondente, em vez de confiar apenas no texto repetido pelo modelo.
 
-Na imagem Docker, o modelo `pt_core_news_sm` é instalado e validado durante o build. Sem o modelo disponível, há fallback heurístico de melhor esforço.
+### Modelo e fallback por ambiente
 
-### Correção integrada — PR #64
+Na imagem Docker, o modelo `pt_core_news_sm` é instalado e validado durante o build.
 
-O PR #64 foi aprovado por Tissiany e integrado à main em `fcc077e`.
+Em ambientes sem o modelo, incluindo a execução no Streamlit Cloud quando ele não está disponível, a anonimização de nomes utiliza fallback heurístico de melhor esforço.
 
-A revisora relatou:
+O caminho efetivamente utilizado depende da disponibilidade do modelo no ambiente. Não deduza seu carregamento apenas pelo serviço de hospedagem.
 
-- **3.682 testes aprovados** no head `f929124`.
+Na VM, o registro de Luciene de 22/11 às 19h28 confirmou o modelo carregado no SHA `fcc077e`.
+
+### Correção integrada — #64
+
+O #64 foi aprovado por Tissiany e integrado à main em `fcc077e`.
+
+Na revisão do head `f929124`, a revisora relatou:
+
+- **3.682 testes aprovados**.
 - Verificações locais com modelo spaCy real e fallback forçado.
 - Mascaramento dos nomes testados: Paulo, Bianca Ferraz, Renata Moura, Carolina Teixeira e Bruno Carvalho.
 - Preservação dos locais e termos técnicos testados no caminho com o modelo real.
 
-Esses resultados pertencem à revisão local da branch. Não comprovam que a correção já está implantada ou homologada pela interface.
+Esses números pertencem à revisão daquela versão e não foram reexecutados para esta atualização documental.
+
+A implantação do #64 está confirmada pelo registro da VM. O reteste completo pela interface continua pendente.
 
 ### Limitações
 
-- A anonimização não deve ser tratada como garantia de remoção de todos os dados pessoais.
+- A anonimização não é garantia de remoção de todos os dados pessoais.
 - O fallback mascarou os nomes isolados testados, mas apresentou falsos positivos em palavras comuns, cidades e termos técnicos.
-- Exemplos observados pela revisora incluem “Estudei SQL”, “Porto Alegre” e “Cloud Foundations”.
-- Os resultados dos casos testados não devem ser generalizados para todos os nomes, termos ou contextos.
+- Exemplos observados incluem “Estudei SQL”, “Porto Alegre” e “Cloud Foundations”.
+- Os resultados testados não devem ser generalizados para todos os nomes, termos ou contextos.
 - A declaração de dados reais ou fictícios não comprova que a anonimização foi suficiente.
-- Para uso de mensagens reais, é necessário confirmar a disponibilidade do modelo ou encaminhar o conteúdo para revisão humana antes do envio ao provedor.
-- Implantação do #64 e reteste pela interface continuam pendentes.
+- Para mensagens reais, confirme o caminho de anonimização utilizado e a suficiência da preparação antes do envio ao provedor.
 
 Para demonstração e retestes, utilize dados fictícios.
 
 ## Integração das telas com os serviços
 
-As telas utilizam `app/services/data_service.py` como ponto de acesso à análise, à rastreabilidade e ao armazenamento. A integração com LLM e OCI já está implementada.
+As telas utilizam `app/services/data_service.py` como ponto de acesso à análise, à rastreabilidade e ao armazenamento. A integração com LLM e OCI está implementada.
 
 | Função | Comportamento atual |
 |---|---|
@@ -346,8 +434,6 @@ Repetir a gravação do mesmo lote e arquivo utiliza o mesmo caminho, evitando c
 
 O pacote principal utiliza a versão **1.1** e registra a natureza declarada dos dados. O arquivo `evidencias.json` permanece na versão **1.0**.
 
-Consulte o [contrato de integração](docs/CARD05_CONTRATOS_INTEGRACAO.md).
-
 ### Real, simulado e falha
 
 Os resultados de armazenamento distinguem:
@@ -365,76 +451,190 @@ Sem credenciais configuradas:
 
 As simulações de interface não comprovam persistência no OCI.
 
-As evidências de bucket privado, autenticação, permissões, acesso negado e condições gratuitas da conta continuam acompanhadas no Card 18. O rótulo visual “OCI Always Free” não comprova a modalidade ou o consumo da conta.
+As evidências de bucket privado, autenticação, permissões, acesso negado e condições gratuitas da conta continuam acompanhadas no Card 18.
+
+O rótulo visual “OCI Always Free” não comprova a modalidade ou o consumo da conta.
 
 ### Persistência e recuperação editorial
 
-O PR #57 integrou a gravação de decisões de curadoria e campos editados.
+O #57 integrou a gravação de decisões de curadoria e campos editados.
 
 Isso não equivale à recuperação completa do lote para continuar a edição em outra sessão.
+
+A hidratação da curadoria depende da existência das histórias na sessão. Consultar o JSON salvo não comprova que textos, histórias e decisões foram reconstruídos para edição.
 
 Permanecem pendentes:
 
 - Reteste funcional da persistência na versão consolidada.
 - Recuperação completa dos textos editados e das decisões em nova sessão.
-- Validação integrada dos cases do #67.
-- Revisão, integração e validação dos testemunhos do #68.
+- Validação integrada dos cases e testemunhos na VM.
+- Verificação de leitura de lotes antigos com os campos opcionais novos.
+
+## Formatos dos dados e contratos
+
+O contrato e os esquemas de integração são documentados em:
+
+- [Contrato de integração — Card 05](docs/CARD05_CONTRATOS_INTEGRACAO.md)
+- [Testemunhos estruturados — Card 13](docs/CARD13_TESTEMUNHOS_ESTRUTURADOS.md)
+- [Cases de sucesso — Card 14](docs/CARD14_CASES_SUCESSO.md)
+
+A representação interna do front e o contrato canônico são estruturas distintas. Não substitua uma pela outra sem adaptação explícita.
+
+### Interações
+
+As interações de entrada utilizam campos como:
+
+- `id`, quando informado.
+- `autor`.
+- `canal`.
+- `tipo`.
+- `texto`.
+
+O ID efetivo é calculado antes dos filtros e preservado durante o processamento.
+
+### Histórias e campos aditivos
+
+A representação interna das histórias inclui:
+
+- Identificador da história.
+- Autor e canal.
+- Categoria e sentimento.
+- Relevância numérica e `relevancia_nivel`.
+- `mensagem_original`.
+- `citacoes`, com texto e `id_interacao`.
+- `interacoes_origem`.
+- `destaques`.
+- Fatos e ativos disponíveis.
+
+`citacoes`, `interacoes_origem`, `relevancia_nivel` e `destaques` fazem parte da evolução aditiva do formato e devem ser preservados nos mapeamentos aplicáveis.
+
+As citações e os destaques são vinculados à fonte conferida. A relevância é uma classificação do processamento, não uma probabilidade ou garantia de veracidade.
+
+### Ativos do front
+
+Os ativos utilizam identificadores, nome, tipo de apresentação e `campos`.
+
+Os tipos de apresentação do formulário não devem ser confundidos com os tipos do contrato canônico. Por exemplo, o case é apresentado como `tipo="texto"` e o testemunho como `tipo="testemunho"`.
+
+Quando disponíveis, os vínculos incluem:
+
+- `interacoes_origem`.
+- `citacoes`.
+- `fontes`.
+
+A estrutura de uma fonte utiliza campos como:
+
+```json
+{
+  "afirmacao": "Trecho relacionado ao conteúdo",
+  "fato": "Descrição do vínculo com a evidência",
+  "trecho": "Trecho literal da interação de origem"
+}
+```
+
+Esse exemplo descreve a forma do vínculo e não constitui evidência de um relato real.
+
+### Pontos de alinhamento entre front, serviços e contrato
+
+- Manter o mapeamento entre IDs internos e IDs canônicos.
+- Preservar os campos estruturados dos testemunhos.
+- Documentar título do case como metadado na raiz do ativo, exibido como legenda e separado da narrativa.
+- Alinhar título opcional no contrato canônico com sua exigência atual na geração e no helper de testemunho.
+- Definir o tratamento de título apagado durante a curadoria.
+- Documentar a relação entre campos editados e citações/fontes originais preservadas.
+- Definir o destino dos campos opcionais `revisor`, `observacao_revisor` e `id_avaliacao_cqf`.
+- Validar os pacotes completos e a leitura de lotes antigos.
+- Não apresentar o helper de conversão de testemunho como exportador canônico geral.
 
 ## Formatos de ativos
 
-A interface possui suporte a campos editáveis conforme o tipo de ativo recebido. Implementação, implantação e homologação de cada formato são etapas distintas.
+A interface possui suporte a campos editáveis conforme o tipo de ativo recebido.
 
 | Formato | Situação em 22/11/2026 |
 |---|---|
 | Post para LinkedIn e card de conquista | Presentes no fluxo existente; sujeitos à revisão de fidelidade e curadoria. |
-| Case de sucesso | PR #67 integrado em `07ae36c`; implantação e validação integrada pendentes. |
-| Testemunho estruturado | PR #68 em revisão, com base main e correção complementar em `016c12d`. |
+| Case de sucesso | #67 integrado em `07ae36c`; implantação consolidada e validação na VM pendentes. |
+| Testemunho estruturado | #68 integrado em `a4ca159`, incluindo `016c12d`; revisão e reteste dos casos com modelo real realizados, com validação na VM pendente. |
 
-### Case de sucesso — Card 14 / PR #67
+### Case de sucesso — Card 14 / #67
 
 A análise pode solicitar um case na mesma chamada dos formatos existentes.
 
-A primeira versão utiliza narrativa extrativa: trechos da fonte, sem paráfrase livre, em `campos.texto`, com título opcional como metadado e vínculo à interação de origem.
+A primeira versão utiliza narrativa extrativa: trechos da fonte, sem paráfrase livre, em `campos.texto`, com vínculo à interação de origem.
 
-Case sem resultado ou citação literal sustentados é omitido. A história permanece para revisão com aviso.
+O título é opcional na geração. Quando presente, fica como metadado na raiz do ativo e é exibido como legenda, separado do texto, sem edição nesta versão.
 
-Edição e Curadoria utilizam o fluxo existente. A geração não aprova o conteúdo nem autoriza publicação.
+A geração confere:
 
-O PR #67 foi aprovado por Jaqueline e integrado à main em `07ae36c`. Os testes locais não substituem a validação com provedor e OCI reais.
+- Narrativa formada por trechos literais da fonte, na ordem.
+- Presença de resultado ou avanço literal na narrativa.
+- Presença de citação conferida da mesma interação.
+- Título, quando presente, como trecho da fonte.
 
-A verificação literal não comprova, sozinha, a fidelidade contextual da narrativa.
+Case recusado pela conferência é omitido, e a história permanece para revisão com aviso.
+
+A seção **Fontes deste conteúdo** apresenta as fontes derivadas das citações conferidas, com a indicação “Trecho literal da interação de origem”.
+
+O texto do case é editável no Estúdio e na Curadoria.
+
+**Limitação:** não existe conferência automática no campo Texto do case nem aviso quando a edição deixa de corresponder a trechos da fonte. Os vínculos exibidos não devem ser interpretados como validação automática do texto editado.
+
+A presença literal de uma expressão não comprova conquista, resultado ou fidelidade contextual. Negação, expectativa e esforço sem resultado continuam exigindo avaliação humana.
+
+Tissiany relatou validação do fluxo com análise real pela interface, além de testes locais e do validador do Card 05. OCI e recuperação em nova sessão não foram verificados nessa revisão.
 
 Consulte a [documentação do Card 14](docs/CARD14_CASES_SUCESSO.md).
 
-### História preservada sem ativos
+### Testemunho estruturado — Card 13 / #68
 
-A revisão do #67 identificou um problema visual: uma história sem ativos pode aparecer com o indicador “Rejeitado”, porque a avaliação de todos os estados sobre uma lista vazia retorna verdadeiro.
+O testemunho vem da análise integrada e utiliza:
 
-Esse indicador não representa uma decisão humana registrada.
+- `campos.titulo`.
+- `campos.descricao`.
+- `campos.citacao`.
 
-O achado foi classificado como não bloqueante para a integração do #67. A correção da interface para mostrar “Sem ativos gerados” ou omitir o indicador continua pendente nesta referência.
+Os três campos são editáveis no Estúdio e na Curadoria.
 
-### Testemunho estruturado — PR #68
+Na geração, os três precisam corresponder a trechos literais da fonte. Título e descrição continuam usando correspondência exata; a citação recupera o trecho da fonte tolerando espaços equivalentes.
 
-A proposta organiza título, descrição e citação com rastreabilidade à fonte.
+A citação também precisa conter a evidência conferida inteira e pertencer à mesma interação.
 
-Após a integração do #67, a base do #68 foi ajustada para main.
+A correção `016c12d`:
 
-Jaqueline relatou quatro recusas de testemunhos em duas rodadas com IA real, causadas pela exigência de igualdade exata entre a citação do testemunho e uma evidência conferida da história.
+- Tolera diferenças de espaços e pontuação final na comparação com a evidência.
+- Aceita citação literal ampliada que contenha a evidência inteira.
+- Mantém a exigência de existência do trecho na fonte.
+- Mantém a correspondência da interação.
+- Recusa os casos testados de trechos menores que a evidência, conteúdo inventado e evidência de outra origem.
 
-O commit complementar `016c12d` propõe:
+A tolerância na comparação não autoriza inventar pontuação ou texto ausente na fonte.
 
-- Tolerar diferenças de espaços e pontuação final na comparação com a evidência.
-- Aceitar citação literal ampliada que contenha a evidência inteira.
-- Manter a exigência de existência do trecho na fonte e de correspondência da interação.
-- Recusar trechos menores que cortem a evidência, inclusive os casos de negação cobertos pelos testes.
-- Preservar a recusa de conteúdo inventado ou atribuído a outra origem.
+A conferência visual da citação aparece abaixo do campo Citação nas duas telas e é recalculada após edições.
 
-Marcus informou **34 testes específicos** e **3.744 testes da suíte completa** aprovados nessa versão. Essas execuções não fizeram chamadas reais à IA ou OCI.
+O pacote preserva os campos estruturados `titulo`, `descricao` e `citacao`. O preenchimento posterior do formulário utiliza esses campos.
 
-A correção aguarda nova revisão e repetição dos casos com modelo real. O CATP-008 não é aprovado automaticamente por esses testes locais.
+Após edição, `citacoes` e `fontes` podem continuar preservando os valores originais, enquanto `campos` contém a versão editada. Essa diferença exige documentação e alinhamento contratual; não significa que a versão editada foi automaticamente conferida como um todo.
 
-O helper de conversão canônica não deve ser apresentado como exportação automática já integrada.
+#### Conversão canônica
+
+`converter_testemunho_canonico` é um helper de projeção inicial.
+
+Ele compõe o texto canônico com descrição, duas quebras de linha e citação entre aspas. Não é um exportador geral integrado, não restaura o Histórico e não exporta automaticamente as decisões da Curadoria.
+
+O helper exige título preenchido, embora o contrato canônico o trate como opcional. Esse alinhamento permanece pendente.
+
+#### Evidências de revisão
+
+- Marcus informou 34 testes específicos e 3.744 testes da suíte aprovados no head `016c12d`, sem chamadas reais à IA ou OCI.
+- Jaqueline repetiu os casos com modelo real: quatro de quatro testemunhos aceitos, em duas rodadas de duas interações, além de 51 testes locais de testemunho e case aprovados.
+- Tissiany confirmou 3.744 testes no head e 3.793 após merge local com a main, validador do Card 05 e verificações de interface com AppTest.
+- As contagens se referem às versões e aos ambientes dessas execuções. Não foram reexecutadas nesta atualização documental.
+
+O reteste positivo dos casos corrigidos não encerra automaticamente o CATP-008 nem a homologação do MVP.
+
+Permanecem pendentes a validação na implantação consolidada, os demais cenários aplicáveis, OCI e recuperação editorial em nova sessão.
+
+Consulte a [documentação do Card 13](docs/CARD13_TESTEMUNHOS_ESTRUTURADOS.md). As contagens históricas e a descrição anterior da igualdade de citações nesse documento também precisam ser conciliadas com `016c12d`.
 
 ## Estrutura principal
 
@@ -459,6 +659,7 @@ app/
     conferencia_citacao.py
     oci_storage.py
     cases.py
+    testemunhos.py
   mocks/
     mock_data.py
 src/
@@ -468,15 +669,15 @@ tests/
 .streamlit/
   config.toml
 requirements-front.txt
+pyproject.toml
+Dockerfile
 ```
 
-A estrutura acima destaca os componentes principais; não é uma listagem completa do repositório.
-
-O módulo `cases.py` foi integrado pelo #67. Os arquivos de testemunhos do #68 devem ser considerados parte da main somente após sua integração.
+A estrutura destaca os componentes principais; não é uma listagem completa do repositório.
 
 ## Modo demonstração
 
-Os controles de demonstração permitem exercitar estados da interface, como:
+Os controles da barra lateral permitem exercitar estados da interface, como:
 
 - Falha de gravação e nova tentativa.
 - Histórico vazio.
@@ -488,7 +689,9 @@ A variável `COMMUNITYLAB_DELAY` ajusta o intervalo das etapas visuais do proces
 
 Esses controles não substituem chamadas reais aos serviços nem comprovam que uma operação ocorreu no bucket.
 
-A natureza declarada dos dados é independente do uso de controles de demonstração.
+A natureza declarada dos dados é independente do uso dos controles de demonstração.
+
+Existe uma pendência visual observada no expansor Modo demonstração: fundo branco e texto sem visibilidade adequada no seletor Estado da tela Histórico. O estilo precisa de conferência e ajuste.
 
 ## Verificação das alterações
 
@@ -498,31 +701,52 @@ Para verificar problemas de espaços e formatação no diff:
 git diff --check
 ```
 
-Para executar os testes da pasta oficial, com as dependências de desenvolvimento instaladas:
+Para instalar o projeto com dependências de desenvolvimento:
+
+```bash
+python -m pip install -e ".[dev]"
+```
+
+Para executar os testes da pasta oficial:
 
 ```bash
 python -m pytest -q tests
 ```
 
-Resultados de testes pertencem à versão e ao ambiente em que foram executados. Não some contagens de suítes diferentes nem apresente testes locais como homologação da versão implantada.
+Para conferir os exemplos canônicos do Card 05:
+
+```bash
+python scripts/validar_exemplos_card05.py
+```
+
+Resultados de testes pertencem à versão e ao ambiente em que foram executados.
+
+Não some contagens de suítes diferentes nem apresente testes locais como homologação da versão implantada.
 
 ## Limitações conhecidas e validações pendentes
 
-- A IA pode produzir classificações ou narrativas inadequadas; a revisão humana continua necessária.
+- A IA pode produzir classificações ou narrativas inadequadas; revisão humana continua necessária.
+- Literalidade não comprova contexto, conquista, resultado ou ausência de contradição.
+- Evidência que já omitiu uma negação pode passar nas verificações mecânicas; a recusa de citação menor não resolve todos os casos de contexto.
 - Falhas dos provedores são apresentadas como erro, sem substituição por histórias fictícias.
 - A nova tentativa após truncamento pode falhar novamente.
 - A conferência de citações não comprova a fidelidade do ativo inteiro.
-- O #64 está integrado, mas a implantação e o reteste pela interface continuam pendentes.
+- O #64 está implantado na VM no último registro disponível, mas o reteste completo pela interface permanece pendente.
 - O fallback de anonimização pode mascarar palavras comuns, cidades e termos técnicos indevidamente.
-- Cases do #67 estão integrados, mas ainda dependem de implantação e validação integrada.
-- O indicador de história sem ativos pode mostrar uma rejeição que não foi decidida por uma pessoa; correção de interface pendente.
-- Testemunhos do #68 e sua correção de citações aguardam nova revisão e validação com IA real.
+- Cases e testemunhos estão integrados à main, mas não constam da última implantação confirmada.
+- O texto editado do case não possui conferência automática nem aviso de perda de correspondência com a fonte.
+- Título e descrição do testemunho ainda exigem correspondência exata de espaços; uma descrição que una linhas da fonte pode ser recusada.
+- O título do testemunho é obrigatório na geração e no helper, mas opcional no contrato canônico.
+- Os campos editados e as citações/fontes originais podem divergir no pacote; o tratamento contratual precisa ser explicitado.
+- Os avisos Case pendente e Testemunho pendente podem aparecer mesmo quando não gerar o formato é uma resposta adequada.
+- Os motivos desses avisos incluem linguagem técnica e nomes de campos; sua apresentação precisa ser melhorada para a pessoa que faz curadoria.
 - A recuperação editorial completa em nova sessão continua pendente.
 - A nota de exemplo fictício da Importação ainda depende da origem do lote.
-- “Copiar texto” disponibiliza um bloco com o recurso de cópia do Streamlit.
-- A configuração e as condições gratuitas da conta OCI dependem das evidências do Card 18.
-- É necessário confirmar o SHA implantado e retestar a versão consolidada pela interface.
-- A homologação geral do MVP e o aceite expresso são acompanhados no Card 23.
+- O chip Exemplo de demonstração nas evidências pode aparecer independentemente da natureza declarada e do provedor real.
+- O expansor Modo demonstração possui pendência de estilo e legibilidade.
+- Copiar texto disponibiliza um bloco com o recurso de cópia do Streamlit.
+- As condições da conta OCI e suas evidências continuam acompanhadas no Card 18.
+- A homologação geral e o aceite expresso são acompanhados no Card 23.
 
 ## Como contribuir
 
@@ -533,6 +757,7 @@ Resultados de testes pertencem à versão e ao ambiente em que foram executados.
 5. Descreva o escopo, os testes e as limitações no Pull Request.
 6. Vincule o PR ao card do Trello correspondente.
 7. Solicite revisão técnica antes da integração.
-8. Atualize a documentação conforme o comportamento efetivamente implementado.
+8. Documente mudanças de formato no README e no contrato de integração.
+9. Atualize a documentação conforme o comportamento efetivamente implementado.
 
 **Princípio do produto:** a IA sugere, o time decide. Nada é publicado automaticamente.
