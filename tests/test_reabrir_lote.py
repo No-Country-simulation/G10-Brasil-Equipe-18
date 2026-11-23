@@ -401,3 +401,33 @@ def test_catp_022_observacao_continua_ligada_ao_mesmo_ativo_em_sessao_nova(bucke
     at.radio(key="w::aba:hist-002").set_value("Case de sucesso").run()
     assert not at.exception, at.exception
     assert any("Citar o prazo do projeto." in i.value for i in at.info)
+
+
+def _dialogo_aberto(at):
+    return any(b.key == "reabrir_confirmar" for b in at.button)
+
+
+def test_cancelar_fecha_o_dialogo_e_preserva_a_sessao(bucket, sem_ia):
+    bucket({CAMINHO_B: _pacote("LOTE-B")})
+    at = _abrir_historico(historias=copy.deepcopy(HISTORIAS), lote_id="LOTE-A")
+    at.button(key=f"reabrir_{CAMINHO_B}").click().run()
+    assert _dialogo_aberto(at)
+
+    at.button(key="reabrir_cancelar").click().run()
+    assert not at.exception, at.exception
+    assert not _dialogo_aberto(at)
+    assert at.session_state["lote_id"] == "LOTE-A"
+    assert at.session_state["pagina"] == "historico"
+    at.run()  # uma execução qualquer depois do cancelamento não pode reabrir o diálogo
+    assert not _dialogo_aberto(at)
+
+
+def test_confirmar_fecha_o_dialogo_e_troca_o_lote(bucket, sem_ia):
+    bucket({CAMINHO_B: _pacote("LOTE-B")})
+    at = _abrir_historico(historias=copy.deepcopy(HISTORIAS), lote_id="LOTE-A")
+    at.button(key=f"reabrir_{CAMINHO_B}").click().run()
+    at.button(key="reabrir_confirmar").click().run()
+    assert not at.exception, at.exception
+    assert not _dialogo_aberto(at)
+    assert at.session_state["lote_id"] == "LOTE-B"
+    assert at.session_state["pagina"] == "curadoria"
