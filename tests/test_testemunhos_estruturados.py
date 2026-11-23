@@ -109,6 +109,26 @@ def test_titulo_derivado_corta_em_palavra_inteira():
     assert len(titulo) <= 200 and titulo in fonte and not titulo.endswith(" ")
 
 
+@pytest.mark.parametrize("separador", ["\n", "\t"])
+def test_titulo_derivado_trata_quebra_de_linha_e_tabulacao_como_limite(separador):
+    palavras = ["Aprendi", "a", "trabalhar", "em", "equipe", "durante", "o", "projeto,"] * 8
+    citacao = separador.join(palavras)          # sem espaços: só o separador testado
+    fonte = citacao + separador + "Consegui a vaga."
+    ativo, erro = preparar_testemunho(
+        {"campos": {"titulo": "", "descricao": citacao, "citacao": citacao}},
+        fonte,
+        [{"texto": citacao, "id_interacao": 41}],
+        41,
+    )
+
+    assert erro == ""
+    titulo = ativo["campos"]["titulo"]
+    assert len(titulo) <= 200
+    assert titulo in citacao                      # recorte literal da citação, preservado
+    assert citacao[len(titulo)] == separador      # cortou no limite, não no meio da palavra
+
+
+
 def test_citacao_literal_mas_nao_conferida_e_recusada():
     h, fonte = dados(*CENARIOS[0])
     h["ativos"][0]["campos"]["citacao"] = "Estudei por oito meses."

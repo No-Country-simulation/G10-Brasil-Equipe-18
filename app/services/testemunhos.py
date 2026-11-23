@@ -32,13 +32,22 @@ def _contem_evidencia(citacao, evidencia):
 
 _LIMITE_TITULO = 200
 _LIMITES = {"descricao": 2000, "citacao": 500}
+_SEPARADOR_PALAVRA = " \t\r\n"
 
 
 def _titulo_derivado(citacao):
-    """Primeiras palavras da citação conferida, até o limite, em palavra inteira."""
+    """Primeiras palavras da citação conferida, até o limite, em palavra inteira.
+
+    Espaço, quebra de linha e tabulação valem como limite de palavra. O recorte
+    continua sendo trecho literal da citação; só as pontas são removidas.
+    """
     if len(citacao) <= _LIMITE_TITULO:
         return citacao.strip()
-    return (citacao[:_LIMITE_TITULO].rsplit(" ", 1)[0] or citacao[:_LIMITE_TITULO]).strip()
+    corte = citacao[:_LIMITE_TITULO]
+    limite = max(corte.rfind(separador) for separador in _SEPARADOR_PALAVRA)
+    if limite > 0:
+        corte = corte[:limite]
+    return corte.strip() or citacao[:_LIMITE_TITULO].strip()
 
 
 def preparar_testemunho(ativo, fonte, citacoes, id_interacao):
