@@ -64,8 +64,11 @@ class Bucket:
     def __init__(self, objetos):
         self.objetos = {k: json.loads(json.dumps(v)) for k, v in objetos.items()}
         self.gravacoes = []
+        self.n_listar = 0
+        self.n_ler = 0
 
     def ler_objeto(self, caminho):
+        self.n_ler += 1
         if caminho not in self.objetos:
             raise FileNotFoundError(caminho)
         return json.loads(json.dumps(self.objetos[caminho]))
@@ -76,6 +79,7 @@ class Bucket:
         return {"salvo_em": "2026-11-20T10:00:00+00:00", "tamanho": 10}
 
     def listar_pacotes(self):
+        self.n_listar += 1
         return [
             {"caminho": c, "lote": c.split("/")[1], "salvo_em": "2026-11-20T09:00:00", "tamanho": "1,0 KB"}
             for c in self.objetos
@@ -514,3 +518,100 @@ def test_pacote_invalido_na_tela_preserva_a_sessao_e_nenhuma_tela_quebra(bucket,
         at.session_state["f:rel"] = 0
         at.run()
         assert not at.exception, f"{pagina}: {at.exception}"
+
+
+# ---------- desempenho: o Histórico não consulta o bucket a cada execução ----------
+
+def _bucket_com_listagem_viva(monkeypatch, objetos):
+    """Bucket cuja listagem mostra quantas gravações já houve (para ver a lista mudar)."""
+    b = Bucket(objetos)
+    monkeypatch.setattr(svc, "_storage", lambda: b)
+    monkeypatch.setattr(svc, "listar_pacotes", lambda: [
+        {"caminho": c, "lote": c.split("/")[1], "data": f"gravacoes={len(b.gravacoes)}",
+         "tamanho": "1,0 KB", "status": "salvo", "persistencia": "real",
+         "salvo_em": "2026-11-20T09:00:00"}
+        for c in b.objetos
+    ])
+    return b
+
+
+def test_cancelar_nao_consulta_o_bucket(bucket):
+    b = bucket({CAMINHO_A: _pacote("LOTE-A"), CAMINHO_B: _pacote("LOTE-B")})
+    at = _abrir_historico(historias=copy.deepcopy(HISTORIAS), lote_id="LOTE-A")
+    at.button(key=f"reabrir_{CAMINHO_B}").click().run()
+    assert _dialogo_aberto(at)
+    antes = (b.n_listar, b.n_ler)
+
+    at.button(key="reabrir_cancelar").click().run()
+    assert not at.exception, at.exception
+    assert not _dialogo_aberto(at)
+    assert (b.n_listar, b.n_ler) == antes
+
+
+def test_render_do_historico_nao_le_cada_objeto(bucket):
+    b = bucket({f"ativos/L{i}/pacote-distribuicao.json": _pacote(f"L{i}") for i in range(12)})
+    _abrir_historico()
+    assert b.n_listar == 1
+    assert b.n_ler == 0  # antes eram 1 leitura por linha, para montar o Baixar
+
+
+def test_baixar_le_so_quando_a_pessoa_clica_e_mostra_o_json(bucket):
+    b = bucket({CAMINHO_B: _pacote("LOTE-B")})
+    at = _abrir_historico()
+    assert b.n_ler == 0
+    at.button(key=f"dl_{CAMINHO_B}").click().run()
+    assert not at.exception, at.exception
+    assert b.n_ler == 1
+    assert any("LOTE-B" in c.value for c in at.code)
+
+
+def test_reabrir_nao_consulta_a_listagem_de_novo(bucket, sem_ia):
+    b = bucket({CAMINHO_A: _pacote("LOTE-A"),
+                CAMINHO_B: _pacote("LOTE-B", curadoria=_curadoria_completa("LOTE-B"))})
+    at = _abrir_historico(historias=copy.deepcopy(HISTORIAS), lote_id="LOTE-A")
+    at.button(key=f"reabrir_{CAMINHO_B}").click().run()
+    listar_antes, ler_antes = b.n_listar, b.n_ler
+    at.button(key="reabrir_confirmar").click().run()
+    assert at.session_state["lote_id"] == "LOTE-B"
+    assert b.n_listar == listar_antes
+    assert b.n_ler - ler_antes == 1  # só o pacote do lote reaberto
+
+
+def test_lista_atualiza_ao_voltar_de_outra_tela_e_ao_clicar_em_atualizar(bucket):
+    b = bucket({CAMINHO_A: _pacote("LOTE-A")})
+    at = _abrir_historico()
+    assert b.n_listar == 1
+    at.run()  # outra execução na mesma tela: usa a lista guardada
+    assert b.n_listar == 1
+
+    b.objetos[CAMINHO_B] = _pacote("LOTE-B")  # algo novo no bucket
+    at.run()
+    assert "ativos/LOTE-B/pacote-distribuicao.json" not in _textos(at)  # ainda a lista guardada
+
+    at.button(key="historico_atualizar_btn").click().run()
+    assert b.n_listar == 2
+    assert "ativos/LOTE-B/pacote-distribuicao.json" in _textos(at)
+
+    b.objetos["ativos/LOTE-C/pacote-distribuicao.json"] = _pacote("LOTE-C")
+    at.session_state["pagina"] = "dashboard"
+    at.run()
+    at.session_state["pagina"] = "historico"
+    at.run()
+    assert b.n_listar == 3  # voltou de outra tela
+    assert "ativos/LOTE-C/pacote-distribuicao.json" in _textos(at)
+
+
+def test_depois_de_reabrir_e_decidir_a_lista_reflete_a_gravacao(monkeypatch, sem_ia):
+    b = _bucket_com_listagem_viva(monkeypatch, {
+        CAMINHO_B: _pacote("LOTE-B", curadoria=[_linha("LOTE-B", H1T, status="ajustes", parecer="ajustar")]),
+    })
+    at = _abrir_historico()
+    assert "gravacoes=0" in _textos(at)
+    _clicar_reabrir(at, CAMINHO_B)
+    at.selectbox(key=f"validacao_{H1T}").set_value("Validada").run()
+    assert b.gravacoes == [CAMINHO_B]
+
+    at.session_state["pagina"] = "historico"
+    at.run()
+    assert not at.exception, at.exception
+    assert "gravacoes=1" in _textos(at)  # a lista foi consultada de novo ao voltar
