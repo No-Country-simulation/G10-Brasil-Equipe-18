@@ -431,3 +431,12 @@ def test_confirmar_fecha_o_dialogo_e_troca_o_lote(bucket, sem_ia):
     assert not _dialogo_aberto(at)
     assert at.session_state["lote_id"] == "LOTE-B"
     assert at.session_state["pagina"] == "curadoria"
+
+
+def test_rodape_do_historico_nao_afirma_que_guarda_as_mensagens_originais(bucket):
+    bucket({CAMINHO_B: _pacote("LOTE-B")})
+    at = _abrir_historico()
+    html = _textos(at)
+    assert ("Os pacotes guardam as histórias, os trechos citados e os rascunhos, "
+            "não as mensagens originais. Nada é publicado automaticamente.") in html
+    assert "e as mensagens de origem" not in html

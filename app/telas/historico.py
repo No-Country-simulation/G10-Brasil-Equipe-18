@@ -302,4 +302,4 @@ def render():
         with st.container(border=True):
             md('<b style="font-size:18px;">Pacotes salvos</b>')
             _tabela(pacotes)
-    caixa("gray", "ⓘ Os pacotes guardam rascunhos e as mensagens de origem. Nada é publicado automaticamente.")
+    caixa("gray", "ⓘ Os pacotes guardam as histórias, os trechos citados e os rascunhos, não as mensagens originais. Nada é publicado automaticamente.")
