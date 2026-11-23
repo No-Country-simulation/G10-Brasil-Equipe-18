@@ -31,13 +31,17 @@ def preparar_case(ativo, fonte, resultados, citacoes, id_interacao):
     citacoes_validas = [dict(c) for c in citacoes if c.get("id_interacao") == id_interacao and c.get("texto") in narrativa]
     if not citacoes_validas:
         return None, "Case sem citação conferida na narrativa."
+    # Título é metadado opcional (Card 05) e não decide o ativo: fora da fonte
+    # ou acima de 200 caracteres, é descartado. Narrativa, resultado e citação
+    # já foram conferidos acima, então o case permanece sem título.
     titulo = campos.get("titulo", "")
-    if not isinstance(titulo, str) or len(titulo) > 200 or (titulo.strip() and titulo.strip() not in fonte):
-        return None, "Título deve ser um trecho da fonte, com até 200 caracteres."
+    titulo = titulo.strip() if isinstance(titulo, str) else ""
+    if len(titulo) > 200 or (titulo and titulo not in fonte):
+        titulo = ""
     return {
         "id": "case_sucesso", "nome": "Case de sucesso", "tipo": "texto",
         "campos": {"texto": narrativa},
-        **({"titulo": titulo.strip()} if titulo.strip() else {}),
+        **({"titulo": titulo} if titulo else {}),
         "interacoes_origem": [id_interacao], "citacoes": citacoes_validas,
         "fontes": [{"afirmacao": c["texto"], "fato": "Trecho literal da interação de origem", "trecho": c["texto"]} for c in citacoes_validas],
     }, ""

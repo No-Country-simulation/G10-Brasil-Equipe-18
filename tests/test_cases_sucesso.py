@@ -43,7 +43,7 @@ def test_tres_categorias_com_case_rastreado(tipo, texto, resultado):
     assert not {"aprovado", "autorizacao_publicacao", "status_revisao"} & case.keys()
 
 
-@pytest.mark.parametrize("alteracao", ["inventado", "resultado", "citacao", "titulo", "duplicado", "vazio", "null"])
+@pytest.mark.parametrize("alteracao", ["inventado", "resultado", "citacao", "duplicado", "vazio", "null"])
 def test_case_invalido_nao_apaga_historia(alteracao):
     tipo, texto, resultado = CENARIOS[0]
     h = resposta(tipo, texto, resultado)
@@ -51,13 +51,43 @@ def test_case_invalido_nao_apaga_historia(alteracao):
     if alteracao == "inventado": campos["texto"] += " Aumentou a renda em 50%."
     if alteracao == "resultado": h["resultados"] = ["Concluiu dois projetos."]
     if alteracao == "citacao": campos["texto"] = "Estudei por oito meses."
-    if alteracao == "titulo": campos["titulo"] = "Contratação na Oracle"
     if alteracao == "duplicado": h["ativos"] *= 2
     if alteracao == "vazio": campos["texto"] = ""
     if alteracao == "null": campos["texto"] = None
     saida = normalizar(h, texto)
     assert len(saida) == 1
     assert saida[0]["ativos"] == [] and saida[0]["case_pendente"]
+
+
+@pytest.mark.parametrize("titulo", [
+    "Contratação na Oracle",
+    "Consegui minha primeira vaga na Oracle!",
+    "a" * 201,
+    None,
+    "",
+])
+def test_titulo_fora_da_fonte_e_descartado_sem_perder_o_case(titulo):
+    """Estilo Cohere: título parafraseado não pode derrubar o case conferido."""
+    tipo, texto, resultado = CENARIOS[0]
+    h = resposta(tipo, texto, resultado)
+    h["ativos"][0]["campos"]["titulo"] = titulo
+    historia = normalizar(h, texto)[0]
+
+    assert [a["id"] for a in historia["ativos"]] == ["case_sucesso"]
+    case = historia["ativos"][0]
+    assert "titulo" not in case
+    assert historia["case_pendente"] == ""
+    assert case["campos"]["texto"] == texto
+
+
+def test_titulo_literal_continua_no_case():
+    tipo, texto, resultado = CENARIOS[0]
+    h = resposta(tipo, texto, resultado)
+    h["ativos"][0]["campos"]["titulo"] = "Consegui minha primeira vaga como analista."
+    case = normalizar(h, texto)[0]["ativos"][0]
+
+    assert case["titulo"] == "Consegui minha primeira vaga como analista."
+    assert case["campos"] == {"texto": texto}
 
 
 def test_fonte_insuficiente_preserva_outros_ativos():
