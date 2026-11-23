@@ -1,7 +1,7 @@
 import streamlit as st
 
 from state import CATEGORIA_TODAS, campo, contagem_ativos_completa, definir, estado_editorial, ir_para, legenda_ativos, resumo_ativos, valor
-from styles import avatar, caixa, cabecalho, chip, esc, md, plural, rotulo_natureza, topbar
+from styles import PROVEDORES_NOMES, avatar, caixa, cabecalho, chip, esc, md, nome_provedor, plural, rotulo_natureza, topbar
 
 
 def _kpi(coluna, rotulo, numero, legenda):
@@ -54,24 +54,22 @@ def render():
 
     c1, c2, c3 = st.columns(3)
     n_canais = len({i['canal'] for i in ss.interacoes})
-    _kpi(c1, "Interações analisadas", len(ss.interacoes), f"{plural(n_canais, 'canal', 'canais')} no lote {ss.lote_id}")
+    if ss.interacoes:
+        _kpi(c1, "Interações analisadas", len(ss.interacoes), f"{plural(n_canais, 'canal', 'canais')} no lote {ss.lote_id}")
+    else:  # lote reaberto do Histórico: o pacote não guarda as interações
+        _kpi(c1, "Interações analisadas", "—", f"Não guardadas no pacote · lote {ss.lote_id}")
     _kpi(c2, "Histórias detectadas", len(historias), f"{len(categorias)} categorias identificadas")
     _kpi(c3, "Ativos gerados", total_ativos, legenda_ativos(contagem))
 
     origem_analise = ss.get("proc_origem_analise", "")
     
-    provedores_nomes = {
-        "gemini": "Gemini",
-        "cohere": "Cohere",
-        "groq": "Groq",
-    }
-    provedor_nome = provedores_nomes.get(origem_analise, origem_analise.title() if origem_analise else "")
+    provedor_nome = nome_provedor(origem_analise)
 
     if origem_analise == "mock":
         caixa("yellow", "⚠️ <b>Resultado simulado, a análise real falhou</b><br>"
                         "As histórias e rascunhos abaixo foram gerados a partir do fallback mock "
                         "porque a análise real não estava disponível ou falhou.")
-    elif origem_analise in provedores_nomes:
+    elif origem_analise in PROVEDORES_NOMES:
         caixa("green", f"✓ <b>Análise real concluída</b><br>"
                        f"As histórias e rascunhos abaixo foram identificados e gerados pela IA ({provedor_nome}). "
                        "A decisão final de publicação é sempre do seu time.")

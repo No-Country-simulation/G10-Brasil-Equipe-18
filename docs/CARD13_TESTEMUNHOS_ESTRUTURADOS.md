@@ -7,7 +7,11 @@ que solicita os demais ativos. Não substitui card de conquista por testemunho.
 
 A primeira versão é extrativa: título (até 200 caracteres), descrição (até 2000)
 e citação (até 500) devem corresponder a trechos literais da única interação de
-origem já preparada/anonimizada. A citação deve coincidir com uma das citações
+origem já preparada/anonimizada. Quando o título devolvido pelo modelo não é
+recorte literal, a aplicação deriva o título das primeiras palavras da citação
+conferida (até 200 caracteres, cortando em palavra inteira) e mantém o
+testemunho; descrição e citação continuam exigindo correspondência literal.
+A citação deve coincidir com uma das citações
 conferidas da história, incluindo o ID da interação. O prompt orienta preservação
 de contexto e omissão diante de dúvida, intenção futura ou insuficiência.
 

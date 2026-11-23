@@ -6,7 +6,7 @@ import streamlit as st
 
 from services import data_service as svc
 from state import contagem_ativos_completa, ir_para, situacao_ativos, valor
-from styles import caixa, cabecalho, esc, md, topbar
+from styles import PROVEDORES_NOMES, caixa, cabecalho, esc, md, nome_provedor, topbar
 
 
 ETAPAS = [
@@ -28,18 +28,19 @@ VISUAL = {
 ATRASO = float(os.environ.get("COMMUNITYLAB_DELAY", "0.9"))
 
 # Provedores de LLM que podem responder a análise (ResultadoLLM.provedor).
-PROVEDORES_REAIS = ("gemini", "cohere", "groq")
+PROVEDORES_REAIS = tuple(PROVEDORES_NOMES)
 
 
 def rotulo_ambiente(origem):
     """Rótulo do Ambiente no resumo do lote.
 
-    "Análise real" diz que a IA rodou de verdade, não que os dados são reais.
+    "Análise real (Provedor)" diz que a IA rodou de verdade e qual provedor
+    respondeu, não que os dados são reais.
     """
     if origem == "mock":
         return "Demonstração"
     if origem in PROVEDORES_REAIS:
-        return "Análise real"
+        return f"Análise real ({nome_provedor(origem)})"
     return "Não confirmado"
 
 

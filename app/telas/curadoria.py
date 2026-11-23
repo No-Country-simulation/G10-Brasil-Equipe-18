@@ -221,6 +221,9 @@ def render():
     h = historia_por_id(hid)
     topbar()
     cabecalho("Etapa 4 de 4 · Decidir", "Curadoria", "Revise, valide e decida sobre cada rascunho antes de qualquer publicação.")
+    aviso_reabertura = ss.pop("aviso_reabertura", "")
+    if aviso_reabertura:
+        caixa("yellow", f"<b>Lote reaberto</b><br>{esc(aviso_reabertura)}")
     if ss.get("erro_curadoria"):
         caixa("red", f"<b>Decisão não gravada no bucket</b><br>{esc(ss.erro_curadoria)}")
     st.button("← Voltar para histórias", on_click=ir_para, args=("historias",))

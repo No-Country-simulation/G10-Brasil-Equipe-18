@@ -179,6 +179,17 @@ def chip(texto, tom="gray"):
     return f'<span class="chip chip-{tom}">{esc(texto)}</span>'
 
 
+# Provedores de LLM que podem responder a análise (ResultadoLLM.provedor) e o
+# nome que a interface mostra. É o único lugar com essa lista.
+PROVEDORES_NOMES = {"gemini": "Gemini", "cohere": "Cohere", "groq": "Groq"}
+
+
+def nome_provedor(origem):
+    """Nome do provedor para exibir. Origem desconhecida volta capitalizada; vazia, vazio."""
+    origem = origem or ""
+    return PROVEDORES_NOMES.get(origem, origem.title())
+
+
 def rotulo_natureza(valor):
     """(texto, tom) do selo da natureza DECLARADA dos dados do lote.
 
@@ -283,6 +294,12 @@ def evidencias_citadas(historia, interacoes_do_lote, modo_demonstracao=True):
         return '<span class="cl-muted">Nenhuma evidência citada registrada.</span>'
 
     html_partes = []
+    if not interacoes_do_lote:
+        # Lote reaberto do Histórico: o pacote não guarda a mensagem original.
+        html_partes.append(
+            '<div class="cl-muted" style="font-size:12px;">Conferência indisponível: '
+            'a mensagem original não é guardada no pacote.</div>'
+        )
     for citacao in citacoes:
         trecho = citacao.get("texto", "")
         confere, motivo, id_int = svc.conferencia_da_citacao(citacao, interacoes_do_lote)

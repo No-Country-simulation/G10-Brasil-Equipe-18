@@ -30,16 +30,35 @@ def _contem_evidencia(citacao, evidencia):
     return re.search(padrao, completa) is not None
 
 
+_LIMITE_TITULO = 200
+_LIMITES = {"descricao": 2000, "citacao": 500}
+_SEPARADOR_PALAVRA = " \t\r\n"
+
+
+def _titulo_derivado(citacao):
+    """Primeiras palavras da citação conferida, até o limite, em palavra inteira.
+
+    Espaço, quebra de linha e tabulação valem como limite de palavra. O recorte
+    continua sendo trecho literal da citação; só as pontas são removidas.
+    """
+    if len(citacao) <= _LIMITE_TITULO:
+        return citacao.strip()
+    corte = citacao[:_LIMITE_TITULO]
+    limite = max(corte.rfind(separador) for separador in _SEPARADOR_PALAVRA)
+    if limite > 0:
+        corte = corte[:limite]
+    return corte.strip() or citacao[:_LIMITE_TITULO].strip()
+
+
 def preparar_testemunho(ativo, fonte, citacoes, id_interacao):
-    """Confere os três campos na fonte; não atribui decisão humana ao LLM."""
+    """Confere descrição e citação na fonte; não atribui decisão humana ao LLM."""
     campos = ativo.get("campos")
     if not isinstance(campos, dict):
         return None, "Campos do testemunho inválidos."
 
-    limites = {"titulo": 200, "descricao": 2000, "citacao": 500}
     limpos = {}
 
-    for nome, limite in limites.items():
+    for nome, limite in _LIMITES.items():
         valor = campos.get(nome)
         if (
             not isinstance(valor, str)
@@ -64,6 +83,14 @@ def preparar_testemunho(ativo, fonte, citacoes, id_interacao):
             )
 
         limpos[nome] = valor
+
+    # O título não derruba o testemunho: usa o do modelo quando é recorte
+    # literal e, quando não é, deriva da citação já conferida.
+    titulo = campos.get("titulo")
+    titulo = titulo.strip() if isinstance(titulo, str) else ""
+    if len(titulo) > _LIMITE_TITULO or (titulo and titulo not in fonte):
+        titulo = ""
+    limpos["titulo"] = titulo or _titulo_derivado(limpos["citacao"])
 
     if not any(
         c.get("id_interacao") == id_interacao
