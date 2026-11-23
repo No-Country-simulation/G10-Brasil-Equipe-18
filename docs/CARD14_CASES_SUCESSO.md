@@ -18,8 +18,9 @@ de procedência. A equipe deve revisar esta escolha antes do aceite.
 - O prompt pede resultado/avanço em conquista profissional, projeto de destaque ou
   superação; dúvida, intenção e plano futuro sem avanço não bastam.
 - A normalização exige um `resultados` literal presente na fonte e no case e uma
-  citação conferida incluída na narrativa. Narrativa e título sem correspondência
-  literal são recusados. Texto é limitado a 6000 caracteres.
+  citação conferida incluída na narrativa. Narrativa sem correspondência literal é
+  recusada; título fora da fonte é descartado e o case permanece, sem título. Texto
+  é limitado a 6000 caracteres.
 - O ID da interação e as citações vêm da fonte já rastreada pela análise, nunca dos
   metadados sugeridos pelo modelo. Cases duplicados são recusados.
 - Não há garantia semântica automática: uma frase literal pode ser selecionada fora
@@ -65,7 +66,7 @@ python scripts/validar_exemplos_card05.py
 ```
 
 Testes do Card 14 cobrem as três categorias, texto inventado, resultado sem fonte,
-citação ausente na narrativa, título inventado, duplicação, campos vazios/nulos,
+citação ausente na narrativa, título inventado (descartado sem perder o case), duplicação, campos vazios/nulos,
 fonte insuficiente, duas histórias, chamada única com provedor simulado,
 edição/roundtrip do pacote com storage simulado e AppTest Estúdio/Curadoria,
 inclusive história sem ativos. Sem credenciais, API ou OCI reais.
