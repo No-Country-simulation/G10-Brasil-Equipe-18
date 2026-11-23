@@ -35,7 +35,7 @@ python -m venv .venv
 
 ### 4. Instale as dependências
 ```bash
-pip install -r requirements-front.txt
+pip install -e .
 ```
 
 ### 5. Rode o aplicativo
@@ -185,7 +185,7 @@ O `docker-compose.yml` orquestrará front + back + banco (se houver).
 **Solução**: 
 ```bash
 pip install --upgrade pip
-pip install -r requirements-front.txt
+pip install -e .
 ```
 
 ### Porta 8501 já em uso

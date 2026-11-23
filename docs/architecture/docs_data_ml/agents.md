@@ -9,7 +9,7 @@ Regras para quem escreve código na **ingestão, processamento e análise**. Det
 ## Comandos
 
 ```bash
-pip install -r requirements.txt     # dependências (manter a lista mínima)
+pip install -e .
 pytest -q                           # testes, devem rodar em poucos segundos e sem rede
 python validar.py exemplos/cenarios_demo.json   # valida schemas e exemplos
 ```
