@@ -1,410 +1,763 @@
-# CommunityLab · Front-end (Streamlit) 
+# CommunityLab · Front-end (Streamlit)
 
-Interface do CommunityLab, feita em Streamlit. Por enquanto ela funciona sozinha, com **dados fictícios**, para o time poder ver e validar o fluxo antes de o back ficar pronto.
+Interface do CommunityLab integrada à análise por LLM, à curadoria humana e ao OCI Object Storage. Permite importar interações, consultar histórias detectadas, editar rascunhos e registrar decisões de curadoria.
 
-> Todos os nomes, mensagens e depoimentos do front são inventados. Nada aqui representa pessoas reais.
+Situação documental conferida em **22/11/2026**. Código integrado à main, implantação e homologação funcional são etapas distintas.
 
-## Identidade Visual
+Os exemplos fornecidos para demonstração usam dados fictícios. Na Importação, a natureza de cada lote é declarada como fictícios, reais ou não informado. Essa declaração não é deduzida pelo provedor de IA nem comprova anonimização.
 
-O CommunityLab usa um estilo híbrido **SaaS corporativo + IA**, com visual limpo, profissional e acessível.
+> Os conteúdos gerados são rascunhos sujeitos à revisão humana. Validação factual, aprovação editorial e autorização para publicação são controles separados. Nada é publicado automaticamente.
+
+## Estado das integrações e da implantação
+
+| Entrega | Situação |
+|---|---|
+| Persistência de decisões e campos editados — #57 | Integrada; recuperação editorial completa em nova sessão continua pendente. |
+| Conferência de citações — #59 | Integrada ao Estúdio e à Curadoria. |
+| Identificação do ambiente de análise — #60 | Integrada; identifica processamento/provedor, não a natureza das mensagens. |
+| Tratamento de resposta truncada — #61 | Integrado, com nova tentativa sobre o mesmo lote. |
+| Natureza dos dados — #62 e #63 | Integrada ao pacote e à interface. |
+| Correção de anonimização — #64 | Integrada em `fcc077e` e implantada na VM conforme registro de Luciene. |
+| Cases de sucesso — #67 | Integrados em `07ae36c`. |
+| Testemunhos estruturados e correção de citações — #68 | Integrados em `a4ca159`, incluindo a correção `016c12d`. |
+| Indicador de história sem ativos — #73 | Integrado em `d33de32`; apresenta “Sem ativos gerados”, em cinza. |
+
+### Última implantação confirmada
+
+Luciene informou uma implantação em **22/11/2026, às 19h28, horário de Brasília**, com:
+
+- SHA `fcc077e`, correspondente ao merge do #64.
+- Container em execução e com saúde `healthy`.
+- Modelo `pt_core_news_sm` carregado.
+- Teste resumido de anonimização com resultado OK, com texto mascarado.
+
+Esse registro não inclui os merges posteriores de cases, testemunhos e indicador de história sem ativos.
+
+A implantação consolidada dessas entregas e seus retestes pela interface continuam pendentes. O teste resumido de máscara não equivale à homologação completa da anonimização.
+
+## Identidade visual
+
+O CommunityLab utiliza navegação lateral escura e destaques em violeta.
 
 ### Paleta de cores
 
-| Cor                  | Código                                  | Uso                                                |
-| -------------------- | --------------------------------------- | -------------------------------------------------- |
-| **Azul-marinho**     | `#101B32`                               | Sidebar e navegação                                |
-| **Violeta**          | `#7C3AED`                               | Cor primária, ações de IA e destaques              |
-| **Ciano**            | `#22D3EE`                               | Detalhes tecnológicos (SOMENTE sobre fundo escuro) |
-| **Branco-neutro**    | `#F8FAFC`                               | Fundo da área de trabalho                          |
-| **Verde**            | `#10B981` (fundos) / `#047857` (textos) | Sucesso e aprovação                                |
-| **Texto principal**  | `#0F172A`                               | Títulos e conteúdo principal                       |
-| **Texto secundário** | `#64748B`                               | Labels, legendas e informações auxiliares          |
-| **Borda suave**      | `#E2E8F0`                               | Bordas de cards e divisores                        |
+| Cor | Código | Uso |
+|---|---|---|
+| Azul-marinho | `#101B32` | Sidebar e navegação |
+| Violeta | `#7C3AED` | Ações e destaques |
+| Ciano | `#22D3EE` | Detalhes sobre fundo escuro |
+| Branco-neutro | `#F8FAFC` | Fundo da área de trabalho |
+| Verde | `#10B981` / `#047857` | Indicadores de sucesso |
+| Texto principal | `#0F172A` | Títulos e conteúdo |
+| Texto secundário | `#64748B` | Legendas e informações auxiliares |
+| Borda suave | `#E2E8F0` | Cards e divisores |
 
-### Regras de contraste
+### Diretrizes
 
-- Todos os pares texto/fundo seguem **WCAG AA** (4.5:1 para texto normal, 3:1 para texto grande)
-- Verde `#047857` é usado para **texto sobre fundo claro** (legibilidade garantida)
-- Ciano `#22D3EE` aparece **apenas sobre azul-marinho** (nunca sobre fundo claro)
-- Sidebar escura: texto claro `#F8FAFC` sobre azul-marinho `#101B32`
+- Fonte Inter.
+- Textos diretos e compreensíveis.
+- Cards com bordas suaves e cantos arredondados.
+- Cores acompanhadas de rótulos e explicações.
+- A paleta e as diretrizes visuais não substituem uma auditoria de acessibilidade.
 
-### Tipografia
+## Módulos da interface
 
-- **Fonte:** Inter (pesos 400, 500, 600, 700)
-- **Tom:** Natural, direto, sem jargão técnico excessivo
-- **Slogan:** "Histórias reais. Impacto inteligente."
+| Módulo | Comportamento |
+|---|---|
+| Dashboard | Apresenta contagens e atalhos. Não equivale ao painel analítico avançado previsto no Card 22. |
+| Importação | Recebe CSV, JSON colado ou mensagens do Discord, conforme configuração. Apresenta prévia, filtro por canal, avisos de IDs e declaração da natureza do lote. |
+| Histórias | Apresenta histórias detectadas, categorias, relevância, natureza declarada dos dados e acesso ao Estúdio. |
+| Estúdio de Conteúdo | Permite consultar evidências e editar os campos dos ativos disponíveis. |
+| Curadoria | Permite validar fatos, decidir editorialmente e registrar autorização de publicação. |
+| Histórico | Lista pacotes persistidos no OCI, permite visualizar o JSON e baixar os objetos disponíveis. |
 
-### Componentes
+### Fluxo de trabalho
 
-- **Cards:** Fundo branco com borda `#E2E8F0`, cantos arredondados (10px)
-- **Botões:** Estados normal, hover e ativo com transições suaves
-- **Chips:** Cores semânticas (verde = sucesso, amarelo = pendente, vermelho = erro, roxo = IA)
-- **Sidebar:** Azul-marinho com destaque violeta no item ativo
+1. Carregar as interações.
+2. Declarar a natureza dos dados antes de confirmar a importação.
+3. Importar e processar o lote.
+4. Consultar histórias e evidências.
+5. Editar rascunhos no Estúdio.
+6. Registrar decisões na Curadoria.
+7. Consultar os pacotes no Histórico.
 
-## O que o front faz
+Consultar ou baixar um pacote no Histórico não significa restaurar automaticamente o lote completo para edição em uma nova sessão.
 
-O fluxo tem 6 módulos, organizados no menu lateral:
+### Histórias sem ativos
 
-| Módulo                  | O que acontece                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
-| ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Dashboard**           | Visão geral com KPIs (interações, histórias, ativos gerados) e ações rápidas para navegar                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
-| **Importação**          | Upload de CSV/JSON ou JSON colado, com prévia das interações e filtro por canal. Botão "Importar interações" dá início ao processamento                                                                                                                                                                                                                                                                                                                                                                                                                                     |
-| **Histórias**           | Lista as histórias detectadas com categoria, relevância e trecho original. Filtros por categoria e relevância mínima. Botão "Ver no Estúdio" para cada história                                                                                                                                                                                                                                                                                                                                                                                                             |
-| **Estúdio de Conteúdo** | Visualização lado a lado de evidências e rascunhos. Coluna esquerda: mensagem original com destaques, fatos extraídos. Coluna direita: conteúdo editável (Testemunho estruturado ou Case de sucesso), contador de caracteres, seção "Fontes deste conteúdo" com rastreabilidade, botões Regenerar, Copiar e Enviar para curadoria                                                                                                                                                                                                                                           |
-| **Curadoria**           | Revisa os rascunhos com três controles independentes: (1) Validação factual (Pendente, Validada, Evidências insuficientes, Contradição não resolvida), (2) Curadoria editorial (Rascunho, Ajustes solicitados, Aprovado, Rejeitado), (3) Autorização de publicação (Não registrada, Registrada). A autorização NÃO bloqueia a aprovação editorial. Regra RG-02: com "Contradição não resolvida", o botão Aprovar fica desabilitado. Regra RG-03: "Liberado para publicação" aparece apenas quando Validada + Aprovado + Registrada. O sistema nunca publica automaticamente |
-| **Histórico**           | Lista os pacotes salvos no bucket OCI, com visualização do JSON e download                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+Uma história preservada sem ativos apresenta o indicador cinza **Sem ativos gerados**.
 
-**Fluxo de trabalho:**
-1. **Importar** → carregar interações da comunidade
-2. **Processar** → análise automática (transição entre Importação e Histórias)
-3. **Revisar** → explorar histórias e editar rascunhos no Estúdio
-4. **Decidir** → validar, aprovar ou rejeitar na Curadoria
-5. **Consultar** → verificar pacotes salvos no Histórico
+A ausência de ativos não é apresentada como rejeição editorial. O #73 corrigiu a avaliação de uma lista vazia de estados, que anteriormente produzia o indicador “Rejeitado”.
 
-**Regras de Curadoria (conforme CQF):**
-- **Três controles independentes:** Validação factual, Curadoria editorial e Autorização de publicação funcionam de forma separada
-- **RG-01:** A interface nunca preenche lacunas com informação inventada. "Regenerar" apenas alterna entre variações fictícias baseadas nas evidências
-- **RG-02:** Com "Contradição não resolvida", o botão Aprovar fica desabilitado até que a contradição seja resolvida ou a validação seja alterada
-- **RG-03:** O indicador "Liberado para publicação" aparece apenas quando os três controles estão completos: Validação = Validada, Curadoria = Aprovado, Autorização = Registrada
-- **Autorização não bloqueia aprovação:** É possível aprovar editorialmente um ativo mesmo sem autorização registrada (útil para análise interna)
-- **Nada é publicado automaticamente:** Mesmo com "Liberado para publicação", o sistema não publica. A decisão final é do time
+A correção preserva os estados de revisão humana pendente, rejeição e revisão concluída quando existem ativos.
 
-**Princípio do produto:** a IA sugere, o time decide. Nada é publicado automaticamente, e cada ativo gerado aponta para a mensagem original.
+## Curadoria humana
 
-## Como rodar
+A interface possui três controles independentes:
 
-Pré-requisito: Python 3.10 ou superior.
+- **Validação factual:** Pendente, Validada, Evidências insuficientes ou Contradição não resolvida.
+- **Curadoria editorial:** Rascunho, Ajustes solicitados, Aprovado ou Rejeitado.
+- **Autorização de publicação:** Não registrada ou Registrada.
+
+### Regras
+
+- Com **Contradição não resolvida**, o botão Aprovar fica desabilitado.
+- Aprovação editorial não exige, por si só, autorização de publicação.
+- O indicador **Liberado para publicação** depende de validação factual, aprovação editorial e autorização registrada.
+- Nenhum conteúdo é publicado automaticamente.
+- A conferência de citações não substitui a avaliação contextual e factual do ativo inteiro.
+- A ação **Regenerar** alterna entre variações já disponíveis. Não realiza uma nova chamada ao LLM; sem variações, mantém o conteúdo.
+
+O #57 integrou a persistência de decisões e campos editados no pacote. O reteste funcional da versão consolidada e a recuperação editorial completa em nova sessão permanecem pendentes.
+
+## Como executar
+
+Pré-requisito: **Python 3.11 ou superior**, com dependências compatíveis com a versão utilizada.
+
+O `pyproject.toml` exige Python `>=3.11`. A imagem Docker utiliza `python:3.11-slim`.
+
+Na raiz do repositório:
 
 ```bash
-pip install -r requirements-front.txt
-streamlit run app/main.py
+python -m venv .venv
 ```
 
-No Windows, se `streamlit` não for reconhecido:
+Ative o ambiente virtual.
+
+**Windows — CMD:**
+
+```cmd
+.venv\Scripts\activate.bat
+```
+
+**Windows — PowerShell:**
+
+```powershell
+.\.venv\Scripts\Activate.ps1
+```
+
+**Linux/macOS:**
+
+```bash
+source .venv/bin/activate
+```
+
+Instale as dependências da interface:
+
+```bash
+python -m pip install -r requirements-front.txt
+```
+
+Inicie a aplicação:
 
 ```bash
 python -m streamlit run app/main.py
 ```
 
-O app abre em `http://localhost:8501`.
+O endereço local padrão é `http://localhost:8501`.
 
-Para executar em uma VM Oracle com Docker, consulte o [guia de deploy](docs/DEPLOYMENT_ORACLE_VM.md).
+A execução integrada também depende da configuração dos provedores e do armazenamento.
+
+Consulte:
+
+- [Instruções gerais de execução](COMO_RODAR.md)
+- [Guia de implantação na VM Oracle](docs/DEPLOYMENT_ORACLE_VM.md)
 
 ## Configuração dos provedores de LLM
 
-A análise tenta os provedores nesta ordem: **Gemini → Cohere → Groq**. Se um provedor não tiver chave configurada ou falhar, o próximo é tentado. O app não substitui uma falha por histórias fictícias.
+A análise tenta os provedores nesta ordem:
 
-Configure as chaves em `.streamlit/secrets.toml` ou como variáveis de ambiente:
+**Gemini → Cohere → Groq**
+
+Se um provedor não tiver chave configurada ou falhar, o próximo é tentado. Se todos falharem, a aplicação apresenta o erro; não substitui a falha por histórias fictícias.
+
+As configurações podem ser fornecidas em `.streamlit/secrets.toml` ou por variáveis de ambiente.
+
+Exemplo de estrutura:
 
 ```toml
-GEMINI_API_KEY = "sua-chave-gemini"
-GEMINI_MODEL = "gemini-3.6-flash"
-COHERE_API_KEY = "sua-chave-cohere"
-COHERE_MODEL = "cohere.command-r-plus"
-GROQ_API_KEY = "sua-chave-groq"
-GROQ_MODEL = "llama-3.1-8b-instant"
+GEMINI_API_KEY = "SUBSTITUA_PELA_SUA_CHAVE"
+GEMINI_MODEL = "MODELO_DISPONIVEL_NA_SUA_CONTA"
+
+COHERE_API_KEY = "SUBSTITUA_PELA_SUA_CHAVE"
+COHERE_MODEL = "MODELO_DISPONIVEL_NA_SUA_CONTA"
+
+GROQ_API_KEY = "SUBSTITUA_PELA_SUA_CHAVE"
+GROQ_MODEL = "MODELO_DISPONIVEL_NA_SUA_CONTA"
+
 LLM_MAX_OUTPUT_TOKENS = 8192
 ```
 
-O arquivo `.streamlit/secrets.toml` está no `.gitignore` e não deve ser commitado. As credenciais não ficam no código. Se as chamadas aos três provedores falharem, a análise apresenta o erro em vez de exibir histórias fictícias como resultado. O texto do prompt fica em `app/services/prompt_analise.txt`, separado da lógica de integração.
+Substitua os exemplos pelos modelos compatíveis com o adaptador e disponíveis na conta utilizada. Configure as chaves dos provedores que serão usados.
 
-**Streamlit Cloud (app publicado):** abra o app em `share.streamlit.io` → menu `⋮` → **Settings** → **Secrets**, cole as chaves e os modelos necessários e clique em **Save**. Se o app não recarregar sozinho, use **Reboot**. As chaves devem ser cadastradas nas configurações do app, nunca no repositório.
+- Não inclua credenciais no repositório.
+- O arquivo `.streamlit/secrets.toml` deve permanecer fora do versionamento.
+- O prompt está em `app/services/prompt_analise.txt`.
+- Configurar um provedor não comprova sua validação funcional no ambiente implantado.
 
-## Rastreabilidade de evidências (CATP-007)
+### Streamlit Community Cloud
 
-Cada evidência citada está vinculada à interação original através do **ID da interação**. O front implementa validação rigorosa de IDs para garantir rastreabilidade completa.
+No gerenciamento do aplicativo:
 
-### Regras de ID de interação
+1. Abra **Settings**.
+2. Acesse **Secrets**.
+3. Informe as chaves e os modelos necessários no formato TOML.
+4. Clique em **Save**.
+5. Se necessário, utilize **Reboot**.
 
-O ID é calculado **uma única vez antes de qualquer filtro ou validação**, seguindo esta ordem:
+Os nomes e a posição dos controles podem variar conforme a interface do serviço.
 
-1. **ID explícito válido:** campo `id` inteiro >= 1 (booleano NÃO conta como inteiro)
-2. **ID ausente ou inválido:** posição da interação no lote original, começando em 1
+As credenciais pertencem às configurações do aplicativo, nunca ao repositório.
 
-#### IDs inválidos
-- Zero (`id: 0`)
-- Negativo (`id: -5`)
-- Texto (`id: "abc"`)
-- Booleano (`id: true` ou `id: false`)
+### Identificação do ambiente de análise
 
-Quando um ID é inválido, o sistema:
-- Usa a posição da interação (começando em 1)
-- Gera um **aviso visível** na tela de Importação listando as interações afetadas
-- **Nunca pode ser silencioso** - o usuário deve saber que IDs foram recalculados
+O Processamento apresenta um dos rótulos:
 
-#### IDs duplicados
+- **Demonstração**
+- **Análise real**
+- **Não confirmado**
 
-Se dois ou mais registros têm o mesmo ID efetivo (seja explícito ou por posição), o lote é **rejeitado imediatamente** com mensagem em português detalhando:
-- Quais IDs estão duplicados
-- Quais interações (autor e posição) colidem
-- Isso vale tanto para upload de arquivo quanto para JSON colado
-- Exemplo de colisão: primeiro item com `id: 2` explícito, segundo item sem id (vira posição 2)
+O rótulo identifica o processamento/provedor utilizado. Ele não determina se as mensagens são reais ou fictícias e não comprova sua anonimização.
 
-#### Preservação após filtros
+### Respostas truncadas
 
-Os IDs calculados são armazenados em `_id_efetivo` e **nunca mudam após filtros**. Exemplo:
+O #61 integrou tratamento específico para respostas encerradas com `MAX_TOKENS`.
 
-```json
-[
-  {"id": 101, "autor": "Ana", "canal": "#conquistas"},  // ID efetivo: 101
-  {"autor": "Bob", "canal": "#geral"},                   // ID efetivo: 2 (posição)
-  {"id": 309, "autor": "Carlos", "canal": "#conquistas"} // ID efetivo: 309
-]
-```
+A interface permite nova tentativa sobre o mesmo lote. Pode ser necessário reduzir o lote ou ajustar `LLM_MAX_OUTPUT_TOKENS`.
 
-Após filtrar por `#conquistas`, os IDs continuam 101 e 309 (não viram 1 e 2).
-
-### Conferência de citações
-
-Cada citação é conferida contra o texto **da interação indicada pelo seu `id_interacao`** (não contra a mensagem inteira nem o lote todo). A regra de comparação está em `app/services/conferencia_citacao.py`; as telas chegam a ela só pelo `data_service` (`conferencia_da_citacao` e `conferencia_da_citacao_do_ativo`). O resultado é **por citação**, sempre com o motivo ao lado, e **não existe selo geral por ativo**.
-
-| Rótulo na tela | Cor | Quando aparece |
-|---|---|---|
-| Trecho literal conferido | verde | o texto existe igual na interação, sem marcador |
-| Compatível com anonimização · a parte mascarada não é conferida | azul | a citação tem `[NOME]`, `[EMAIL]`, `[CPF]` ou `[TELEFONE]` e o resto bate com o original |
-| ⚠ Não confere + motivo | amarelo | trecho alterado, marcador de outro tipo, lacuna longa etc. |
-| Conferência indisponível | neutro, sem chip | a interação com aquele ID não está no lote |
-| Conferência indisponível (mais de uma origem) | neutro, sem chip | o ativo tem mais de uma interação de origem |
-| ID não informado | neutro, sem chip | `id_interacao` ausente, 0 ou inválido |
-
-Os dois "confere" nunca usam o mesmo rótulo nem a mesma cor. O azul **não é uma aprovação**: a função só confere a forma da parte mascarada, não o dado real. Um termo mascarado por engano (por exemplo `[NOME]` no lugar de "Cloud") também aparece como compatível.
-
-**Onde aparece**
-
-- **Evidências citadas** (Estúdio e Curadoria): um resultado por citação, com "interação nº N" visível.
-- **Campo "Citação" editável** (Estúdio e Curadoria): o resultado fica logo abaixo do campo e é recalculado a cada edição. Como o campo não tem `id_interacao` próprio, a origem é `interacoes_origem` da história.
-
-**Regras**
-
-- O sistema **nunca mostra verde nem azul** sem interação de origem no lote.
-- Origem ambígua (mais de uma interação, ou nenhuma) não é adivinhada: o resultado fica neutro.
-- A conferência confirma que o trecho existe na mensagem. Não prova que o conteúdo do ativo é fiel ao relato nem autoriza publicação.
-
-### Modo demonstração
-
-Quando `modo_demonstracao=True` (padrão), as evidências citadas recebem o chip cinza "Exemplo de demonstração" para deixar claro que são dados fictícios.
-
-### Exibição de IDs
-
-- **Importação:** coluna "ID" na prévia das interações
-- **Estúdio e Curadoria:** linha "ID da interação" nos metadados (separada do campo "Lote")
-- **Evidências citadas:** "interação nº N" para cada trecho
-- **ID não informado:** quando `id_interacao` é 0, ausente ou inválido, exibe "ID não informado" em vez de "ID 0"
-
-### Implementação técnica
-
-- **Função centralizada:** `calcular_ids_efetivos(itens)` em `app/services/data_service.py`
-  - Retorna lista de IDs, lista de avisos e mensagem de erro (se houver duplicados)
-  - Valida unicidade **antes** de qualquer outra operação
-  - Campo `_id_efetivo` adicionado a cada interação
-- **Compatibilidade:** mesma regra do `llm.py` linha 220 (campo `id` inteiro >= 1, senão posição)
-- **Testes:** `tests/test_front_ids.py` cobre 9 cenários sem Streamlit e sem rede
-
-## Modo demonstração
-
-Na barra lateral, em **Modo demonstração**, dá para:
-
-- simular erro ao salvar no OCI (mostra a tela de falha e o botão "Tentar novamente");
-- alternar a tela de Histórico entre os estados normal, vazio, carregando e erro de conexão;
-- reiniciar a demonstração.
-
-Para acelerar ou desacelerar a simulação do Processamento, use a variável `COMMUNITYLAB_DELAY` (segundos por etapa).
+A nova tentativa não garante sucesso, e aumentar o limite depende das condições do modelo utilizado.
 
 ## Natureza declarada dos dados
 
-Na **Importação**, antes do botão "Importar interações", a pessoa declara a natureza dos dados do lote: **Fictícios (exemplo ou teste)**, **Reais (relatos de pessoas)** ou **Não informado** (padrão). O valor é `natureza_dados`, guardado com `campo()` em `ss.dados` e lido por `valor("natureza_dados", "nao_informado")`. Os valores válidos vêm de `svc.NATUREZAS_DADOS`. O contrato e a gravação no pacote estão em `docs/CARD05_CONTRATOS_INTEGRACAO.md`.
+Na Importação, antes de confirmar o lote, a pessoa declara:
 
-- A declaração volta para "Não informado" a cada lote novo e em "Reiniciar demonstração".
-- Depois de clicar em "Importar interações", o controle fica desabilitado para este lote, para o selo sempre mostrar o que foi gravado. Carregar o lote de novo libera a declaração. No upload de arquivo, para reenviar o mesmo arquivo é preciso remover o arquivo do campo antes (isso cria um lote novo).
-- Sem interações carregadas o controle também fica desabilitado, porque carregar um lote apaga a declaração.
-- Nas **Histórias**, o selo mostra o que foi declarado: "Dados fictícios (declarado)" (amarelo), "Dados reais (declarado)" (azul) ou "Natureza não informada" (cinza). Nenhum usa verde, para não parecer validação. O rótulo vem de `rotulo_natureza()` em `app/styles.py`.
-- O selo **nunca deduz** a natureza pelo autor, pelo conteúdo, pela origem (Discord, JSON) nem pelo provedor de análise (Gemini, Cohere, Groq, mock).
+| Valor | Rótulo na interface |
+|---|---|
+| `ficticios` | Fictícios (exemplo ou teste) |
+| `reais` | Reais (relatos de pessoas) |
+| `nao_informado` | Não informado |
 
-Pendência: a nota "Exemplo fictício…" da Importação ainda é decidida pela origem do lote, não pela declaração.
+### Comportamento
 
-## Estrutura de pastas
+- O padrão é **Não informado**.
+- Um lote novo não herda a declaração do lote anterior.
+- Reiniciar a demonstração também retorna a declaração ao padrão.
+- Sem interações carregadas, o controle fica desabilitado.
+- Após clicar em **Importar interações**, a declaração fica travada para aquele lote.
+- Para alterar a declaração, carregue um lote novo.
+- Para reenviar o mesmo arquivo como novo lote, remova-o do campo de upload antes de selecioná-lo novamente.
 
+Nas Histórias:
+
+- **Dados fictícios (declarado):** amarelo.
+- **Dados reais (declarado):** azul.
+- **Natureza não informada:** cinza.
+
+Nenhum desses selos usa verde como indicação de validação.
+
+A natureza não é inferida pelo autor, conteúdo, origem do arquivo, Discord ou provedor de análise.
+
+O valor é preservado como `natureza_dados` no pacote principal. Consulte o [contrato de integração](docs/CARD05_CONTRATOS_INTEGRACAO.md).
+
+### Rótulos demonstrativos ainda pendentes de alinhamento
+
+A nota “Exemplo fictício…” da Importação ainda depende da origem do lote, embora a declaração seja independente.
+
+O componente de evidências citadas utiliza `modo_demonstracao=True` por padrão, e as telas não substituem esse valor. Por isso, o chip **Exemplo de demonstração** também pode aparecer com análise real e dados declarados como reais.
+
+Esses rótulos não devem ser usados como prova da natureza dos dados. O alinhamento com a declaração do lote permanece pendente.
+
+## Rastreabilidade das interações
+
+Cada interação recebe um ID efetivo antes dos filtros.
+
+### Regras de ID
+
+1. Um `id` explícito é aceito quando é inteiro maior ou igual a 1.
+2. Booleanos não são aceitos como IDs inteiros.
+3. Se o ID estiver ausente ou inválido, é utilizada a posição no lote original, começando em 1.
+4. A substituição de IDs inválidos gera aviso na Importação.
+5. IDs efetivos duplicados provocam rejeição do lote.
+6. Os IDs efetivos não são recalculados após filtros.
+
+A regra está centralizada em `calcular_ids_efetivos()` de `app/services/data_service.py`.
+
+### Exemplo de entrada
+
+Os registros abaixo são fictícios:
+
+```json
+[
+  {
+    "id": 101,
+    "autor": "Pessoa de exemplo A",
+    "canal": "#conquistas",
+    "tipo": "mensagem",
+    "texto": "Consegui minha primeira vaga."
+  },
+  {
+    "autor": "Pessoa de exemplo B",
+    "canal": "#geral",
+    "tipo": "mensagem",
+    "texto": "Compartilho uma experiência."
+  }
+]
 ```
-app/
-  main.py                    entrada do app, menu lateral e roteamento
-  state.py                   estado da sessão
-  styles.py                  CSS e helpers de HTML
-  telas/                     uma tela por arquivo
-    dashboard.py             (nova) visão geral do sistema
-    importacao.py            (era ingestao.py) upload de interações
-    processamento.py
-    historias.py
-    estudio.py               (nova) placeholder para ETAPA 3
-    curadoria.py
-    historico.py             (era oci.py) consulta de pacotes salvos
-  services/
-    data_service.py          ÚNICO ponto de contato com os dados
-  mocks/
-    mock_data.py             dados fictícios
-.streamlit/
-  config.toml                tema (cores)
-requirements-front.txt
+
+O primeiro registro utiliza o ID 101. O segundo utiliza o ID efetivo 2, correspondente à posição original.
+
+Uma colisão entre um ID explícito e um ID derivado da posição também provoca rejeição do lote.
+
+### Exibição dos IDs
+
+- **Importação:** coluna ID na prévia das interações.
+- **Estúdio e Curadoria:** ID da interação nos metadados, separado do lote.
+- **Evidências citadas:** identificação “interação nº N”.
+- **Origem sem ID válido:** apresentação “ID não informado”, em vez de “ID 0”.
+
+As regras possuem cobertura em `tests/test_front_ids.py`.
+
+## Conferência de citações
+
+Cada citação é conferida contra a interação indicada pelo seu `id_interacao`.
+
+A regra está em `app/services/conferencia_citacao.py`. As telas utilizam as funções disponibilizadas pelo `data_service`.
+
+| Resultado | Apresentação | Significado |
+|---|---|---|
+| Trecho literal conferido | Verde | O trecho corresponde ao texto da interação, sem marcador. |
+| Compatível com anonimização · a parte mascarada não é conferida | Azul | A parte não mascarada corresponde ao original; o dado ocultado não é conferido. |
+| Não confere | Amarelo, com motivo | O trecho apresenta incompatibilidade com a fonte. |
+| Conferência indisponível | Neutro | A interação não está disponível ou a origem é ambígua. |
+| ID não informado | Neutro | O ID está ausente ou inválido. |
+
+### Onde aparece
+
+- Nas evidências citadas do Estúdio e da Curadoria.
+- Abaixo do campo Citação editável do testemunho, com revalidação após alterações.
+
+O campo editável utiliza a origem da história. Quando há mais de uma origem ou nenhuma origem disponível, a conferência não adivinha qual utilizar.
+
+### Limites da conferência
+
+- O resultado é individual por citação; não existe selo geral de fidelidade por ativo.
+- O azul não representa aprovação factual.
+- Um termo mascarado indevidamente pode ser considerado compatível com anonimização.
+- A presença literal de um trecho não comprova que toda a narrativa respeita o contexto.
+- A conferência do campo Citação não equivale à conferência de todos os campos editáveis.
+- Nenhum resultado autoriza publicação.
+
+## Preparação textual e anonimização
+
+Antes do envio ao provedor, o serviço de análise aplica normalização e anonimização ao texto.
+
+Os dados reconhecidos podem ser substituídos por marcadores como:
+
+- `[NOME]`
+- `[EMAIL]`
+- `[TELEFONE]`
+- `[CPF]`
+
+O autor também é pseudonimizado antes do envio. Valores já no formato esperado de pseudônimo são preservados.
+
+Na resposta, o texto de origem e as citações são vinculados à interação correspondente, em vez de confiar apenas no texto repetido pelo modelo.
+
+### Modelo e fallback por ambiente
+
+Na imagem Docker, o modelo `pt_core_news_sm` é instalado e validado durante o build.
+
+Em ambientes sem o modelo, incluindo a execução no Streamlit Cloud quando ele não está disponível, a anonimização de nomes utiliza fallback heurístico de melhor esforço.
+
+O caminho efetivamente utilizado depende da disponibilidade do modelo no ambiente. Não deduza seu carregamento apenas pelo serviço de hospedagem.
+
+Na VM, o registro de Luciene de 22/11 às 19h28 confirmou o modelo carregado no SHA `fcc077e`.
+
+### Correção integrada — #64
+
+O #64 foi aprovado por Tissiany e integrado à main em `fcc077e`.
+
+Na revisão do head `f929124`, a revisora relatou:
+
+- **3.682 testes aprovados**.
+- Verificações locais com modelo spaCy real e fallback forçado.
+- Mascaramento dos nomes testados: Paulo, Bianca Ferraz, Renata Moura, Carolina Teixeira e Bruno Carvalho.
+- Preservação dos locais e termos técnicos testados no caminho com o modelo real.
+
+Esses números pertencem à revisão daquela versão e não foram reexecutados para esta atualização documental.
+
+A implantação do #64 está confirmada pelo registro da VM. O reteste completo pela interface continua pendente.
+
+### Limitações
+
+- A anonimização não é garantia de remoção de todos os dados pessoais.
+- O fallback mascarou os nomes isolados testados, mas apresentou falsos positivos em palavras comuns, cidades e termos técnicos.
+- Exemplos observados incluem “Estudei SQL”, “Porto Alegre” e “Cloud Foundations”.
+- Os resultados testados não devem ser generalizados para todos os nomes, termos ou contextos.
+- A declaração de dados reais ou fictícios não comprova que a anonimização foi suficiente.
+- Para mensagens reais, confirme o caminho de anonimização utilizado e a suficiência da preparação antes do envio ao provedor.
+
+Para demonstração e retestes, utilize dados fictícios.
+
+## Integração das telas com os serviços
+
+As telas utilizam `app/services/data_service.py` como ponto de acesso à análise, à rastreabilidade e ao armazenamento. A integração com LLM e OCI está implementada.
+
+| Função | Comportamento atual |
+|---|---|
+| `analisar(interacoes)` | Encaminha as interações para análise pelo serviço de LLM. |
+| `regenerar(historia, ativo_id, vez)` | Alterna entre variações disponíveis no ativo; não solicita nova geração ao LLM. |
+| `listar_pacotes()` | Consulta os objetos persistidos no bucket. |
+| `salvar_no_oci(pacotes, lote_id, historias=None, natureza_dados=None)` | Grava os pacotes do lote com os dados fornecidos. |
+| `reenviar_pacote(pacote)` | Tenta novamente a gravação de um pacote que falhou. |
+| `conteudo_pacote(caminho)` | Lê o JSON de um objeto armazenado. |
+
+### Armazenamento no OCI
+
+O módulo `app/services/oci_storage.py` realiza a gravação e a leitura dos pacotes.
+
+Configuração:
+
+- `OCI_BUCKET_NAME` — nome do bucket.
+- `OCI_NAMESPACE` — namespace do tenancy.
+- `OCI_CONFIG_FILE` — caminho do arquivo de configuração OCI.
+- `OCI_PROFILE` — perfil utilizado no arquivo de configuração.
+
+A autenticação por chave de API utiliza o arquivo de configuração OCI e a chave privada. Credenciais não devem ser incluídas no repositório.
+
+Os objetos são organizados por lote:
+
+```text
+ativos/<lote_id>/<arquivo>.json
 ```
 
-## Como o back se conecta (importante)
+Repetir a gravação do mesmo lote e arquivo utiliza o mesmo caminho, evitando criar outro objeto apenas pela repetição da operação.
 
-As telas **não** importam o back diretamente. Elas só chamam funções do arquivo `app/services/data_service.py`. Hoje essas funções devolvem dados fictícios. Quando o back estiver pronto, basta trocar o corpo delas por chamadas reais, e as telas continuam iguais.
-
-Procure por `TODO(back)` no arquivo para achar os pontos de integração:
-
-| Função                               | O que o back precisa fazer                                                                       |
-| ------------------------------------ | ------------------------------------------------------------------------------------------------ |
-| `analisar(interacoes)`               | Receber as interações e devolver as histórias detectadas com os ativos gerados                   |
-| `regenerar(historia, ativo_id, vez)` | Gerar um novo rascunho para um ativo                                                             |
-| `listar_pacotes()`                   | Listar os objetos do bucket no OCI Object Storage                                                |
-| `salvar_no_oci(pacotes, lote_id)`    | Gravar o pacote no OCI. **Precisa ser idempotente**: tentar de novo não pode duplicar resultados |
-| `reenviar_pacote(pacote)`            | Tentar gravar de novo um pacote que falhou                                                       |
-| `conteudo_pacote(caminho)`           | Ler o JSON de um objeto do bucket                                                                |
-
-### Armazenamento no OCI (implementado)
-
-O módulo `app/services/oci_storage.py` grava e lê os pacotes no bucket. O `data_service.py` já chama esse módulo nas quatro funções acima; sem credencial configurada, o app volta para os dados fictícios.
-
-Configuração por variável de ambiente (ou no `.env` da raiz):
-
-- `OCI_BUCKET_NAME` — padrão `G10communitylab-ativos`
-- `OCI_NAMESPACE` — namespace do tenancy (se vazio, é consultado na API)
-- `OCI_CONFIG_FILE` — padrão `~/.oci/config`
-- `OCI_PROFILE` — padrão `DEFAULT`
-
-Credencial: chave de API do usuário, em `~/.oci/config` com a chave privada. Nada de segredo no repositório.
-
-Formato: cada lote vira `ativos/<lote_id>/<arquivo>.json`. Como o nome vem do lote, regravar sobrescreve — repetir a gravação não duplica. O caminho é montado pelo backend a partir do lote e do nome do arquivo recebido, e não copiado do dado: o mesmo lote com o mesmo arquivo cai sempre no mesmo objeto. Vários arquivos por lote continuam suportados, diferenciados pelo nome.
+O pacote principal utiliza a versão **1.1** e registra a natureza declarada dos dados. O arquivo `evidencias.json` permanece na versão **1.0**.
 
 ### Real, simulado e falha
 
-Cada item devolvido pelo armazenamento carrega três campos:
+Os resultados de armazenamento distinguem:
 
-- `status`: `salvo` (o objeto entrou no bucket) ou `falhou`
-- `persistencia`: `real` ou `simulada`
-- `motivo`: explicação quando não houve gravação real
+- `status`: `salvo` ou `falhou`.
+- `persistencia`: `real` ou `simulada`.
+- `motivo`: explicação quando não houve gravação real.
 
-Sem credencial configurada, nada é gravado: os itens voltam com `status="falhou"`, `persistencia="simulada"` e o motivo preenchido, e a listagem devolve lista vazia. Nunca aparece `salvo` sem gravação no bucket.
+Sem credenciais configuradas:
 
-### Formato provisório dos dados
+- Nada é gravado no bucket.
+- A tentativa retorna falha com motivo.
+- A listagem retorna vazia.
+- Não deve aparecer sucesso de gravação real.
 
-O formato abaixo é o que o front usa **hoje**. Ele é só um ponto de partida e **pode mudar**: quem define o contrato oficial é o back, e o time deve decidir em conjunto.
+As simulações de interface não comprovam persistência no OCI.
 
-Interação (entrada):
+As evidências de bucket privado, autenticação, permissões, acesso negado e condições gratuitas da conta continuam acompanhadas no Card 18.
 
-```json
-{ "autor": "Marina Costa", "canal": "#conquistas", "tipo": "mensagem", "texto": "..." }
-```
+O rótulo visual “OCI Always Free” não comprova a modalidade ou o consumo da conta.
 
-Antes de enviar ao provedor, `llm.analisar()` inclui o ID efetivo e aplica
-`normalizar_texto()` e `anonimizar_texto()` de `src.preprocessing` ao texto.
-Marcadores como `[EMAIL]`, `[TELEFONE]`, `[CPF]` e `[NOME]` substituem os
-valores identificados. O campo `autor` também é pseudonimizado com
-`SAL_PSEUDONIMIZACAO` antes do envio; valores já no formato `membro_...` são
-mantidos. Na resposta, `mensagem_original`, autor e citações são obtidos da
-interação de origem correspondente, não do texto repetido pelo LLM.
+### Persistência e recuperação editorial
 
-Na imagem Docker, `pt_core_news_sm` é instalado e validado durante o build.
-Fora desse ambiente, se o modelo não estiver disponível, a anonimização de
-nomes usa um fallback heurístico de melhor esforço.
+O #57 integrou a gravação de decisões de curadoria e campos editados.
 
-História detectada (saída):
+Isso não equivale à recuperação completa do lote para continuar a edição em outra sessão.
+
+A hidratação da curadoria depende da existência das histórias na sessão. Consultar o JSON salvo não comprova que textos, histórias e decisões foram reconstruídos para edição.
+
+Permanecem pendentes:
+
+- Reteste funcional da persistência na versão consolidada.
+- Recuperação completa dos textos editados e das decisões em nova sessão.
+- Validação integrada dos cases e testemunhos na VM.
+- Verificação de leitura de lotes antigos com os campos opcionais novos.
+
+## Formatos dos dados e contratos
+
+O contrato e os esquemas de integração são documentados em:
+
+- [Contrato de integração — Card 05](docs/CARD05_CONTRATOS_INTEGRACAO.md)
+- [Testemunhos estruturados — Card 13](docs/CARD13_TESTEMUNHOS_ESTRUTURADOS.md)
+- [Cases de sucesso — Card 14](docs/CARD14_CASES_SUCESSO.md)
+
+A representação interna do front e o contrato canônico são estruturas distintas. Não substitua uma pela outra sem adaptação explícita.
+
+### Interações
+
+As interações de entrada utilizam campos como:
+
+- `id`, quando informado.
+- `autor`.
+- `canal`.
+- `tipo`.
+- `texto`.
+
+O ID efetivo é calculado antes dos filtros e preservado durante o processamento.
+
+### Histórias e campos aditivos
+
+A representação interna das histórias inclui:
+
+- Identificador da história.
+- Autor e canal.
+- Categoria e sentimento.
+- Relevância numérica e `relevancia_nivel`.
+- `mensagem_original`.
+- `citacoes`, com texto e `id_interacao`.
+- `interacoes_origem`.
+- `destaques`.
+- Fatos e ativos disponíveis.
+
+`citacoes`, `interacoes_origem`, `relevancia_nivel` e `destaques` fazem parte da evolução aditiva do formato e devem ser preservados nos mapeamentos aplicáveis.
+
+As citações e os destaques são vinculados à fonte conferida. A relevância é uma classificação do processamento, não uma probabilidade ou garantia de veracidade.
+
+### Ativos do front
+
+Os ativos utilizam identificadores, nome, tipo de apresentação e `campos`.
+
+Os tipos de apresentação do formulário não devem ser confundidos com os tipos do contrato canônico. Por exemplo, o case é apresentado como `tipo="texto"` e o testemunho como `tipo="testemunho"`.
+
+Quando disponíveis, os vínculos incluem:
+
+- `interacoes_origem`.
+- `citacoes`.
+- `fontes`.
+
+A estrutura de uma fonte utiliza campos como:
 
 ```json
 {
-  "id": "hist-001",
-  "autor": "Marina Costa",
-  "canal": "#conquistas",
-  "categoria": "Conquista profissional",
-  "sentimento": "Positivo",
-  "relevancia": 96,
-  "relevancia_nivel": "alta",
-  "mensagem_original": "...",
-  "citacoes": [{ "texto": "trecho literal do original", "id_interacao": 1 }],
-  "interacoes_origem": [1],
-  "destaques": ["trecho da mensagem usado no rascunho"],
-  "fatos": ["Conquista: primeira vaga como dev júnior"],
-  "ativos": [
-    { "id": "post_linkedin", "nome": "Post para LinkedIn", "tipo": "texto", "campos": { "texto": "..." } },
-    { "id": "card_conquista", "nome": "Card de conquista", "tipo": "card", "campos": { "titulo": "...", "frase": "..." } }
-  ]
+  "afirmacao": "Trecho relacionado ao conteúdo",
+  "fato": "Descrição do vínculo com a evidência",
+  "trecho": "Trecho literal da interação de origem"
 }
 ```
 
-Campos novos (aditivos, outubro/2026):
+Esse exemplo descreve a forma do vínculo e não constitui evidência de um relato real.
 
-- `citacoes` — cada trecho de prova com o `id_interacao` de origem. O trecho é recortado do texto preparado para análise (com dados pessoais reconhecidos mascarados), não copiado do modelo; se não existir literalmente nessa fonte, é descartado.
-- `interacoes_origem` — lista de ids das interações que sustentam a história.
-- `relevancia_nivel` — faixa derivada da numérica: `alta` (85+), `media` (60 a 84) e `baixa` (abaixo de 60).
-- `destaques` passa a ser derivado das citações validadas, então o destaque em negrito na tela sempre corresponde a texto que existe na mensagem.
+### Pontos de alinhamento entre front, serviços e contrato
 
-Pacote salvo no OCI (listagem):
+- Manter o mapeamento entre IDs internos e IDs canônicos.
+- Preservar os campos estruturados dos testemunhos.
+- Documentar título do case como metadado na raiz do ativo, exibido como legenda e separado da narrativa.
+- Alinhar título opcional no contrato canônico com sua exigência atual na geração e no helper de testemunho.
+- Definir o tratamento de título apagado durante a curadoria.
+- Documentar a relação entre campos editados e citações/fontes originais preservadas.
+- Definir o destino dos campos opcionais `revisor`, `observacao_revisor` e `id_avaliacao_cqf`.
+- Validar os pacotes completos e a leitura de lotes antigos.
+- Não apresentar o helper de conversão de testemunho como exportador canônico geral.
 
-```json
-{ "caminho": "ativos/demo-001/pacote-distribuicao.json", "lote": "DEMO-001",
-  "data": "15/10/2026 14:32", "tamanho": "2,4 KB", "status": "salvo" }
-```
+## Formatos de ativos
 
-## Pontos para alinhar com o back
+A interface possui suporte a campos editáveis conforme o tipo de ativo recebido.
 
-- **Tipos de ativo:** o front agora usa Testemunho estruturado (título + descrição + citação) e Case de sucesso (texto narrativo). Confirmar se o back vai gerar nesse formato.
-- **Rastreabilidade:** o front espera um campo `fontes` em cada ativo, com a estrutura: `[{"afirmacao": "...", "fato": "...", "trecho": "..."}]`. Alinhar formato com o back.
-- Se o campo `tipo` da interação vai ser preenchido e com quais valores.
-- O que o pacote salvo no OCI deve conter. Hoje o JSON de exemplo só tem o status dos ativos. O ideal é guardar também o texto gerado, as citações com a mensagem de origem e se a autorização foi confirmada.
-- Se o status de aprovação ou rejeição feito na Curadoria deve ser atualizado no bucket e como.
-- **Fluxo:** o front agora tem Histórias → Estúdio → Curadoria. Confirmar se o back segue essa sequência.
+| Formato | Situação em 22/11/2026 |
+|---|---|
+| Post para LinkedIn e card de conquista | Presentes no fluxo existente; sujeitos à revisão de fidelidade e curadoria. |
+| Case de sucesso | #67 integrado em `07ae36c`; implantação consolidada e validação na VM pendentes. |
+| Testemunho estruturado | #68 integrado em `a4ca159`, incluindo `016c12d`; revisão e reteste dos casos com modelo real realizados, com validação na VM pendente. |
 
-## Limitações conhecidas do protótipo
-
-- A análise sempre devolve as 3 histórias fictícias, mesmo que você envie outro arquivo (o arquivo é validado e aparece na prévia, mas não é analisado).
-- Aprovar ou rejeitar só vale durante a sessão e não grava em lugar nenhum.
-- "Copiar texto" mostra um bloco com ícone de copiar, porque o Streamlit não acessa a área de transferência.
-- Testado no Streamlit 1.66. O `requirements-front.txt` pede `>=1.37`.
-- Tipos de ativo disponíveis: Testemunho estruturado (título + descrição + citação) e Case de sucesso (texto narrativo completo).
-
-## Como contribuir no front
-
-1. Para mudar um texto ou visual de uma tela, edite o arquivo dela em `app/telas/`.
-2. Para mudar os dados de exemplo, edite `app/mocks/mock_data.py`.
-3. Para conectar o back, edite só `app/services/data_service.py`.
-4. Não misture os mocks do front com a pasta de dados de demonstração do back.
-
-## Como executar no Windows
-
-1. Abra o Prompt de Comando ou PowerShell.
-2. Navegue até a pasta do projeto:
-   ```bash
-   cd "c:\Users\communitylab-front\communitylab-front"
-   ```
-3. Ative o ambiente virtual (se existir):
-   ```bash
-   .\.venv\Scripts\Activate
-   ```
-4. Instale as dependências:
-   ```bash
-   pip install -r requirements-front.txt
-   ```
-5. Execute o aplicativo:
-   ```bash
-   streamlit run app/main.py
-   ```
-
-## Case de sucesso — Card 14
+### Case de sucesso — Card 14 / #67
 
 A análise pode solicitar um case na mesma chamada dos formatos existentes.
-A primeira versão propõe narrativa extrativa (trechos da fonte, sem paráfrase
-livre), em `campos.texto`, com título opcional como metadado e vínculo à interação.
-Case sem resultado/citação literal sustentados é omitido, e a história permanece
-para revisão com aviso. Edição e Curadoria usam o fluxo existente; geração não
-aprova nem autoriza publicação. Implementação proposta, sujeita à revisão técnica
-e reteste com provedor/OCI reais. Ver [Card 14](docs/CARD14_CASES_SUCESSO.md).
 
-## Testemunho estruturado — Card 13
+A primeira versão utiliza narrativa extrativa: trechos da fonte, sem paráfrase livre, em `campos.texto`, com vínculo à interação de origem.
 
-Sobre a implementação proposta de cases (#67), a análise pode solicitar também
-`testemunho_estruturado`, apresentado no formulário `testemunho` com título,
-descrição e citação. A versão extrativa confere os campos na fonte e a citação
-nas evidências rastreadas; conteúdo recusado mantém a história com aviso para
-revisão. Inclui projeção canônica inicial testada, sem novo exportador OCI ou
-restauração pelo Histórico. Ver [Card 13](docs/CARD13_TESTEMUNHOS_ESTRUTURADOS.md).
-A revisão técnica e os testes reais de IA/OCI ainda são necessários.
+O título é opcional na geração. Quando presente, fica como metadado na raiz do ativo e é exibido como legenda, separado do texto, sem edição nesta versão.
+
+A geração confere:
+
+- Narrativa formada por trechos literais da fonte, na ordem.
+- Presença de resultado ou avanço literal na narrativa.
+- Presença de citação conferida da mesma interação.
+- Título, quando presente, como trecho da fonte.
+
+Case recusado pela conferência é omitido, e a história permanece para revisão com aviso.
+
+A seção **Fontes deste conteúdo** apresenta as fontes derivadas das citações conferidas, com a indicação “Trecho literal da interação de origem”.
+
+O texto do case é editável no Estúdio e na Curadoria.
+
+**Limitação:** não existe conferência automática no campo Texto do case nem aviso quando a edição deixa de corresponder a trechos da fonte. Os vínculos exibidos não devem ser interpretados como validação automática do texto editado.
+
+A presença literal de uma expressão não comprova conquista, resultado ou fidelidade contextual. Negação, expectativa e esforço sem resultado continuam exigindo avaliação humana.
+
+Tissiany relatou validação do fluxo com análise real pela interface, além de testes locais e do validador do Card 05. OCI e recuperação em nova sessão não foram verificados nessa revisão.
+
+Consulte a [documentação do Card 14](docs/CARD14_CASES_SUCESSO.md).
+
+### Testemunho estruturado — Card 13 / #68
+
+O testemunho vem da análise integrada e utiliza:
+
+- `campos.titulo`.
+- `campos.descricao`.
+- `campos.citacao`.
+
+Os três campos são editáveis no Estúdio e na Curadoria.
+
+Na geração, os três precisam corresponder a trechos literais da fonte. Título e descrição continuam usando correspondência exata; a citação recupera o trecho da fonte tolerando espaços equivalentes.
+
+A citação também precisa conter a evidência conferida inteira e pertencer à mesma interação.
+
+A correção `016c12d`:
+
+- Tolera diferenças de espaços e pontuação final na comparação com a evidência.
+- Aceita citação literal ampliada que contenha a evidência inteira.
+- Mantém a exigência de existência do trecho na fonte.
+- Mantém a correspondência da interação.
+- Recusa os casos testados de trechos menores que a evidência, conteúdo inventado e evidência de outra origem.
+
+A tolerância na comparação não autoriza inventar pontuação ou texto ausente na fonte.
+
+A conferência visual da citação aparece abaixo do campo Citação nas duas telas e é recalculada após edições.
+
+O pacote preserva os campos estruturados `titulo`, `descricao` e `citacao`. O preenchimento posterior do formulário utiliza esses campos.
+
+Após edição, `citacoes` e `fontes` podem continuar preservando os valores originais, enquanto `campos` contém a versão editada. Essa diferença exige documentação e alinhamento contratual; não significa que a versão editada foi automaticamente conferida como um todo.
+
+#### Conversão canônica
+
+`converter_testemunho_canonico` é um helper de projeção inicial.
+
+Ele compõe o texto canônico com descrição, duas quebras de linha e citação entre aspas. Não é um exportador geral integrado, não restaura o Histórico e não exporta automaticamente as decisões da Curadoria.
+
+O helper exige título preenchido, embora o contrato canônico o trate como opcional. Esse alinhamento permanece pendente.
+
+#### Evidências de revisão
+
+- Marcus informou 34 testes específicos e 3.744 testes da suíte aprovados no head `016c12d`, sem chamadas reais à IA ou OCI.
+- Jaqueline repetiu os casos com modelo real: quatro de quatro testemunhos aceitos, em duas rodadas de duas interações, além de 51 testes locais de testemunho e case aprovados.
+- Tissiany confirmou 3.744 testes no head e 3.793 após merge local com a main, validador do Card 05 e verificações de interface com AppTest.
+- As contagens se referem às versões e aos ambientes dessas execuções. Não foram reexecutadas nesta atualização documental.
+
+O reteste positivo dos casos corrigidos não encerra automaticamente o CATP-008 nem a homologação do MVP.
+
+Permanecem pendentes a validação na implantação consolidada, os demais cenários aplicáveis, OCI e recuperação editorial em nova sessão.
+
+Consulte a [documentação do Card 13](docs/CARD13_TESTEMUNHOS_ESTRUTURADOS.md). As contagens históricas e a descrição anterior da igualdade de citações nesse documento também precisam ser conciliadas com `016c12d`.
+
+## Estrutura principal
+
+```text
+app/
+  main.py
+  state.py
+  styles.py
+  telas/
+    dashboard.py
+    importacao.py
+    processamento.py
+    historias.py
+    estudio.py
+    curadoria.py
+    historico.py
+  services/
+    data_service.py
+    llm.py
+    llm_provider.py
+    prompt_analise.txt
+    conferencia_citacao.py
+    oci_storage.py
+    cases.py
+    testemunhos.py
+  mocks/
+    mock_data.py
+src/
+  preprocessing/
+docs/
+tests/
+.streamlit/
+  config.toml
+requirements-front.txt
+pyproject.toml
+Dockerfile
+```
+
+A estrutura destaca os componentes principais; não é uma listagem completa do repositório.
+
+## Modo demonstração
+
+Os controles da barra lateral permitem exercitar estados da interface, como:
+
+- Falha de gravação e nova tentativa.
+- Histórico vazio.
+- Carregamento.
+- Erro de conexão.
+- Reinício da demonstração.
+
+A variável `COMMUNITYLAB_DELAY` ajusta o intervalo das etapas visuais do processamento.
+
+Esses controles não substituem chamadas reais aos serviços nem comprovam que uma operação ocorreu no bucket.
+
+A natureza declarada dos dados é independente do uso dos controles de demonstração.
+
+Existe uma pendência visual observada no expansor Modo demonstração: fundo branco e texto sem visibilidade adequada no seletor Estado da tela Histórico. O estilo precisa de conferência e ajuste.
+
+## Verificação das alterações
+
+Para verificar problemas de espaços e formatação no diff:
+
+```bash
+git diff --check
+```
+
+Para instalar o projeto com dependências de desenvolvimento:
+
+```bash
+python -m pip install -e ".[dev]"
+```
+
+Para executar os testes da pasta oficial:
+
+```bash
+python -m pytest -q tests
+```
+
+Para conferir os exemplos canônicos do Card 05:
+
+```bash
+python scripts/validar_exemplos_card05.py
+```
+
+Resultados de testes pertencem à versão e ao ambiente em que foram executados.
+
+Não some contagens de suítes diferentes nem apresente testes locais como homologação da versão implantada.
+
+## Limitações conhecidas e validações pendentes
+
+- A IA pode produzir classificações ou narrativas inadequadas; revisão humana continua necessária.
+- Literalidade não comprova contexto, conquista, resultado ou ausência de contradição.
+- Evidência que já omitiu uma negação pode passar nas verificações mecânicas; a recusa de citação menor não resolve todos os casos de contexto.
+- Falhas dos provedores são apresentadas como erro, sem substituição por histórias fictícias.
+- A nova tentativa após truncamento pode falhar novamente.
+- A conferência de citações não comprova a fidelidade do ativo inteiro.
+- O #64 está implantado na VM no último registro disponível, mas o reteste completo pela interface permanece pendente.
+- O fallback de anonimização pode mascarar palavras comuns, cidades e termos técnicos indevidamente.
+- Cases e testemunhos estão integrados à main, mas não constam da última implantação confirmada.
+- O texto editado do case não possui conferência automática nem aviso de perda de correspondência com a fonte.
+- Título e descrição do testemunho ainda exigem correspondência exata de espaços; uma descrição que una linhas da fonte pode ser recusada.
+- O título do testemunho é obrigatório na geração e no helper, mas opcional no contrato canônico.
+- Os campos editados e as citações/fontes originais podem divergir no pacote; o tratamento contratual precisa ser explicitado.
+- Os avisos Case pendente e Testemunho pendente podem aparecer mesmo quando não gerar o formato é uma resposta adequada.
+- Os motivos desses avisos incluem linguagem técnica e nomes de campos; sua apresentação precisa ser melhorada para a pessoa que faz curadoria.
+- A recuperação editorial completa em nova sessão continua pendente.
+- A nota de exemplo fictício da Importação ainda depende da origem do lote.
+- O chip Exemplo de demonstração nas evidências pode aparecer independentemente da natureza declarada e do provedor real.
+- O expansor Modo demonstração possui pendência de estilo e legibilidade.
+- Copiar texto disponibiliza um bloco com o recurso de cópia do Streamlit.
+- As condições da conta OCI e suas evidências continuam acompanhadas no Card 18.
+- A homologação geral e o aceite expresso são acompanhados no Card 23.
+
+## Como contribuir
+
+1. Utilize uma branch específica para a alteração.
+2. Edite as telas em `app/telas/` e os serviços correspondentes em `app/services/`.
+3. Preserve a separação entre exemplos fictícios e resultados dos serviços reais.
+4. Não inclua credenciais ou dados pessoais nos exemplos.
+5. Descreva o escopo, os testes e as limitações no Pull Request.
+6. Vincule o PR ao card do Trello correspondente.
+7. Solicite revisão técnica antes da integração.
+8. Documente mudanças de formato no README e no contrato de integração.
+9. Atualize a documentação conforme o comportamento efetivamente implementado.
+
+**Princípio do produto:** a IA sugere, o time decide. Nada é publicado automaticamente.
