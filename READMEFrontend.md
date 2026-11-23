@@ -84,7 +84,7 @@ O CommunityLab utiliza navegação lateral escura e destaques em violeta.
 
 ### Reabrir um lote pelo Histórico
 
-Cada pacote principal da tabela tem o botão **Reabrir lote**. Ele lê o pacote salvo no bucket e leva para a Curadoria, sem repetir a análise pela IA.
+Cada pacote principal da tabela tem o botão **Reabrir**. Ele lê o pacote salvo no bucket e leva para a Curadoria, sem repetir a análise pela IA.
 
 O que volta do pacote:
 
@@ -106,7 +106,7 @@ Regras de uso:
 - Se houver mais de um pacote principal do mesmo lote, abre o mais recente e avisa.
 - Se a leitura falhar, a sessão atual é mantida e a tela mostra o motivo. Nenhum dado fictício é usado no lugar.
 - Pacote fora do formato do app (por exemplo, o teste antigo `TESTE-001`, com `id_historia` e sem `ativos`) é recusado, com a sessão intacta. Cada história precisa ter `id` e `ativos` em lista. Se só parte das histórias estiver fora do formato, o pacote inteiro é recusado: descartar essas histórias as apagaria do bucket na próxima decisão.
-- O diálogo de confirmação fecha ao cancelar e ao reabrir. O rodapé do Histórico informa que o pacote guarda histórias, trechos citados e rascunhos, não as mensagens originais.
+- O diálogo de confirmação fecha ao cancelar e ao reabrir. Com a tabela ainda carregando, o clique espera a execução em andamento (ver Limitações). O rodapé do Histórico informa que o pacote guarda histórias, trechos citados e rascunhos, não as mensagens originais.
 
 A função de serviço é `recuperar_lote` em `app/services/data_service.py`.
 
@@ -486,7 +486,7 @@ O rótulo visual “OCI Always Free” não comprova a modalidade ou o consumo d
 
 O #57 integrou a gravação de decisões de curadoria e campos editados.
 
-O botão **Reabrir lote** do Histórico reconstrói a sessão a partir do pacote: histórias, textos editados, decisões e pareceres. Os testes automatizados usam um bucket simulado e cobrem o cenário do CATP-022 (pedir ajuste, abrir sessão nova, reabrir pelo Histórico e ver a observação no mesmo ativo). Consultar o JSON salvo, por si só, não comprova a reconstrução; ela deve ser conferida na interface com o OCI real.
+O botão **Reabrir** do Histórico reconstrói a sessão a partir do pacote: histórias, textos editados, decisões e pareceres. Os testes automatizados usam um bucket simulado e cobrem o cenário do CATP-022 (pedir ajuste, abrir sessão nova, reabrir pelo Histórico e ver a observação no mesmo ativo). Consultar o JSON salvo, por si só, não comprova a reconstrução; ela deve ser conferida na interface com o OCI real.
 
 As interações originais não são guardadas no pacote e, por isso, não voltam ao reabrir.
 
@@ -768,6 +768,7 @@ Não some contagens de suítes diferentes nem apresente testes locais como homol
 - Os campos editados e as citações/fontes originais podem divergir no pacote; o tratamento contratual precisa ser explicitado.
 - Os avisos Case pendente e Testemunho pendente podem aparecer mesmo quando não gerar o formato é uma resposta adequada.
 - Os motivos desses avisos incluem linguagem técnica e nomes de campos; sua apresentação precisa ser melhorada para a pessoa que faz curadoria.
+- O Histórico já era lento antes da reabertura de lote: a tabela lê cada pacote do bucket para montar o botão de baixar (cerca de 0,5 s por objeto, ~40 s por execução com 71 objetos no OCI real). Cliques feitos enquanto a tabela ainda carrega, inclusive o Cancelar do diálogo, esperam essa execução terminar. O ajuste de desempenho será tratado em outra entrega.
 - Em lote reaberto pelo Histórico, as interações originais não voltam (KPI "—" e conferência de citações indisponível); a reabertura ainda precisa ser conferida com o OCI real.
 - A nota de exemplo fictício da Importação ainda depende da origem do lote.
 - O chip Exemplo de demonstração nas evidências pode aparecer independentemente da natureza declarada e do provedor real.
