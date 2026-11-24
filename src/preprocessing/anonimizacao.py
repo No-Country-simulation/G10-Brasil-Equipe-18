@@ -124,9 +124,8 @@ def _obter_nlp():
             try:
                 _NLP = spacy.load("pt_core_news_sm")
             except OSError:
-                import spacy.cli
-                spacy.cli.download("pt_core_news_sm")
-                _NLP = spacy.load("pt_core_news_sm")
+                # O modelo deve ser instalado no provisionamento, nunca em runtime.
+                _NLP = None
         except Exception:
             _NLP = None
     return _NLP
@@ -169,6 +168,22 @@ def anonimizar_texto(texto: str) -> Tuple[str, Dict[str, int]]:
     # 3. Mascarar Telefones brasileiros com DDD obrigatório (ex: (11) 98888-8888, 11 988888888, +55 11 98888-8888)
     padrao_telefone = r'(?<!\w)(?:\+?55\s?)?(?:\([1-9]{2}\)\s*|[1-9]{2}\s+)(?:9[0-9]{4}[-\s]?[0-9]{4}|[2-8][0-9]{3}[-\s]?[0-9]{4})(?!\w)'
     texto_anonimo, count = re.subn(padrao_telefone, '[TELEFONE]', texto_anonimo)
+    contagem["telefone"] += count
+
+    # Protecao adicional de identificadores antes do NER.
+    texto_anonimo = re.sub(r"(?i)\b(?:https?://|www\.)[^\s<>]+", "[URL]", texto_anonimo)
+    texto_anonimo = re.sub(r"<@!?\d+>|(?<![\w@])@(?!membro_[\w]+\b)[\w.\-]+", "[USUARIO]", texto_anonimo, flags=re.IGNORECASE)
+    # Telefones compactos: CPF valido ja foi tratado na etapa anterior.
+    def _mascarar_compacto(m):
+        contexto = m.string[max(0, m.start() - 80):m.start()]
+        if re.search(r"\bc[oó]digo\s+do\s+pedido\s+(?:[eé]\s+)?$", contexto, re.IGNORECASE):
+            return m.group(0)
+        return "[TELEFONE]"
+
+    padrao_compacto = r"(?<!\w)(?:\+?55)?[1-9][0-9](?:9\d{8}|[2-8]\d{7})(?!\w)"
+    antes = texto_anonimo.count("[TELEFONE]")
+    texto_anonimo = re.sub(padrao_compacto, _mascarar_compacto, texto_anonimo)
+    count = texto_anonimo.count("[TELEFONE]") - antes
     contagem["telefone"] += count
 
     # 4. Mascarar Nomes próprios via NER (spaCy)

@@ -154,12 +154,12 @@ def test_testemunho_e_case_na_mesma_resposta(monkeypatch):
     chamadas = []
     class Provedor:
         def __init__(self, **kwargs): pass
-        def gerar(self, prompt, payload):
+        def gerar(self, prompt, payload, *, natureza_dados):
             chamadas.append(prompt)
             return SimpleNamespace(texto=json.dumps({"historias": [h]}), provedor="teste", finish_reason="STOP")
     monkeypatch.setattr(llm_provider, "LLMProvider", Provedor)
     monkeypatch.setattr(llm, "anonimizar_texto", lambda t: (t, {}))
-    historias = llm.analisar([fonte])
+    historias = llm.analisar([fonte], natureza_dados="ficticios")
     assert len(chamadas) == 1 and "testemunho_estruturado" in chamadas[0]
     assert {a["id"] for a in historias[0]["ativos"]} == {"case_sucesso", "testemunho_estruturado"}
 

@@ -20,7 +20,7 @@ def test_provider_preserva_finish_reason_sem_chamada_externa(monkeypatch):
         lambda: [("gemini", lambda *args: saida, "gemini-teste")],
     )
 
-    resultado = provider.gerar("prompt", {})
+    resultado = provider.gerar("prompt", {}, natureza_dados="ficticios")
 
     assert resultado.texto == texto
     assert resultado.finish_reason == "MAX_TOKENS"
@@ -56,7 +56,7 @@ def test_erro_json_inclui_metadados_sem_expor_resposta_ou_payload(monkeypatch):
         def __init__(self, timeout):
             pass
 
-        def gerar(self, prompt, payload):
+        def gerar(self, prompt, payload, *, natureza_dados):
             return SimpleNamespace(
                 texto=resposta_invalida,
                 provedor="gemini",
@@ -78,7 +78,7 @@ def test_erro_json_inclui_metadados_sem_expor_resposta_ou_payload(monkeypatch):
     ]
 
     with pytest.raises(llm.ErroAnalise) as erro:
-        llm.analisar(interacoes)
+        llm.analisar(interacoes, natureza_dados="ficticios")
 
     mensagem = str(erro.value)
     assert "provedor=gemini" in mensagem

@@ -17,6 +17,23 @@ TAMANHO_LOTE: int = int(os.getenv("TAMANHO_LOTE", "50"))
 # --- Segurança e Pseudonimização ---
 SAL_PADRAO: str = os.getenv("SAL_PSEUDONIMIZACAO", "communitylab_default_salt")
 
+def resolver_sal_pseudonimizacao(*, permitir_publico=False, sal=None):
+    """Resolve o sal sem expor seu valor em mensagens de erro."""
+    if sal is None:
+        sal = os.getenv("SAL_PSEUDONIMIZACAO", "")
+        if not sal:
+            try:
+                import streamlit as st
+                sal = st.secrets.get("SAL_PSEUDONIMIZACAO", "")
+            except Exception:
+                sal = ""
+    if isinstance(sal, str) and sal.strip() and sal.strip() != "communitylab_default_salt":
+        return sal
+    if permitir_publico:
+        return "communitylab_default_salt"
+    raise ValueError("Configure SAL_PSEUDONIMIZACAO com um segredo não público.")
+
+
 # --- Modo Demonstração ---
 # Controla se o sistema opera em modo demonstração (oculta erros de credencial)
 # Apenas "1", "true" ou "sim" (case-insensitive) ativam; qualquer outro valor desativa

@@ -20,7 +20,7 @@ def _resposta(status=200, json=None, text="", headers=None):
 
 @pytest.fixture(autouse=True)
 def credenciais():
-    cfg = {"DISCORD_TOKEN": "token_fake", "CANAL_ID": "112233"}
+    cfg = {"DISCORD_TOKEN": "token_fake", "CANAL_ID": "112233", "SAL_PSEUDONIMIZACAO": "segredo-ficticio-exclusivo-testes-2026"}
     with patch(f"{MODULO}._cfg", side_effect=lambda c: cfg.get(c, "")):
         yield
 

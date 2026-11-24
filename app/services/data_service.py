@@ -300,7 +300,7 @@ def _data_br(iso: str) -> str:
     return f"{partes[2]}/{partes[1]}/{partes[0]} {hora}"
 
 
-def analisar(interacoes):
+def analisar(interacoes, *, natureza_dados="nao_informado"):
     """Analisa o lote com o provedor de LLM; falhas não viram histórias fictícias."""
     global ORIGEM_ANALISE, ULTIMO_ERRO, ULTIMO_ERRO_TRUNCADO
     try:
@@ -309,7 +309,7 @@ def analisar(interacoes):
         from services import llm  # type: ignore
 
     try:
-        historias = llm.analisar(interacoes)
+        historias = llm.analisar(interacoes, natureza_dados=normalizar_natureza_dados(natureza_dados))
         ORIGEM_ANALISE = llm.ULTIMO_PROVEDOR or "gemini"
         ULTIMO_ERRO = ""
         ULTIMO_ERRO_TRUNCADO = False

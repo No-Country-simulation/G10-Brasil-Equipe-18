@@ -11,7 +11,7 @@ from services import llm
 
 
 def test_analisar_propaga_falha_em_vez_de_devolver_historias_de_mock(monkeypatch):
-    def falhar(interacoes):
+    def falhar(interacoes, *, natureza_dados="nao_informado"):
         raise RuntimeError("provedor indisponível (simulado)")
 
     monkeypatch.setattr(llm, "analisar", falhar)
@@ -33,7 +33,8 @@ def test_analisar_propaga_falha_em_vez_de_devolver_historias_de_mock(monkeypatch
     assert "provedor indisponível (simulado)" in svc.ULTIMO_ERRO
 
 
-def test_processamento_usa_interacoes_discord_e_nao_mostra_historias_mockadas():
+def test_processamento_usa_interacoes_discord_e_nao_mostra_historias_mockadas(monkeypatch):
+    monkeypatch.setenv('SAL_PSEUDONIMIZACAO', 'segredo-ficticio-exclusivo-testes-2026')
     from streamlit.testing.v1 import AppTest
 
     at = AppTest.from_string(
@@ -51,7 +52,7 @@ from telas import processamento
 original_analisar = llm.analisar
 original_listar = svc.listar_pacotes
 recebidas = []
-def falhar(itens):
+def falhar(itens, *, natureza_dados="nao_informado"):
     recebidas.extend(itens)
     raise RuntimeError("provedor indisponível (simulado)")
 try:
@@ -67,6 +68,7 @@ try:
         "_id_efetivo": 123456789,
     }]
     st.session_state.arquivo = {"nome": "Discord", "tamanho": "1 mensagem", "origem": "Discord"}
+    st.session_state.natureza_dados = "reais"
     st.session_state.proc_status = "novo"
     processamento.render()
     assert recebidas == st.session_state.interacoes
