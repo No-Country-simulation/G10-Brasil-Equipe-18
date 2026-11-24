@@ -147,6 +147,7 @@ def conferencia_da_citacao_do_ativo(texto, historia, interacoes):
 
 MOTIVO_CASE_LITERAL = "Texto composto só por trechos da mensagem original"
 MOTIVO_CASE_FORA_DA_FONTE = "Há trechos que não estão na mensagem original"
+MOTIVO_CASE_TEXTO_VAZIO = "Texto vazio"
 
 
 def conferencia_do_texto_case(texto, fonte):
@@ -154,8 +155,11 @@ def conferencia_do_texto_case(texto, fonte):
 
     Cada parágrafo precisa ser um trecho literal da fonte, na ordem. A fonte é
     a mensagem original da história (a mesma que o preparar_case usou).
-    Devolve (confere, motivo); confere é None quando não há fonte para conferir.
+    Devolve (confere, motivo); confere é None quando não há fonte para conferir
+    ou quando o texto está vazio (nada a conferir nunca vira "confere").
     """
+    if not (texto or "").strip():
+        return None, MOTIVO_CASE_TEXTO_VAZIO
     if not (fonte or "").strip():
         return None, MOTIVO_INDISPONIVEL
     paragrafos = _cases.dividir_paragrafos(texto or "")

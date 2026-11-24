@@ -51,6 +51,13 @@ def test_fonte_indisponivel_e_neutra_nunca_verdadeira(fonte):
     assert svc.conferencia_do_texto_case(P1, fonte) == (None, svc.MOTIVO_INDISPONIVEL)
 
 
+@pytest.mark.parametrize("texto", [None, "", "   ", "\n\n  \t"])
+def test_texto_vazio_com_fonte_nao_confere(texto):
+    resultado = svc.conferencia_do_texto_case(texto, FONTE)
+    assert resultado[0] is not True
+    assert resultado == (None, svc.MOTIVO_CASE_TEXTO_VAZIO)
+
+
 # ---- Componente ----
 
 def test_texto_vazio_nao_mostra_nada():
