@@ -605,7 +605,9 @@ A seção **Fontes deste conteúdo** apresenta as fontes derivadas das citaçõe
 
 O texto do case é editável no Estúdio e na Curadoria.
 
-**Limitação:** não existe conferência automática no campo Texto do case nem aviso quando a edição deixa de corresponder a trechos da fonte. Os vínculos exibidos não devem ser interpretados como validação automática do texto editado.
+**Aviso no texto editado:** logo abaixo do campo Texto do case, no Estúdio e na Curadoria, uma conferência recalculada a cada edição aplica a regra do `preparar_case`: cada parágrafo (separado por linha em branco) precisa ser um trecho literal da mensagem original, na ordem. O resultado pode ser verde (texto composto só por trechos da mensagem original), amarelo (há trechos que não estão na mensagem original, e “Fontes deste conteúdo” não cobre essas partes) ou neutro (conferência indisponível, sem fonte). A fonte é o campo `mensagem_original` da história, o mesmo texto que o case usou, por isso o aviso funciona também em lote reaberto. O Post para LinkedIn não recebe o aviso.
+
+**Limitações do aviso:** ele apenas informa; não bloqueia a decisão nem altera a validação factual, que continua sendo definida na Curadoria. Também não confere resultado nem citação dentro do texto editado, só os trechos literais. Um texto verde não comprova veracidade, e os vínculos de “Fontes deste conteúdo” não validam o texto editado.
 
 A presença literal de uma expressão não comprova conquista, resultado ou fidelidade contextual. Negação, expectativa e esforço sem resultado continuam exigindo avaliação humana.
 
@@ -761,7 +763,7 @@ Não some contagens de suítes diferentes nem apresente testes locais como homol
 - O #64 está implantado na VM no último registro disponível, mas o reteste completo pela interface permanece pendente.
 - O fallback de anonimização pode mascarar palavras comuns, cidades e termos técnicos indevidamente.
 - Cases e testemunhos estão integrados à main, mas não constam da última implantação confirmada.
-- O texto editado do case não possui conferência automática nem aviso de perda de correspondência com a fonte.
+- O aviso do texto editado do case só confere trechos literais da fonte: não avisa se a edição remove o resultado ou a citação, não bloqueia a decisão e não volta a validação factual para “Pendente”.
 - Título e descrição do testemunho ainda exigem correspondência exata de espaços; uma descrição que una linhas da fonte pode ser recusada.
 - O título do testemunho é obrigatório na geração e no helper, mas opcional no contrato canônico.
 - Os campos editados e as citações/fontes originais podem divergir no pacote; o tratamento contratual precisa ser explicitado.
