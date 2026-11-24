@@ -116,6 +116,12 @@ O PR #57 acrescenta decisões de curadoria e campos editados ao pacote existente
 
 Dados demonstrativos e operações reais devem ser distinguíveis. **Nenhum status de sucesso deve ser atribuído a uma gravação que não ocorreu.**
 
+#### Dependências e versões de Python
+
+O Streamlit Community Cloud lê `pyproject.toml` com Poetry. As dependências de execução permanecem em `[project.dependencies]`; o intervalo de Python deve estar alinhado em `[project].requires-python` e `[tool.poetry.dependencies].python` (`>=3.11,<3.13`). `package-mode = false` informa ao Poetry que o app não precisa ser instalado como pacote.
+
+Na VM, o Dockerfile usa Python 3.11 e instala o projeto com `pip install .`, via setuptools. As opções de Poetry não alteram esse fluxo. No Streamlit Cloud, selecione Python 3.11 ou 3.12 nas configurações do app, compatível com o intervalo declarado.
+
 #### Configuração de credenciais OCI
 
 Para a VM com Docker, siga o [guia de implantação](docs/DEPLOYMENT_ORACLE_VM.md): a pasta `.oci/` é montada somente para leitura em `/run/oci`. O arquivo de configuração deve apontar para a chave dentro do contêiner. Variáveis OCI no `.env` não substituem esse arquivo no Compose.
