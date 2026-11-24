@@ -96,12 +96,12 @@ def _chamar_gemini(
     }
     resposta = requests.post(
         GEMINI_ENDPOINT.format(modelo=modelo),
-        params={"key": chave},
+        headers={"x-goog-api-key": chave},
         json=corpo,
         timeout=timeout,
     )
     if resposta.status_code != 200:
-        raise ErroProvedor(f"Gemini {resposta.status_code}: {resposta.text[:200]}")
+        raise ErroProvedor(f"Gemini HTTP {resposta.status_code}")
     try:
         dados = resposta.json()
         candidato = dados["candidates"][0]
@@ -111,8 +111,8 @@ def _chamar_gemini(
             texto=texto,
             finish_reason=str(candidato.get("finishReason") or ""),
         )
-    except (KeyError, IndexError, TypeError) as e:
-        raise ErroProvedor(f"Resposta inesperada do Gemini: {e}") from e
+    except (KeyError, IndexError, TypeError, ValueError):
+        raise ErroProvedor("Resposta inesperada do Gemini.") from None
 
 
 def _chamar_groq(
@@ -142,7 +142,7 @@ def _chamar_groq(
         timeout=timeout,
     )
     if resposta.status_code != 200:
-        raise ErroProvedor(f"Groq {resposta.status_code}: {resposta.text[:200]}")
+        raise ErroProvedor(f"Groq HTTP {resposta.status_code}")
     try:
         dados = resposta.json()
         escolha = dados["choices"][0]
@@ -150,8 +150,8 @@ def _chamar_groq(
             texto=str(escolha["message"]["content"]),
             finish_reason=str(escolha.get("finish_reason") or ""),
         )
-    except (KeyError, IndexError, TypeError) as e:
-        raise ErroProvedor(f"Resposta inesperada do Groq: {e}") from e
+    except (KeyError, IndexError, TypeError, ValueError):
+        raise ErroProvedor("Resposta inesperada do Groq.") from None
 
 
 def _chamar_cohere(
@@ -181,7 +181,7 @@ def _chamar_cohere(
         timeout=timeout,
     )
     if resposta.status_code != 200:
-        raise ErroProvedor(f"Cohere {resposta.status_code}: {resposta.text[:200]}")
+        raise ErroProvedor(f"Cohere {resposta.status_code}")
     try:
         dados = resposta.json()
         partes = dados["message"]["content"]
@@ -196,8 +196,8 @@ def _chamar_cohere(
             texto=texto,
             finish_reason=str(dados.get("finish_reason") or ""),
         )
-    except (KeyError, IndexError, TypeError) as e:
-        raise ErroProvedor(f"Resposta inesperada da Cohere: {e}") from e
+    except (KeyError, IndexError, TypeError, ValueError):
+        raise ErroProvedor("Resposta inesperada da Cohere.") from None
 
 
 # ---------- Classe principal ----------
@@ -259,7 +259,7 @@ class LLMProvider:
                     finish_reason=finish_reason,
                 )
             except (ErroProvedor, requests.RequestException) as e:
-                erro_primario = str(e)
+                erro_primario = (str(e) if isinstance(e, ErroProvedor) else "Falha de transporte HTTP")
                 logger.warning("[llm_provider] %s falhou: %s", nome, erro_primario)
 
         raise ErroProvedor(
