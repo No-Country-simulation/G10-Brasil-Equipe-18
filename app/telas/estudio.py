@@ -2,7 +2,7 @@
 import streamlit as st
 
 from state import campo, definir, historia_por_id, ir_para, valor
-from styles import avatar, cabecalho, caixa, chip, conferencia_da_citacao_editada, destacar, esc, md, topbar
+from styles import avatar, cabecalho, caixa, chip, conferencia_da_citacao_editada, conferencia_do_texto_case_editado, destacar, eh_case, esc, md, topbar
 
 
 def _chave(hid, aid, nome_campo):
@@ -152,6 +152,8 @@ def _coluna_conteudo(h):
             rotulo_texto = "Texto do case" if "Case" in ativo["nome"] else "Texto"  # mesma regra da Curadoria
             campo(st.text_area, rotulo_texto, _chave(hid, aid, "texto"), texto_campo, height=300)
             texto = valor(_chave(hid, aid, "texto"), "")
+            if eh_case(ativo):
+                conferencia_do_texto_case_editado(texto, h)
             st.caption(f"{len(texto)} caracteres")
             copiavel = texto
         else:
