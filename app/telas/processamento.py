@@ -269,6 +269,7 @@ def _continuar_processamento(ss, etapas, area):
             ss.lote_id,
             ss.historias,
             natureza_dados=valor("natureza_dados", "nao_informado"),
+            origem_analise=ss.get("proc_origem_analise"),
         )
         ss.pacotes_oci = pacotes
         if _pacotes_confirmados(pacotes):
@@ -397,6 +398,7 @@ def render():
             ss.lote_id,
             ss.historias,
             natureza_dados=valor("natureza_dados", "nao_informado"),
+            origem_analise=ss.get("proc_origem_analise"),
         )
         ss.pacotes_oci = pacotes
         if _pacotes_confirmados(pacotes):

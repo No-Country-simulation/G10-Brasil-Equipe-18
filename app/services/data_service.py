@@ -408,7 +408,7 @@ def normalizar_natureza_dados(valor):
     return texto if texto in NATUREZAS_DADOS else NATUREZA_DADOS_PADRAO
 
 
-def salvar_no_oci(pacotes, lote_id, historias=None, natureza_dados=None):
+def salvar_no_oci(pacotes, lote_id, historias=None, natureza_dados=None, *, origem_analise=None):
     """Grava os pacotes do lote no bucket.
 
     O caminho e montado pelo backend a partir do lote e do nome do arquivo,
@@ -455,7 +455,7 @@ def salvar_no_oci(pacotes, lote_id, historias=None, natureza_dados=None):
         "versao_schema": "1.1",
         "lote": lote_id,
         "gerado_em": datetime.now(timezone.utc).isoformat(timespec="seconds"),
-        "origem_analise": ORIGEM_ANALISE,
+        "origem_analise": str(origem_analise or "nao_informado"),
         "natureza_dados": normalizar_natureza_dados(natureza_dados),
         "historias": historias,
         "evidencias": [
