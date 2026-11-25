@@ -54,7 +54,7 @@ def test_cohere_falha_com_erro_controlado_em_status_nao_200(monkeypatch):
     try:
         llm_provider._chamar_cohere("prompt", "payload", "modelo", 100, 1)
     except llm_provider.ErroProvedor as erro:
-        assert "Cohere 503" in str(erro)
+        assert "Cohere HTTP 503" in str(erro)
     else:
         raise AssertionError("Esperava ErroProvedor para resposta HTTP não 200")
 
