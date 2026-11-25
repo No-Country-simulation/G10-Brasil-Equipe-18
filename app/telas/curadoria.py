@@ -361,7 +361,7 @@ def render():
         with st.container(border=True):
             md('<b style="font-size:18px;">Evidências citadas</b>')
             from styles import evidencias_citadas
-            md(evidencias_citadas(h, ss.interacoes))
+            md(evidencias_citadas(h, ss.interacoes, modo_demonstracao=ss.get("proc_origem_analise") == "mock"))
 
     st.divider()
     
