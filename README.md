@@ -118,7 +118,11 @@ Dados demonstrativos e operações reais devem ser distinguíveis. **Nenhum stat
 
 #### Dependências e versões de Python
 
-O Streamlit Community Cloud lê `pyproject.toml` com Poetry. As dependências de execução permanecem em `[project.dependencies]`; o intervalo de Python deve estar alinhado em `[project].requires-python` e `[tool.poetry.dependencies].python` (`>=3.11,<3.13`). `package-mode = false` informa ao Poetry que o app não precisa ser instalado como pacote.
+As dependências de execução ficam em `[project.dependencies]` do `pyproject.toml`, incluindo o modelo `pt_core_news_sm` do spaCy (instalado por URL, na mesma série 3.8 do spaCy). O intervalo de Python é `>=3.11,<3.13`, declarado em `[project].requires-python`. O arquivo `uv.lock` fixa as versões resolvidas e deve ser versionado.
+
+Para atualizar dependências, edite o `pyproject.toml`, rode `uv lock` e faça o commit dos dois arquivos. Para rodar localmente: `uv sync --extra dev` e `uv run streamlit run app/main.py`.
+
+No Streamlit Community Cloud, o gerenciador usado é o primeiro arquivo de dependências encontrado, na ordem `uv.lock`, `Pipfile`, `environment.yml`, `requirements.txt` e `pyproject.toml`. Por isso o repositório não deve conter `requirements*.txt`, `Pipfile` nem `environment.yml`. Selecione Python 3.11 ou 3.12 nas configurações do app.
 
 Na VM, o Dockerfile usa Python 3.11 e instala o projeto com `pip install .`, via setuptools. As opções de Poetry não alteram esse fluxo. No Streamlit Cloud, selecione Python 3.11 ou 3.12 nas configurações do app, compatível com o intervalo declarado.
 
