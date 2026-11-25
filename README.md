@@ -124,7 +124,7 @@ Para atualizar dependências, edite o `pyproject.toml`, rode `uv lock` e faça o
 
 No Streamlit Community Cloud, o gerenciador usado é o primeiro arquivo de dependências encontrado, na ordem `uv.lock`, `Pipfile`, `environment.yml`, `requirements.txt` e `pyproject.toml`. Por isso o repositório não deve conter `requirements*.txt`, `Pipfile` nem `environment.yml`. Selecione Python 3.11 ou 3.12 nas configurações do app.
 
-Na VM, o Dockerfile usa Python 3.11 e instala o projeto com `pip install .`, via setuptools. As opções de Poetry não alteram esse fluxo. No Streamlit Cloud, selecione Python 3.11 ou 3.12 nas configurações do app, compatível com o intervalo declarado.
+Na VM, o Dockerfile usa Python 3.11 e instala o projeto com `pip install .`, via setuptools. Esse fluxo não lê o `uv.lock`.
 
 #### Configuração de credenciais OCI
 
