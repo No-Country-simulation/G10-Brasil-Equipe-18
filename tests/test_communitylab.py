@@ -441,8 +441,9 @@ def test_ingestao_deteccao_colisao(monkeypatch):
     monkeypatch.setattr("src.ingestion.ingestion.pseudonimizar_autor", lambda autor, sal: "membro_777777")
     monkeypatch.setattr("src.ingestion.pseudonimizar_autor", lambda autor, sal: "membro_777777")
     
-    itens_col, _, avisos_colisao = processar_json(conteudo_com_colisao, sal="sal_teste")
-    assert len(itens_col) == 2
+    itens_col, rejeitadas_col, avisos_colisao = processar_json(conteudo_com_colisao, sal="sal_teste")
+    assert itens_col == []
+    assert rejeitadas_col
     assert any("Detectada colisão de pseudonimização" in a for a in avisos_colisao)
     assert any("membro_777777" in a for a in avisos_colisao)
 

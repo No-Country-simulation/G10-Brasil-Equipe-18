@@ -23,7 +23,7 @@ def chamada_llm(monkeypatch):
         def __init__(self, timeout):
             pass
 
-        def gerar(self, prompt, payload):
+        def gerar(self, prompt, payload, *, natureza_dados):
             assert isinstance(payload, str)
             recebidos.extend(json.loads(payload))
             return SimpleNamespace(
@@ -51,7 +51,7 @@ INTERACAO = {
 
 
 def test_payload_preserva_id_e_campos_de_entrada(chamada_llm):
-    llm.analisar([INTERACAO])
+    llm.analisar([INTERACAO], natureza_dados="ficticios")
 
     assert chamada_llm[0]["id"] == 1
     assert chamada_llm[0]["autor"].startswith("membro_")
@@ -61,7 +61,7 @@ def test_payload_preserva_id_e_campos_de_entrada(chamada_llm):
 
 
 def test_payload_anonimiza_pii_do_texto_antes_de_enviar(chamada_llm):
-    llm.analisar([INTERACAO])
+    llm.analisar([INTERACAO], natureza_dados="ficticios")
 
     texto_enviado = chamada_llm[0]["texto"]
     assert "marina@example.com" not in texto_enviado

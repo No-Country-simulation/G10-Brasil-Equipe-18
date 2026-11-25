@@ -35,7 +35,7 @@ def _provider_falso(texto, finish_reason):
         def __init__(self, *args, **kwargs):
             pass
 
-        def gerar(self, prompt, payload):
+        def gerar(self, prompt, payload, *, natureza_dados):
             return ResultadoLLM(
                 texto=texto,
                 provedor="gemini",
@@ -55,7 +55,7 @@ def test_resposta_truncada_tem_erro_proprio(monkeypatch):
     )
 
     with pytest.raises(llm.ErroRespostaTruncada) as erro:
-        llm.analisar(INTERACOES)
+        llm.analisar(INTERACOES, natureza_dados="ficticios")
 
     mensagem = str(erro.value)
     assert "truncada" in mensagem.lower()
@@ -75,7 +75,7 @@ def test_json_invalido_sem_truncamento_mantem_a_mensagem(monkeypatch):
     )
 
     with pytest.raises(llm.ErroAnalise) as erro:
-        llm.analisar(INTERACOES)
+        llm.analisar(INTERACOES, natureza_dados="ficticios")
 
     assert not isinstance(erro.value, llm.ErroRespostaTruncada)
     assert "JSON inválido" in str(erro.value)
@@ -89,7 +89,7 @@ def test_camada_de_dados_marca_a_falha_como_truncada(monkeypatch):
     )
 
     with pytest.raises(RuntimeError):
-        svc.analisar(INTERACOES)
+        svc.analisar(INTERACOES, natureza_dados="ficticios")
 
     assert svc.ULTIMO_ERRO_TRUNCADO is True
     assert svc.ORIGEM_ANALISE == "erro"

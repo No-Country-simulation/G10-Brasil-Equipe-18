@@ -357,7 +357,9 @@ def render():
         with area.container():
             _desenhar(etapas, botoes=False)
         try:
-            historias = svc.analisar(ss.interacoes)
+            historias = svc.analisar(
+                ss.interacoes, natureza_dados=valor("natureza_dados", "nao_informado")
+            )
             origem = svc.ORIGEM_ANALISE
         except Exception as erro:
             etapas[1] = "erro"

@@ -80,10 +80,11 @@ def buscar_mensagens_discord(
         return [], [], ["CANAL_ID não configurado."]
 
     avisos: List[str] = []
-    sal = sal or _cfg("SAL_PSEUDONIMIZACAO")
-    if not sal:
-        sal = SAL_PADRAO
-        avisos.append("SAL_PSEUDONIMIZACAO não configurado: usando sal padrão (inseguro fora de desenvolvimento).")
+    from src.config import resolver_sal_pseudonimizacao
+    try:
+        sal = resolver_sal_pseudonimizacao(sal=sal if sal is not None else (_cfg("SAL_PSEUDONIMIZACAO") or None))
+    except ValueError as erro:
+        return [], [], [str(erro)]
 
     limite = max(1, min(limite, LIMITE_MAXIMO))
 
@@ -118,6 +119,7 @@ def buscar_mensagens_discord(
 
     interacoes_validas: List[Dict[str, Any]] = []
     rejeitadas: List[Dict[str, Any]] = []
+    autores_por_pseudonimo: Dict[str, str] = {}
 
     # Maior ID entre todas as mensagens retornadas (inclusive as rejeitadas),
     # para que a próxima busca incremental não reprocesse nada.
@@ -150,13 +152,21 @@ def buscar_mensagens_discord(
             continue
 
         # Usa o ID numérico do Discord (estável); nunca username ou nome de exibição.
-        autor_bruto = str(author.get("id") or "desconhecido")
+        autor_bruto = str(author.get("id") or "").strip()
+        if not re.fullmatch(r"[0-9]+", autor_bruto) or int(autor_bruto) == 0:
+            rejeitadas.append(_rejeitar(idx, msg_id, "Identificador de autor ausente ou inválido"))
+            continue
+        autor_id = pseudonimizar_autor(autor_bruto, sal)
+        anterior = autores_por_pseudonimo.get(autor_id)
+        if anterior is not None and anterior != autor_bruto:
+            return [], [], ["Detectada colisão de pseudonimização: lote Discord bloqueado."]
+        autores_por_pseudonimo[autor_id] = autor_bruto
 
         interacoes_validas.append({
             "versao_schema": "1.0",
             "id": idx,
             "id_discord": msg_id,
-            "autor_id": pseudonimizar_autor(autor_bruto, sal),
+            "autor_id": autor_id,
             "canal": canal,
             "tipo": "mensagem",
             "data": data_iso,

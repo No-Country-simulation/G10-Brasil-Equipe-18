@@ -39,6 +39,7 @@ import requests
 
 from src import SAL_PADRAO, pseudonimizar_autor  # type: ignore[reportMissingImports]
 from src.preprocessing import anonimizar_texto, normalizar_texto
+from src.config import resolver_sal_pseudonimizacao
 
 MODELO_PADRAO = "gemini-1.5-flash"
 ENDPOINT = "https://generativelanguage.googleapis.com/v1beta/models/{modelo}:generateContent"
@@ -319,13 +320,15 @@ def _campos_classificacao(hist: dict):
     return campos, motivos
 
 
-def _normalizar(historias: list, interacoes: list) -> list:
+def _normalizar(historias: list, interacoes: list, *, sal=None) -> list:
     """Garante o contrato esperado pelas telas, sem confiar cegamente no modelo.
 
     Historia que nao fecha com o contrato nao entra na saida: vai para
     ULTIMAS_RECUSADAS com o motivo escrito.
     """
     global ULTIMAS_RECUSADAS, ULTIMOS_AVISOS, ULTIMAS_AMBIGUIDADES
+    if sal is None:
+        sal = resolver_sal_pseudonimizacao(permitir_publico=True)
     ULTIMAS_RECUSADAS = []
     ULTIMOS_AVISOS = []
     ULTIMAS_AMBIGUIDADES = []
@@ -352,7 +355,7 @@ def _normalizar(historias: list, interacoes: list) -> list:
         texto_fonte = str(base.get("texto") or "") if base else ""
         original = texto_fonte.strip()
         autor_fonte = str((base or {}).get("autor") or hist.get("autor") or "").strip()
-        autor = pseudonimizar_autor(autor_fonte, SAL_PADRAO)
+        autor = pseudonimizar_autor(autor_fonte, sal)
         id_interacao = int(base.get("_id") or 0) if base else 0
 
         ativos = []
@@ -496,11 +499,19 @@ def _normalizar(historias: list, interacoes: list) -> list:
     return saida
 
 
-def analisar(interacoes: list, maximo: int = MAXIMO_HISTORIAS, timeout: int = 60) -> list:
+def analisar(interacoes: list, maximo: int = MAXIMO_HISTORIAS, timeout: int = 60, *, natureza_dados: str = "nao_informado") -> list:
     """Envia as interações ao LLMProvider (com fallback automático) e devolve as histórias no contrato do front."""
     global ULTIMO_PROVEDOR
     if not interacoes:
         raise ErroAnalise("Nenhuma interação para analisar.")
+
+    ULTIMO_PROVEDOR = ""
+    if natureza_dados not in ("ficticios", "reais"):
+        raise ErroAnalise("Declare a natureza dos dados antes da análise.")
+    try:
+        sal = resolver_sal_pseudonimizacao(permitir_publico=(natureza_dados == "ficticios"))
+    except ValueError as erro:
+        raise ErroAnalise(str(erro)) from erro
 
     interacoes_preparadas = []
     for interacao in interacoes:
@@ -520,10 +531,10 @@ def analisar(interacoes: list, maximo: int = MAXIMO_HISTORIAS, timeout: int = 60
             {
                 "id": id_interacao,
                 "autor": pseudonimizar_autor(
-                    str(interacao.get("autor") or ""), SAL_PADRAO
+                    str(interacao.get("autor") or ""), sal
                 ),
-                "canal": interacao.get("canal", ""),
-                "tipo": interacao.get("tipo", "mensagem"),
+                "canal": anonimizar_texto(str(interacao.get("canal") or ""))[0],
+                "tipo": anonimizar_texto(str(interacao.get("tipo") or "mensagem"))[0],
                 "texto": interacao["texto"],
             }
         )
@@ -538,6 +549,7 @@ def analisar(interacoes: list, maximo: int = MAXIMO_HISTORIAS, timeout: int = 60
         resultado = provider.gerar(
             prompt_texto,
             json.dumps(payload, ensure_ascii=False),
+            natureza_dados=natureza_dados,
         )
 
         texto = resultado.texto
@@ -583,4 +595,4 @@ def analisar(interacoes: list, maximo: int = MAXIMO_HISTORIAS, timeout: int = 60
         raise ErroAnalise("JSON do modelo sem a chave 'historias'.")
 
     ULTIMO_PROVEDOR = resultado.provedor
-    return _normalizar(historias, interacoes_preparadas)
+    return _normalizar(historias, interacoes_preparadas, sal=sal)

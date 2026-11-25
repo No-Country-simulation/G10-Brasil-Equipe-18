@@ -117,12 +117,12 @@ def test_mesma_chamada_de_analise_gera_case(monkeypatch):
     tipo, texto, resultado = CENARIOS[0]
     class Provedor:
         def __init__(self, **kwargs): pass
-        def gerar(self, prompt, payload):
+        def gerar(self, prompt, payload, *, natureza_dados):
             chamadas.append((prompt, json.loads(payload)))
             return SimpleNamespace(texto=json.dumps({"historias": [resposta(tipo, texto, resultado)]}), provedor="teste", finish_reason="STOP")
     monkeypatch.setattr(llm_provider, "LLMProvider", Provedor)
     monkeypatch.setattr(llm, "anonimizar_texto", lambda t: (t, {}))
-    saida = llm.analisar([{"id": 41, "autor": "membro_teste", "texto": texto}])
+    saida = llm.analisar([{"id": 41, "autor": "membro_teste", "texto": texto}], natureza_dados="ficticios")
     assert len(chamadas) == 1 and "case_sucesso" in chamadas[0][0]
     assert saida[0]["ativos"][0]["campos"]["texto"] == texto
 

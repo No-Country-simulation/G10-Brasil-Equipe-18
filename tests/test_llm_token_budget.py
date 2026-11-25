@@ -40,7 +40,7 @@ def test_resposta_truncada_informa_como_aumentar_limite_sem_vazar_conteudo(monke
         def __init__(self, timeout):
             pass
 
-        def gerar(self, prompt, payload):
+        def gerar(self, prompt, payload, *, natureza_dados):
             return SimpleNamespace(
                 texto=resposta_parcial,
                 provedor="gemini",
@@ -53,7 +53,7 @@ def test_resposta_truncada_informa_como_aumentar_limite_sem_vazar_conteudo(monke
     with pytest.raises(llm.ErroAnalise, match="truncada") as erro:
         llm.analisar(
             [{"id": 1, "autor": "membro_001", "canal": "#teste", "texto": "Mensagem de teste."}]
-        )
+        , natureza_dados="ficticios")
 
     assert "LLM_MAX_OUTPUT_TOKENS" in str(erro.value)
     assert resposta_parcial not in str(erro.value)

@@ -7,31 +7,20 @@ import json
 import csv
 import io
 import hashlib
+import hmac
 from datetime import datetime, timezone
 from typing import Dict, Any, List, Tuple
 
 def pseudonimizar_autor(autor_original: str, sal: str) -> str:
-    """Converte um nome ou ID de autor para o formato membro_###### usando hash e sal.
-    Se já estiver no formato correto, mantém o valor.
-    """
-    if not autor_original:
+    """Gera pseudonimo HMAC de 20 digitos; preserva IDs numericos legados."""
+    autor_str = str(autor_original or "").strip()
+    if not autor_str:
         return "membro_000000"
-    
-    autor_str = str(autor_original).strip()
-    
-    # Se já segue o padrão exigido (membro_ mais dígitos), mantém
-    if autor_str.startswith("membro_") and autor_str[7:].isdigit():
+    if autor_str.startswith("membro_") and autor_str[7:].isascii() and autor_str[7:].isdigit() and len(autor_str[7:]) >= 3:
         return autor_str
-    
-    # Caso contrário, gera hash com o sal
-    hash_obj = hashlib.sha256((autor_str + sal).encode("utf-8"))
-    digitos = ''.join([c for c in hash_obj.hexdigest() if c.isdigit()])
-    
-    # Garante pelo menos 6 dígitos
-    if len(digitos) < 6:
-        digitos = digitos.ljust(6, '0')
-        
-    return f"membro_{digitos[:6]}"
+    digest = hmac.new(sal.encode("utf-8"), autor_str.encode("utf-8"), hashlib.sha256).digest()
+    return f"membro_{int.from_bytes(digest, 'big') % 10**20:020d}"
+
 
 def processar_json(conteudo_texto: str, sal: str, origem_padrao: str = "discord") -> Tuple[List[Dict[str, Any]], List[Dict[str, Any]], List[str]]:
     """Processa conteúdo JSON (lista de interações ou objeto de lote)."""
@@ -71,6 +60,8 @@ def processar_json(conteudo_texto: str, sal: str, origem_padrao: str = "discord"
         # Detecta colisões dentro do lote
         if autor_id in mapeamento_autores and mapeamento_autores[autor_id] != autor_bruto:
             avisos.append(f"Detectada colisão de pseudonimização para o autor_id '{autor_id}' no lote.")
+            rejeitadas.append({"posicao": 0, "motivo": "Lote bloqueado por colisao de pseudonimizacao", "original": {}})
+            return [], rejeitadas, avisos
         else:
             mapeamento_autores[autor_id] = autor_bruto
 
@@ -134,6 +125,8 @@ def processar_csv(conteudo_texto: str, sal: str, origem_padrao: str = "discord")
             # Detecta colisões dentro do lote
             if autor_id in mapeamento_autores and mapeamento_autores[autor_id] != autor_bruto:
                 avisos.append(f"Detectada colisão de pseudonimização para o autor_id '{autor_id}' no lote.")
+                rejeitadas.append({"posicao": 0, "motivo": "Lote bloqueado por colisao de pseudonimizacao", "original": {}})
+                return [], rejeitadas, avisos
             else:
                 mapeamento_autores[autor_id] = autor_bruto
             
@@ -194,6 +187,8 @@ def processar_dataframe(
 
         if autor_id in mapeamento_autores and mapeamento_autores[autor_id] != autor_bruto:
             avisos.append(f"Detectada colisão de pseudonimização para o autor_id '{autor_id}' no lote.")
+            rejeitadas.append({"posicao": 0, "motivo": "Lote bloqueado por colisao de pseudonimizacao", "original": {}})
+            return [], rejeitadas, avisos
         else:
             mapeamento_autores[autor_id] = autor_bruto
 
