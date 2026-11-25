@@ -112,7 +112,9 @@ mark {background:#DDD6FE; color:inherit; padding:1px 2px; border-radius:3px;}
 .cl-muted {color:#64748B; font-size:13px;}
 .cl-big {font-size:26px; font-weight:600; color:#0F172A;}
 
-.cl-kv {display:flex; justify-content:space-between; font-size:14px; padding:6px 0;}
+.cl-kv {display:flex; justify-content:space-between; gap:12px; align-items:flex-start; font-size:14px; padding:6px 0;}
+.cl-kv span:first-child {flex-shrink:0;}
+.cl-kv span:last-child {min-width:0; overflow-wrap:anywhere; text-align:right;}
 .cl-kv span:first-child {color:#64748B;}
 
 .cl-table {width:100%; border-collapse:collapse; font-size:14px;}
@@ -325,12 +327,13 @@ def evidencias_citadas(historia, interacoes_do_lote, modo_demonstracao=True):
     if not citacoes:
         return '<span class="cl-muted">Nenhuma evidência citada registrada.</span>'
 
+    interacoes_do_lote = svc.interacoes_para_conferencia(historia, interacoes_do_lote)
     html_partes = []
     if not interacoes_do_lote:
         # Lote reaberto do Histórico: o pacote não guarda a mensagem original.
         html_partes.append(
             '<div class="cl-muted" style="font-size:12px;">Conferência indisponível: '
-            'a mensagem original não é guardada no pacote.</div>'
+            'não há fonte original vinculada inequivocamente.</div>'
         )
     for citacao in citacoes:
         trecho = citacao.get("texto", "")

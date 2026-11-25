@@ -74,12 +74,12 @@ def preparar_testemunho(ativo, fonte, citacoes, id_interacao):
             if valor is None or len(valor) > limite:
                 return (
                     None,
-                    "citacao do testemunho não corresponde a trecho literal da fonte.",
+                    "A citação do testemunho precisa reproduzir um trecho exato da mensagem original.",
                 )
         elif valor not in fonte:
             return (
                 None,
-                f"{nome} do testemunho não corresponde a trecho literal da fonte.",
+                "A descrição do testemunho precisa reproduzir um trecho exato da mensagem original.",
             )
 
         limpos[nome] = valor

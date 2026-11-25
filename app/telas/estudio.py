@@ -94,7 +94,7 @@ def _coluna_evidencias(h):
         # Evidências citadas (ajuste 2: componente compartilhado)
         md('<b style="font-size:14px; margin-top:12px;">Evidências citadas</b>')
         from styles import evidencias_citadas
-        md(evidencias_citadas(h, ss.interacoes))
+        md(evidencias_citadas(h, ss.interacoes, modo_demonstracao=ss.get("proc_origem_analise") == "mock"))
 
 
 def _coluna_conteudo(h):
