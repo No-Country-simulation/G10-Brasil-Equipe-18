@@ -13,6 +13,7 @@ import json
 from datetime import datetime, timedelta, timezone
 
 from mocks import mock_data as m
+from services import cases as _cases
 from services import conferencia_citacao as _conf
 
 CAMPOS_OBRIGATORIOS = ("autor", "canal", "texto")
@@ -142,6 +143,29 @@ def conferencia_da_citacao_do_ativo(texto, historia, interacoes):
         return None, MOTIVO_VARIAS_ORIGENS, None
     id_int = origens[0] if origens else None
     return conferencia_da_citacao({"texto": texto, "id_interacao": id_int}, interacoes)
+
+
+MOTIVO_CASE_LITERAL = "Texto composto só por trechos da mensagem original"
+MOTIVO_CASE_FORA_DA_FONTE = "Há trechos que não estão na mensagem original"
+MOTIVO_CASE_TEXTO_VAZIO = "Texto vazio"
+
+
+def conferencia_do_texto_case(texto, fonte):
+    """Confere o texto editado do case com a regra do preparar_case.
+
+    Cada parágrafo precisa ser um trecho literal da fonte, na ordem. A fonte é
+    a mensagem original da história (a mesma que o preparar_case usou).
+    Devolve (confere, motivo); confere é None quando não há fonte para conferir
+    ou quando o texto está vazio (nada a conferir nunca vira "confere").
+    """
+    if not (texto or "").strip():
+        return None, MOTIVO_CASE_TEXTO_VAZIO
+    if not (fonte or "").strip():
+        return None, MOTIVO_INDISPONIVEL
+    paragrafos = _cases.dividir_paragrafos(texto or "")
+    if _cases.paragrafos_literais_em_ordem(paragrafos, fonte):
+        return True, MOTIVO_CASE_LITERAL
+    return False, MOTIVO_CASE_FORA_DA_FONTE
 
 
 # ---------- Ingestão ----------
@@ -408,7 +432,7 @@ def normalizar_natureza_dados(valor):
     return texto if texto in NATUREZAS_DADOS else NATUREZA_DADOS_PADRAO
 
 
-def salvar_no_oci(pacotes, lote_id, historias=None, natureza_dados=None):
+def salvar_no_oci(pacotes, lote_id, historias=None, natureza_dados=None, *, origem_analise=None):
     """Grava os pacotes do lote no bucket.
 
     O caminho e montado pelo backend a partir do lote e do nome do arquivo,
@@ -455,7 +479,7 @@ def salvar_no_oci(pacotes, lote_id, historias=None, natureza_dados=None):
         "versao_schema": "1.1",
         "lote": lote_id,
         "gerado_em": datetime.now(timezone.utc).isoformat(timespec="seconds"),
-        "origem_analise": ORIGEM_ANALISE,
+        "origem_analise": str(origem_analise or "nao_informado"),
         "natureza_dados": normalizar_natureza_dados(natureza_dados),
         "historias": historias,
         "evidencias": [

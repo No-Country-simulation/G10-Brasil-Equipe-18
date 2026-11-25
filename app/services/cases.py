@@ -6,6 +6,22 @@ Não valida a veracidade do relato. A escolha editorial do LLM continua sujeita
 import re
 
 
+def dividir_paragrafos(texto):
+    """Parágrafos separados por linha em branco, sem espaços nas pontas."""
+    return [p.strip() for p in re.split(r"\n\s*\n", texto.strip()) if p.strip()]
+
+
+def paragrafos_literais_em_ordem(paragrafos, fonte):
+    """True se cada parágrafo aparece literalmente na fonte, na ordem."""
+    posicao = 0
+    for paragrafo in paragrafos:
+        inicio = fonte.find(paragrafo, posicao)
+        if inicio < 0:
+            return False
+        posicao = inicio + len(paragrafo)
+    return True
+
+
 def preparar_case(ativo, fonte, resultados, citacoes, id_interacao):
     """Retorna (ativo do front, motivo). Não infere sucesso de termos-chave."""
     campos = ativo.get("campos")
@@ -15,15 +31,11 @@ def preparar_case(ativo, fonte, resultados, citacoes, id_interacao):
     if not isinstance(texto, str) or not texto.strip():
         return None, "Case sem narrativa."
     # Parágrafos completos devem ser recortes exatos, na ordem da fonte.
-    paragrafos = [p.strip() for p in re.split(r"\n\s*\n", texto.strip()) if p.strip()]
+    paragrafos = dividir_paragrafos(texto)
     if len(texto) > 6000:
         return None, "Case excede 6000 caracteres."
-    posicao = 0
-    for paragrafo in paragrafos:
-        inicio = fonte.find(paragrafo, posicao)
-        if inicio < 0:
-            return None, "Narrativa não é uma sequência de trechos literais da fonte."
-        posicao = inicio + len(paragrafo)
+    if not paragrafos_literais_em_ordem(paragrafos, fonte):
+        return None, "Narrativa não é uma sequência de trechos literais da fonte."
     resultados_validos = [r.strip() for r in resultados if isinstance(r, str) and r.strip() and r.strip() in fonte]
     narrativa = "\n\n".join(paragrafos)
     if not any(r in narrativa for r in resultados_validos):

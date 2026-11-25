@@ -46,3 +46,9 @@ venv/
 
 # Arquivos de informações do projeto
 info_project.md
+
+# Protecao contra inclusao acidental de chaves privadas
+*.pem
+*.key
+*.p12
+*.pfx
