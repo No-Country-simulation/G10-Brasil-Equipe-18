@@ -112,7 +112,9 @@ mark {background:#DDD6FE; color:inherit; padding:1px 2px; border-radius:3px;}
 .cl-muted {color:#64748B; font-size:13px;}
 .cl-big {font-size:26px; font-weight:600; color:#0F172A;}
 
-.cl-kv {display:flex; justify-content:space-between; font-size:14px; padding:6px 0;}
+.cl-kv {display:flex; justify-content:space-between; gap:12px; align-items:flex-start; font-size:14px; padding:6px 0;}
+.cl-kv span:first-child {flex-shrink:0;}
+.cl-kv span:last-child {min-width:0; overflow-wrap:anywhere; text-align:right;}
 .cl-kv span:first-child {color:#64748B;}
 
 .cl-table {width:100%; border-collapse:collapse; font-size:14px;}

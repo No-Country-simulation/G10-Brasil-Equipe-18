@@ -393,10 +393,9 @@ def render():
         elif validacao == "insuficiente":
             razao_bloqueio = "Evidências insuficientes"
         
-        if not pode_aprovar:
-            b5.markdown(f'<div class="cl-muted" style="text-align:right;padding-top:8px;font-size:12px;">{razao_bloqueio}</div>',
-                       unsafe_allow_html=True)
         b5.button("✓ Aprovar", type="primary", disabled=not pode_aprovar, on_click=_aprovar, args=(hid, aid))
+        if not pode_aprovar:
+            b5.caption(razao_bloqueio)
     else:
         # Após decisão
         b1.button("Desfazer", on_click=_desfazer, args=(hid, aid))
