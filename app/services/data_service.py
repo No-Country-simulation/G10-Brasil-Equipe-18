@@ -132,6 +132,18 @@ def conferencia_da_citacao(citacao, interacoes):
     return confere, motivo, id_int
 
 
+def interacoes_para_conferencia(historia, interacoes):
+    """Recupera fonte preservada somente para história de origem única."""
+    if interacoes:
+        return interacoes
+    historia = historia or {}
+    origens = historia.get("interacoes_origem") or []
+    fonte = historia.get("mensagem_original")
+    if len(origens) == 1 and _id_valido(origens[0]) and isinstance(fonte, str) and fonte.strip():
+        return [{"_id_efetivo": origens[0], "texto": fonte}]
+    return interacoes
+
+
 def conferencia_da_citacao_do_ativo(texto, historia, interacoes):
     """Confere a citação editável de um ativo, que não traz id_interacao próprio.
 
@@ -142,7 +154,7 @@ def conferencia_da_citacao_do_ativo(texto, historia, interacoes):
     if len(origens) > 1:
         return None, MOTIVO_VARIAS_ORIGENS, None
     id_int = origens[0] if origens else None
-    return conferencia_da_citacao({"texto": texto, "id_interacao": id_int}, interacoes)
+    return conferencia_da_citacao({"texto": texto, "id_interacao": id_int}, interacoes_para_conferencia(historia, interacoes))
 
 
 MOTIVO_CASE_LITERAL = "Texto composto só por trechos da mensagem original"

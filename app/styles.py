@@ -325,12 +325,13 @@ def evidencias_citadas(historia, interacoes_do_lote, modo_demonstracao=True):
     if not citacoes:
         return '<span class="cl-muted">Nenhuma evidência citada registrada.</span>'
 
+    interacoes_do_lote = svc.interacoes_para_conferencia(historia, interacoes_do_lote)
     html_partes = []
     if not interacoes_do_lote:
         # Lote reaberto do Histórico: o pacote não guarda a mensagem original.
         html_partes.append(
             '<div class="cl-muted" style="font-size:12px;">Conferência indisponível: '
-            'a mensagem original não é guardada no pacote.</div>'
+            'não há fonte original vinculada inequivocamente.</div>'
         )
     for citacao in citacoes:
         trecho = citacao.get("texto", "")
