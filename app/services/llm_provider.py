@@ -74,6 +74,19 @@ def _max_tokens_configurado() -> int:
     return limite if limite > 0 else MAX_TOKENS_PADRAO
 
 
+def _erro_http(provedor: str, status: int) -> ErroProvedor:
+    categoria = {401: "autenticacao", 403: "acesso negado", 429: "limite de requisicoes", 503: "indisponibilidade"}.get(status, "falha HTTP")
+    return ErroProvedor(f"{provedor} HTTP {status}: {categoria}")
+
+
+def _erro_transporte(erro: requests.RequestException) -> str:
+    if isinstance(erro, requests.Timeout):
+        return "Falha de transporte HTTP: timeout"
+    if isinstance(erro, requests.ConnectionError):
+        return "Falha de transporte HTTP: conexao"
+    return "Falha de transporte HTTP"
+
+
 # ---------- Adaptadores ----------
 
 def _chamar_gemini(
@@ -101,7 +114,7 @@ def _chamar_gemini(
         timeout=timeout,
     )
     if resposta.status_code != 200:
-        raise ErroProvedor(f"Gemini HTTP {resposta.status_code}")
+        raise _erro_http("Gemini", resposta.status_code)
     try:
         dados = resposta.json()
         candidato = dados["candidates"][0]
@@ -142,7 +155,7 @@ def _chamar_groq(
         timeout=timeout,
     )
     if resposta.status_code != 200:
-        raise ErroProvedor(f"Groq HTTP {resposta.status_code}")
+        raise _erro_http("Groq", resposta.status_code)
     try:
         dados = resposta.json()
         escolha = dados["choices"][0]
@@ -181,7 +194,7 @@ def _chamar_cohere(
         timeout=timeout,
     )
     if resposta.status_code != 200:
-        raise ErroProvedor(f"Cohere {resposta.status_code}")
+        raise _erro_http("Cohere", resposta.status_code)
     try:
         dados = resposta.json()
         partes = dados["message"]["content"]
@@ -259,7 +272,7 @@ class LLMProvider:
                     finish_reason=finish_reason,
                 )
             except (ErroProvedor, requests.RequestException) as e:
-                erro_primario = (str(e) if isinstance(e, ErroProvedor) else "Falha de transporte HTTP")
+                erro_primario = (str(e) if isinstance(e, ErroProvedor) else _erro_transporte(e))
                 logger.warning("[llm_provider] %s falhou: %s", nome, erro_primario)
 
         raise ErroProvedor(
