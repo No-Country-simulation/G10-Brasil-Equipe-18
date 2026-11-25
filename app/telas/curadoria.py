@@ -3,7 +3,7 @@ import streamlit as st
 
 from services import data_service as svc
 from state import campo, definir, historia_por_id, ir_para, valor
-from styles import avatar, cabecalho, caixa, chip, conferencia_da_citacao_editada, destacar, esc, md, topbar
+from styles import avatar, cabecalho, caixa, chip, conferencia_da_citacao_editada, conferencia_do_texto_case_editado, destacar, eh_case, esc, md, topbar
 
 try:  # st.dialog existe a partir da 1.37; antes era experimental
     _dialogo = st.dialog
@@ -182,6 +182,8 @@ def _coluna_rascunhos(h, ativo, status):
         campo(st.text_area, "Texto do case" if "Case" in ativo["nome"] else "Texto",
               _chave(hid, aid, "texto"), ativo["campos"]["texto"], height=240, disabled=not editavel)
         texto_atual = valor(_chave(hid, aid, "texto"), "")
+        if eh_case(ativo):
+            conferencia_do_texto_case_editado(texto_atual, h)
         st.caption(f"{len(texto_atual)} caracteres")
         copiavel = texto_atual
     elif ativo["tipo"] == "testemunho":
