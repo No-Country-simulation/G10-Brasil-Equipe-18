@@ -7,7 +7,7 @@ import streamlit as st
 
 from services import data_service as svc
 from state import CANAL_TODOS, campo, definir, ir_para, resetar_lote, valor
-from styles import cabecalho, chip, esc, md, plural, topbar
+from styles import cabecalho, chip, esc, md, plural, rotulo_natureza, topbar
 
 
 def render():
@@ -248,12 +248,7 @@ def _tabela_html(linhas):
 
 
 def _rotulo_natureza_declarada():
-    natureza = svc.normalizar_natureza_dados(valor("natureza_dados", "nao_informado"))
-    return {
-        "ficticios": "Dados fictícios (declarado)",
-        "reais": "Dados reais (declarado)",
-        "nao_informado": "Natureza não informada",
-    }[natureza]
+    return rotulo_natureza(valor("natureza_dados", "nao_informado"))[0]
 
 
 def _previa():

@@ -66,11 +66,6 @@ def _dialogo_json(caminho):
     st.caption("Os ativos são rascunhos e aguardam revisão humana.")
 
 
-# Chaves de tela que pertencem ao lote e não podem sobrar ao reabrir outro.
-_PREFIXOS_DADOS_DO_LOTE = ("c:", "f:cat", "f:rel", "f:canal", "aba")
-_PREFIXOS_WIDGETS_DO_LOTE = ("w::c:", "w::f:cat", "w::f:rel", "w::f:canal", "w::aba", "validacao_", "aut_")
-
-
 def aplicar_lote_recuperado(ss, lote):
     """Troca o lote da sessão pelo lote recuperado do bucket.
 
@@ -83,13 +78,6 @@ def aplicar_lote_recuperado(ss, lote):
     ss.ultimo_upload = None
     ss.avisos_discord = []
     ss.rejeitadas_discord = []
-    ss.mostrar_copia = False
-    for chave in [k for k in ss.dados if str(k).startswith(_PREFIXOS_DADOS_DO_LOTE)]:
-        del ss.dados[chave]
-    # Os widgets da Curadoria são "validacao_<hist>:<ativo>"; o ":" evita apagar
-    # o estado "validacao_factual", que não é widget.
-    for chave in [k for k in list(ss.keys()) if str(k).startswith(_PREFIXOS_WIDGETS_DO_LOTE) and ":" in str(k)]:
-        del ss[chave]
 
     ss.lote_id = lote["lote_id"]
     ss.historias = lote["historias"]

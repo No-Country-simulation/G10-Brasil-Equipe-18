@@ -30,6 +30,8 @@ def _gerar_lote_id():
 
 def limpar_estado_temporario_lote(ss):
     """Remove controles temporarios que nao podem atravessar lotes."""
+    # Prefixos reservados para controles temporarios do lote; nao reutilizar
+    # em chaves persistentes, pois a limpeza usa startswith.
     prefixos = ("c:", "e:", "f:cat", "f:rel", "f:canal", "aba")
     dados = getattr(ss, "dados", None)
     if isinstance(dados, dict):
