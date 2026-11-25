@@ -28,6 +28,22 @@ def _gerar_lote_id():
     return "LOTE-" + uuid.uuid4().hex[:6].upper()
 
 
+def limpar_estado_temporario_lote(ss):
+    """Remove controles temporarios que nao podem atravessar lotes."""
+    prefixos = ("c:", "e:", "f:cat", "f:rel", "f:canal", "aba")
+    dados = getattr(ss, "dados", None)
+    if isinstance(dados, dict):
+        for chave in list(dados):
+            if str(chave).startswith(prefixos):
+                del dados[chave]
+    widgets = tuple("w::" + prefixo for prefixo in prefixos)
+    for chave in (list(ss.keys()) if hasattr(ss, "keys") else []):
+        nome = str(chave)
+        if nome.startswith(widgets) or (nome.startswith(("validacao_", "aut_")) and ":" in nome):
+            del ss[chave]
+    ss.mostrar_copia = False
+
+
 def resetar_lote(ss=None):
     """Limpa todo o estado ligado ao lote atual e gera um novo lote_id.
 
@@ -36,6 +52,7 @@ def resetar_lote(ss=None):
     """
     if ss is None:
         ss = st.session_state
+    limpar_estado_temporario_lote(ss)
     ss.lote_id = _gerar_lote_id()
     ss.historias = []
     ss.proc_status = "novo"        # novo | retry | erro | concluido
