@@ -197,7 +197,7 @@ def _normalizar(itens):
         faltando = [c for c in CAMPOS_OBRIGATORIOS if not str(item.get(c, "")).strip()]
         if faltando:
             raise ValueError(f"Interação {i}: faltam os campos {', '.join(faltando)}.")
-        normalizado = {
+        normalizado: dict[str, str | int] = {
             "autor": str(item["autor"]).strip(),
             "canal": str(item["canal"]).strip(),
             "tipo": str(item.get("tipo") or "mensagem").strip(),
@@ -296,7 +296,7 @@ def _fuso_brasil():
         return timezone(timedelta(hours=-3))
 
 
-def _data_br(iso: str) -> str:
+def _data_br(iso: str | None) -> str:
     """Converte o instante ISO para o fuso de São Paulo: 22/10/2026 01:05.
 
     Aceita offset explícito, sufixo Z e data sem fuso (tratada como UTC, que é
