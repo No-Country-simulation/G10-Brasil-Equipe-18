@@ -360,13 +360,13 @@ def render():
             historias = svc.analisar(
                 ss.interacoes, natureza_dados=valor("natureza_dados", "nao_informado")
             )
-            origem = svc.ORIGEM_ANALISE
+            origem = historias.provedor
         except Exception as erro:
             etapas[1] = "erro"
             ss.proc_status = "erro"
             ss.proc_erro_etapa = "analise"
             ss.proc_erro_analise = str(erro)
-            ss.proc_erro_truncada = bool(getattr(svc, "ULTIMO_ERRO_TRUNCADO", False))
+            ss.proc_erro_truncada = bool(getattr(erro, "truncada", False))
             _persistir_progresso(ss, etapas)
             with area.container():
                 _desenhar(etapas, botoes=True)
@@ -374,7 +374,7 @@ def render():
 
         # O serviço devolve uma análise completa (ou um fallback demonstrativo).
         # Não atribuímos conclusão a etapas subsequentes antes desse retorno.
-        ss.historias = historias
+        ss.historias = list(historias)
         ss.proc_origem_analise = origem
         etapas[1] = "concluida"
         _persistir_progresso(ss, etapas)

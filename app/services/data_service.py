@@ -11,6 +11,10 @@ import csv
 import io
 import json
 from datetime import datetime, timedelta, timezone
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from services.llm import ResultadoAnalise
 
 from mocks import mock_data as m
 from services import cases as _cases
@@ -324,7 +328,13 @@ def _data_br(iso: str) -> str:
     return f"{partes[2]}/{partes[1]}/{partes[0]} {hora}"
 
 
-def analisar(interacoes, *, natureza_dados="nao_informado"):
+class FalhaAnalise(RuntimeError):
+    def __init__(self, mensagem, *, truncada=False):
+        super().__init__(mensagem)
+        self.truncada = truncada
+
+
+def analisar(interacoes, *, natureza_dados="nao_informado") -> "ResultadoAnalise":
     """Analisa o lote com o provedor de LLM; falhas não viram histórias fictícias."""
     global ORIGEM_ANALISE, ULTIMO_ERRO, ULTIMO_ERRO_TRUNCADO
     try:
@@ -334,17 +344,19 @@ def analisar(interacoes, *, natureza_dados="nao_informado"):
 
     try:
         historias = llm.analisar(interacoes, natureza_dados=normalizar_natureza_dados(natureza_dados))
-        ORIGEM_ANALISE = llm.ULTIMO_PROVEDOR or "gemini"
+        ORIGEM_ANALISE = historias.provedor
         ULTIMO_ERRO = ""
         ULTIMO_ERRO_TRUNCADO = False
         print(f"[analise] concluída: {len(historias)} histórias", flush=True)
         return historias
     except Exception as erro:  # rede, chave ausente, JSON inválido
-        ULTIMO_ERRO = str(erro)
+        mensagem = str(erro)
+        truncada = isinstance(erro, getattr(llm, "ErroRespostaTruncada", ()))
+        ULTIMO_ERRO = mensagem
         ORIGEM_ANALISE = "erro"
-        ULTIMO_ERRO_TRUNCADO = isinstance(erro, getattr(llm, "ErroRespostaTruncada", ()))
-        print(f"[analise] FALHOU: {ULTIMO_ERRO}", flush=True)
-        raise RuntimeError(f"Análise real falhou: {erro}") from erro
+        ULTIMO_ERRO_TRUNCADO = truncada
+        print(f"[analise] FALHOU: {mensagem}", flush=True)
+        raise FalhaAnalise(f"Análise real falhou: {mensagem}", truncada=truncada) from erro
 
 
 def regenerar(historia, ativo_id, vez):

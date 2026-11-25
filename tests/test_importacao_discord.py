@@ -107,7 +107,10 @@ def test_normalizar_interacoes_discord_usa_contrato_da_tela():
     ]
 
 
-def test_tela_importacao_renderiza_aba_discord():
+def test_tela_importacao_renderiza_aba_discord(monkeypatch):
+    # AppTest altera o modulo compartilhado; restaure os atributos ao terminar.
+    monkeypatch.setattr(svc, "analisar", svc.analisar)
+    monkeypatch.setattr(svc, "listar_pacotes", svc.listar_pacotes)
     from streamlit.testing.v1 import AppTest
 
     at = AppTest.from_string(
@@ -130,7 +133,12 @@ render()
     assert at.button(key="buscar_discord").label == "Buscar mensagens do Discord"
 
 
-def test_aba_discord_carrega_mensagens_e_guarda_cursor_pendente():
+def test_aba_discord_carrega_mensagens_e_guarda_cursor_pendente(monkeypatch):
+    # AppTest altera o modulo compartilhado; restaure os atributos ao terminar.
+    monkeypatch.setattr(svc, "analisar", svc.analisar)
+    monkeypatch.setattr(svc, "listar_pacotes", svc.listar_pacotes)
+    monkeypatch.setattr(svc, "carregar_cursor_discord", svc.carregar_cursor_discord)
+    monkeypatch.setattr(svc, "buscar_mensagens_discord", svc.buscar_mensagens_discord)
     from streamlit.testing.v1 import AppTest
 
     at = AppTest.from_string(
