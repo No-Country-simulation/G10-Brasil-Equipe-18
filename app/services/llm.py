@@ -30,6 +30,7 @@ O prompt de análise é mantido em `prompt_analise.txt`, ao lado deste módulo.
 from __future__ import annotations
 
 import json
+from contextvars import ContextVar
 import os
 import re
 import unicodedata
@@ -75,6 +76,30 @@ ULTIMOS_AVISOS: list = []
 # desempate ainda nao esta definido pela dona do contrato, entao o dado fica
 # registrado em vez de a regra ser inventada aqui.
 ULTIMAS_AMBIGUIDADES: list = []
+
+# Diagnósticos locais à execução; os nomes globais permanecem apenas para
+# compatibilidade com chamadas diretas legadas de _normalizar.
+_diagnosticos: ContextVar[dict[str, list] | None] = ContextVar("diagnosticos_analise", default=None)
+
+
+class ResultadoAnalise(list):
+    """Lista compatível com o contrato anterior, com metadados por execução."""
+
+    def __init__(self, historias, provedor, diagnosticos):
+        super().__init__(historias)
+        self.provedor = provedor
+        self.recusadas = tuple(diagnosticos["recusadas"])
+        self.avisos = tuple(diagnosticos["avisos"])
+        self.ambiguidades = tuple(diagnosticos["ambiguidades"])
+
+
+def _registro(nome):
+    atual = _diagnosticos.get()
+    if atual is not None:
+        return atual[nome]
+    return {"recusadas": ULTIMAS_RECUSADAS, "avisos": ULTIMOS_AVISOS,
+            "ambiguidades": ULTIMAS_AMBIGUIDADES}[nome]
+
 
 PROMPT = Path(__file__).with_name("prompt_analise.txt").read_text(encoding="utf-8")
 
@@ -213,12 +238,12 @@ def _fechado(valor, opcoes):
 
 
 def _registrar_recusa(identificador, motivos: list) -> None:
-    ULTIMAS_RECUSADAS.append({"id": identificador, "motivo": "; ".join(motivos)})
+    _registro("recusadas").append({"id": identificador, "motivo": "; ".join(motivos)})
 
 
 def _anotar_ajuste(campo: str, original, canonico) -> None:
     if str(original) != str(canonico):
-        ULTIMOS_AVISOS.append(f"{campo}: {original!r} ajustado para {canonico!r}.")
+        _registro("avisos").append(f"{campo}: {original!r} ajustado para {canonico!r}.")
 
 
 def _topicos_fechados(valor):
@@ -236,7 +261,7 @@ def _topicos_fechados(valor):
             motivos.append(f"topico fora da lista fechada: {item!r}.")
             continue
         if canonico in escolhidos:
-            ULTIMOS_AVISOS.append(f"topicos: {canonico!r} repetido, mantido uma vez.")
+            _registro("avisos").append(f"topicos: {canonico!r} repetido, mantido uma vez.")
             continue
         escolhidos.append(canonico)
     return escolhidos, motivos
@@ -249,10 +274,10 @@ def _confianca(valor):
     try:
         numero = float(valor)
     except (TypeError, ValueError):
-        ULTIMOS_AVISOS.append(f"confianca: {valor!r} nao e numero, descartada.")
+        _registro("avisos").append(f"confianca: {valor!r} nao e numero, descartada.")
         return None
     if numero < 0 or numero > 1:
-        ULTIMOS_AVISOS.append(f"confianca: {valor!r} fora de 0..1, descartada.")
+        _registro("avisos").append(f"confianca: {valor!r} fora de 0..1, descartada.")
         return None
     return numero
 
@@ -264,14 +289,14 @@ def _tipos_alternativos(valor, escolhido: str):
     if isinstance(valor, str):
         valor = [valor]
     if not isinstance(valor, (list, tuple)):
-        ULTIMOS_AVISOS.append(f"tipos_alternativos: {valor!r} ignorado, esperada uma lista.")
+        _registro("avisos").append(f"tipos_alternativos: {valor!r} ignorado, esperada uma lista.")
         return []
 
     alternativos = []
     for item in valor:
         canonico = _fechado(item, TIPOS_HISTORIA)
         if canonico is None:
-            ULTIMOS_AVISOS.append(
+            _registro("avisos").append(
                 f"tipos_alternativos: {item!r} ignorado, fora da lista fechada."
             )
             continue
@@ -313,7 +338,7 @@ def _campos_classificacao(hist: dict):
 
     justificativa = _colapsar(str(hist.get("justificativa") or ""))
     if len(justificativa) > 500:
-        ULTIMOS_AVISOS.append("justificativa: cortada em 500 caracteres.")
+        _registro("avisos").append("justificativa: cortada em 500 caracteres.")
         justificativa = justificativa[:500].rsplit(" ", 1)[0] or justificativa[:500]
     campos["justificativa"] = justificativa
     campos["confianca"] = _confianca(hist.get("confianca"))
@@ -329,9 +354,10 @@ def _normalizar(historias: list, interacoes: list, *, sal=None) -> list:
     global ULTIMAS_RECUSADAS, ULTIMOS_AVISOS, ULTIMAS_AMBIGUIDADES
     if sal is None:
         sal = resolver_sal_pseudonimizacao(permitir_publico=True)
-    ULTIMAS_RECUSADAS = []
-    ULTIMOS_AVISOS = []
-    ULTIMAS_AMBIGUIDADES = []
+    if _diagnosticos.get() is None:
+        ULTIMAS_RECUSADAS = []
+        ULTIMOS_AVISOS = []
+        ULTIMAS_AMBIGUIDADES = []
 
     por_posicao = {}
     for posicao, item in enumerate(interacoes, start=1):
@@ -390,7 +416,7 @@ def _normalizar(historias: list, interacoes: list, *, sal=None) -> list:
         if not resumo:
             motivos.append("Sem resumo: o contrato da historia exige resumo.")
         elif len(resumo) > 1000:
-            ULTIMOS_AVISOS.append(f"{identificador}: resumo cortado em 1000 caracteres.")
+            _registro("avisos").append(f"{identificador}: resumo cortado em 1000 caracteres.")
             resumo = resumo[:1000].rsplit(" ", 1)[0] or resumo[:1000]
 
         resultados = [str(r).strip() for r in (hist.get("resultados") or []) if str(r).strip()]
@@ -429,7 +455,7 @@ def _normalizar(historias: list, interacoes: list, *, sal=None) -> list:
         if case:
             ativos.append(case)
         else:
-            ULTIMOS_AVISOS.append(f"{identificador}: {motivo_case}")
+            _registro("avisos").append(f"{identificador}: {motivo_case}")
         from services.testemunhos import preparar_testemunho
         testemunhos = [a for a in (hist.get("ativos") or [])
                        if isinstance(a, dict) and a.get("id") == "testemunho_estruturado"]
@@ -444,7 +470,7 @@ def _normalizar(historias: list, interacoes: list, *, sal=None) -> list:
         if testemunho:
             ativos.append(testemunho)
         else:
-            ULTIMOS_AVISOS.append(f"{identificador}: {motivo_testemunho}")
+            _registro("avisos").append(f"{identificador}: {motivo_testemunho}")
         # Formatos principais recusados não apagam uma história revisável.
         if not ativos and not cases and not testemunhos:
             motivos.append("Sem ativo gerado: nao ha conteudo para publicar.")
@@ -455,7 +481,7 @@ def _normalizar(historias: list, interacoes: list, *, sal=None) -> list:
 
         faixa = classificacao["relevancia"]
         if classificacao["tipos_alternativos"]:
-            ULTIMAS_AMBIGUIDADES.append(
+            _registro("ambiguidades").append(
                 {
                     "id": identificador,
                     "tipo": classificacao["tipo"],
@@ -492,20 +518,18 @@ def _normalizar(historias: list, interacoes: list, *, sal=None) -> list:
             }
         )
 
-    if ULTIMAS_RECUSADAS:
+    if _registro("recusadas"):
         pass
-    if ULTIMAS_AMBIGUIDADES:
+    if _registro("ambiguidades"):
         pass
     return saida
 
 
-def analisar(interacoes: list, maximo: int = MAXIMO_HISTORIAS, timeout: int = 60, *, natureza_dados: str = "nao_informado") -> list:
+def analisar(interacoes: list, maximo: int = MAXIMO_HISTORIAS, timeout: int = 60, *, natureza_dados: str = "nao_informado") -> ResultadoAnalise:
     """Envia as interações ao LLMProvider (com fallback automático) e devolve as histórias no contrato do front."""
-    global ULTIMO_PROVEDOR
     if not interacoes:
         raise ErroAnalise("Nenhuma interação para analisar.")
 
-    ULTIMO_PROVEDOR = ""
     if natureza_dados not in ("ficticios", "reais"):
         raise ErroAnalise("Declare a natureza dos dados antes da análise.")
     try:
@@ -594,5 +618,10 @@ def analisar(interacoes: list, maximo: int = MAXIMO_HISTORIAS, timeout: int = 60
     if not isinstance(historias, list):
         raise ErroAnalise("JSON do modelo sem a chave 'historias'.")
 
-    ULTIMO_PROVEDOR = resultado.provedor
-    return _normalizar(historias, interacoes_preparadas, sal=sal)
+    diagnosticos = {"recusadas": [], "avisos": [], "ambiguidades": []}
+    token = _diagnosticos.set(diagnosticos)
+    try:
+        normalizadas = _normalizar(historias, interacoes_preparadas, sal=sal)
+        return ResultadoAnalise(normalizadas, resultado.provedor, diagnosticos)
+    finally:
+        _diagnosticos.reset(token)
