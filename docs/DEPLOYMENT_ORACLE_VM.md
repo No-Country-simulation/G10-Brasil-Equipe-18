@@ -51,6 +51,11 @@ Copie o resultado para `SAL_PSEUDONIMIZACAO` em `.env`. O Compose exige esse
 valor e não inicia o serviço se ele estiver ausente. Mantenha o mesmo sal nas
 próximas implantações; trocar o valor altera os pseudônimos dos autores.
 
+Para dados reais, configure `LLM_PROVEDORES_DADOS_REAIS` no `.env` somente
+com os provedores explicitamente autorizados (lista separada por vírgulas:
+`gemini`, `cohere`, `groq`). O padrão vazio não autoriza nenhum provedor.
+Não habilite provedores sem revisar as condições de tratamento dos dados.
+
 Ajuste também os valores de execução no `.env`:
 
 ```dotenv
