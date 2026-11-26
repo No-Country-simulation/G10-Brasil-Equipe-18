@@ -1,3 +1,4 @@
+
 # CommunityLab
 
 **Community Intelligence & Marketing Enablement**
@@ -19,6 +20,10 @@ Relatos relevantes ficam dispersos nas comunidades digitais. O CommunityLab auxi
 - Histórias, citações vinculadas à origem, posts, cards, cases e testemunhos estruturados.
 - Estúdio de conteúdo e curadoria humana, com validação factual, aprovação editorial e autorização de divulgação separadas.
 - Persistência de pacotes e recuperação editorial pelo Histórico, com OCI Object Storage quando configurado.
+
+Os ativos são vinculados às mensagens de origem por meio das histórias e evidências; essa rastreabilidade não equivale à validação factual. A recuperação editorial da versão consolidada ainda requer homologação na OCI real. O lote reaberto não restaura o conjunto integral das interações originais.
+
+Consulte o [guia da interface](READMEFrontend.md) para navegação, curadoria e limitações.
 
 ## Arquitetura
 
@@ -48,13 +53,14 @@ A interface Streamlit utiliza serviços em `app/services` e estado de sessão. O
 | Dependências uv | Integradas (#84) |
 | Centralização de estado | Integrada (#85) |
 | Refatoração e diagnósticos | PR #86 em revisão |
-| Ajustes de evidências e curadoria | PR #87 em revisão |
+| Ajustes de evidências e curadoria | Integrados (#87) |
+| Política de provedores no Docker | PR #89 em revisão |
 
 Integração de código não equivale a implantação ou aceite operacional. Consulte o [Card 23](https://trello.com/c/dwxU4dBD) para evidências e pendências.
 
 ## Instalação e configuração
 
-#### Dependências e versões de Python
+### Dependências e versões de Python
 
 As dependências de execução ficam em `[project.dependencies]` do `pyproject.toml`, incluindo o modelo `pt_core_news_sm` do spaCy (instalado por URL, na mesma série 3.8 do spaCy). O intervalo de Python é `>=3.11,<3.13`, declarado em `[project].requires-python`. O arquivo `uv.lock` fixa as versões resolvidas e deve ser versionado.
 
@@ -62,9 +68,11 @@ Para atualizar dependências, edite o `pyproject.toml`, rode `uv lock` e faça o
 
 No Streamlit Community Cloud, o gerenciador usado é o primeiro arquivo de dependências encontrado, na ordem `uv.lock`, `Pipfile`, `environment.yml`, `requirements.txt` e `pyproject.toml`. Por isso o repositório não deve conter `requirements*.txt`, `Pipfile` nem `environment.yml`. Selecione Python 3.11 ou 3.12 nas configurações do app.
 
+O [guia geral de execução](COMO_RODAR.md) contém instruções históricas; para instalação atual, priorize o fluxo uv acima.
+
 Na VM, o Dockerfile usa Python 3.11 e instala o projeto com `pip install .`, via setuptools. Esse fluxo não lê o `uv.lock`.
 
-#### Configuração de credenciais OCI
+### Configuração de credenciais OCI
 
 Para a VM com Docker, siga o [guia de implantação](docs/DEPLOYMENT_ORACLE_VM.md): a pasta `.oci/` é montada somente para leitura em `/run/oci`. O arquivo de configuração deve apontar para a chave dentro do contêiner. Variáveis OCI no `.env` não substituem esse arquivo no Compose.
 
@@ -82,10 +90,9 @@ O serviço também suporta:
 
 **Importante:** `secrets.toml` está no `.gitignore` e nunca deve ser commitado. Defina um sal secreto próprio em `SAL_PSEUDONIMIZACAO`; o Docker Compose exige esse valor e não inicia sem ele. Preserve o sal entre implantações para manter os pseudônimos estáveis.
 
-
 ## Segurança e responsabilidade
 
-Dados reais exigem política explícita de provedor e sal privado de pseudonimização. Dados de natureza desconhecida não devem ser enviados para análise real. Pseudonimização e mascaramento não garantem anonimização integral. Não versione credenciais, chaves ou dados pessoais. Preserve a revisão humana e a autorização de divulgação.
+Dados reais exigem autorização explícita dos provedores em `LLM_PROVEDORES_DADOS_REAIS` e sal privado de pseudonimização. A lista vazia não autoriza provedores para dados reais; a propagação dessa variável pelo Docker Compose é objeto do PR #89. Dados de natureza desconhecida não devem ser enviados para análise real. Pseudonimização e mascaramento não garantem anonimização integral. Não versione credenciais, chaves ou dados pessoais. Preserve a revisão humana e a autorização de divulgação.
 
 Veja [privacidade e segurança](docs/security/privacy-hardening.md).
 
@@ -108,7 +115,7 @@ A demonstração de 20/11 utilizou dados fictícios, Gemini e OCI. Resultados de
 - Consolidar evidências OCI, CATP e aceite expresso.
 - Definir licença e estratégia de disponibilização com a equipe.
 
-## 👥 Equipe
+## Equipe
 
 | Integrante | Responsabilidade |
 |---|---|
