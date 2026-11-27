@@ -4,7 +4,7 @@
 **Projeto:** CommunityLab — Hackathon ONE G10  
 **Equipe:** 18  
 **Responsável funcional:** Marcus — Project Manager  
-**Status:** Planejamento revisado — CATP-011 executado e aprovado em 16/11/2026; os demais casos não executados
+**Status:** Planejamento revisado — CATP-011 aprovado em 16/11/2026; CATP-022 e CATP-024 executados em 19 e 20/11/2026; CATP-008 aprovado e CATP-009 reprovado no ambiente principal em 27/11/2026; os demais casos não executados
 
 ## 1. Objetivo
 
@@ -45,8 +45,8 @@ Todos os testes possuem status inicial **Não executado**.
 | CATP-005 | Extração de tópicos | Tópicos identificados e rastreáveis | Não executado |
 | CATP-006 | Detecção de histórias | Histórias relevantes identificadas sem substituir resultados vazios por histórias fictícias | Não executado |
 | CATP-007 | Rastreabilidade | Evidência literal vinculada ao ID da interação original | Não executado |
-| CATP-008 | Geração de depoimentos | Depoimento estruturado e fiel à fonte | Não executado |
-| CATP-009 | Geração de casos de sucesso | Caso estruturado sem fatos inventados | Não executado |
+| CATP-008 | Geração de depoimentos | Depoimento estruturado e fiel à fonte | Aprovado |
+| CATP-009 | Geração de casos de sucesso | Caso estruturado sem fatos inventados | Reprovado na VM (Cohere); aprovado no app local (Gemini) |
 | CATP-010 | Curadoria humana | Controles independentes validados pelos subcasos CATP-010a a CATP-010d | Não executado |
 | CATP-010a | Validação factual | Estados Pendente, Validada, Insuficiente e Contradição registrados corretamente | Não executado |
 | CATP-010b | Curadoria editorial | Estados Rascunho, Ajustes, Aprovado e Rejeitado registrados corretamente | Não executado |
@@ -256,6 +256,54 @@ Executado em 20/11/2026, no app local, com o cenário de seis interações de `d
 **Observação de mensagem:** antes da correção, a tela mostrava "JSON inválido do LLM" e só no fim mencionava o truncamento, sem oferecer nova tentativa.
 
 **Evidências:** `tests/evidences/truncamento.01-antes-mensagem-json-invalido.jpg`, `truncamento.02-depois-mensagem-especifica.jpg` e `truncamento.03-log-duas-tentativas.txt`.
+
+### 3.7. CATP-008 e CATP-009 — geração de ativos com análise real
+
+Executados em 27/11/2026, com a mesma massa de entrada, em dois ambientes: a VM Oracle implantada com o commit `698587a` (análise real pelo Cohere) e o app local no mesmo commit (análise real pelo Gemini). O objeto destes dois casos é a fidelidade do ativo gerado. A diferença de comportamento entre provedores apareceu como efeito colateral e está registrada em 3.7.2.
+
+#### 3.7.1. Registro de execução — CATP-008
+
+| Campo | Registro |
+|---|---|
+| Identificador do teste | CATP-008 — Geração de depoimentos (testemunho estruturado) |
+| Data de execução | 27/11/2026 — rodada 1 às 17h15 (BRT), na VM; rodada 2 às 18h08 (BRT), no app local |
+| Responsável pela execução | Jaqueline (AI Engineer) |
+| Ambiente utilizado | Rodada 1: VM Oracle em `communitylab-oci-one-g10-group18.duckdns.org` (Docker atrás de nginx), análise real pelo **Cohere**. Rodada 2: app local Streamlit em `http://localhost:8501` (Windows), análise real pelo **Gemini** |
+| Branch, versão e commit testados | `main`, commit `698587a` nas duas rodadas. A VM foi atualizada para esse commit em 26/11/2026, conforme registro da responsável pela infraestrutura |
+| Dados de entrada | `data/samples/teste_recuperacao.json` — 3 depoimentos fictícios (Ana Ribeiro, Bruno Sales, Carla Nunes), 3 canais distintos |
+| Pré-condições | Natureza dos dados declarada como "Dados fictícios" na Importação, antes do processamento; credencial OCI do próprio ambiente |
+| Resultado esperado | Depoimento estruturado com título, descrição e citação; descrição e citação como recortes literais da mensagem; conferência da citação e fontes vinculadas à interação de origem |
+| Resultado observado | **Rodada 1 (Cohere)**, lote `LOTE-20261127T201522Z-AAF219C0049D468DA8F0271A1D86E597`: 3 histórias e 8 ativos. Na `hist-001`, o `testemunho_estruturado` saiu com os três campos; a tela exibiu "Conferência da citação (interação nº 1) → Trecho literal conferido" e as duas evidências citadas apontaram para a interação nº 1. `hist-002` e `hist-003` recusaram o testemunho — na `hist-003` com "A citação do testemunho não corresponde às evidências conferidas da história", recusa prevista quando o modelo parafraseia. **Rodada 2 (Gemini)**, lote `LOTE-20261127T210752Z-0EE45A72BF1D4E8C9B5526401DFDAA8B`: 3 histórias e 9 ativos, com `testemunho_estruturado` na `hist-001` e `testemunho_pendente` vazio |
+| Status de implementação | Disponível |
+| Aplicabilidade ao escopo aprovado | Aplicável |
+| Status de execução | **Aprovado** |
+| Evidências de execução | `tests/evidences/catp008.01-processamento-lote-cohere.jpg`, `catp008.02-historias-ia-cohere.jpg`, `catp008.03-estudio-testemunho-conferencia.jpg`, `catp008.04-historico-json-topo.jpg`, `catp008.05-historico-json-hist001.jpg`, `catp008.06-historico-json-testemunho.jpg`; rodada local: `catp009.00-processamento-lote-gemini-local.jpg` |
+| Defeito identificado | Nenhum impeditivo. Observações: (a) a anonimização mascarou a palavra comum "Comecei" como `[NOME]` no texto exibido, nos dois provedores — mesma família do caso "Estudei" registrado em 21/11; não invalida a conferência, que compara contra a cópia mascarada; (b) o autor é exibido pseudonimizado (`membro_…`), comportamento esperado da política de privacidade; (c) nas duas rodadas, 1 de 3 histórias gerou testemunho e 2 foram recusadas por paráfrase |
+| Resultado do reteste | Não aplicável — aprovado em primeira execução |
+
+**Nota de escopo:** este registro é o status de execução do caso de teste. A consolidação dos resultados e a decisão de aceite do MVP permanecem com o responsável funcional.
+
+#### 3.7.2. Registro de execução — CATP-009
+
+| Campo | Registro |
+|---|---|
+| Identificador do teste | CATP-009 — Geração de casos de sucesso |
+| Data de execução | 27/11/2026 — mesma execução do CATP-008 (rodadas de 17h15 e 18h08, BRT) |
+| Responsável pela execução | Jaqueline (AI Engineer) |
+| Ambiente utilizado | Idem ao CATP-008: VM Oracle com análise real pelo Cohere e app local com análise real pelo Gemini |
+| Branch, versão e commit testados | `main`, commit `698587a` |
+| Dados de entrada | `data/samples/teste_recuperacao.json` — 3 depoimentos fictícios |
+| Pré-condições | Idem ao CATP-008 |
+| Resultado esperado | Caso estruturado, com narrativa composta por trechos literais na ordem da fonte, citação conferida e nenhum fato inventado |
+| Resultado observado | **VM (Cohere)**: 0 de 3. As três histórias recusaram o case com "Sem resultado ou avanço literal na narrativa; revisão necessária". O campo `resultados` veio capitalizado ("Primeira vaga como analista de dados júnior", "Plano de carreira assinado") e a mensagem original grafa em minúscula; `preparar_case` (`app/services/cases.py`) filtra o resultado por correspondência literal (`r.strip() in fonte`), sem normalização. **App local (Gemini)**: 2 de 3. `hist-001` e `hist-002` com `case_sucesso`, texto em dois parágrafos recortados da mensagem, conferência "Trecho composto só por trechos da mensagem original" e fontes por trecho com `id_interacao`; `hist-003` recusada ("Modelo não retornou case"). Nesta rodada o campo `resultados` veio em minúscula, igual à fonte |
+| Status de implementação | Disponível |
+| Aplicabilidade ao escopo aprovado | Aplicável |
+| Status de execução | **Reprovado** no ambiente principal (VM, Cohere) e aprovado na rodada local (Gemini). A divergência acompanha o provedor: mesma massa de entrada, mesmo commit e regra idêntica |
+| Evidências de execução | `tests/evidences/catp009.00-processamento-lote-gemini-local.jpg`, `catp009.01-estudio-case-conferencia.jpg`, `catp009.02-historico-json-topo.jpg`, `catp009.03-historico-json-case.jpg`; e `catp008.04` a `catp008.06`, que mostram o `case_pendente` no pacote da rodada da VM |
+| Defeito identificado | A conferência do campo `resultados` é a única das três sem tolerância: a citação e o testemunho toleram espaço repetido e pontuação final, a do resultado exige correspondência literal. Com provedor que capitaliza o resultado, o case é recusado mesmo com narrativa e citação conformes. Decisão pendente do time: normalizar a comparação (caixa, espaço e pontuação final, mantendo a recusa de trecho parcial e de resultado inventado) ou rebaixar esta conferência a aviso de revisão |
+| Resultado do reteste | Pendente — depende da decisão acima e de nova execução no ambiente principal |
+
+**Nota de escopo:** este registro é o status de execução do caso de teste. A consolidação dos resultados e a decisão de aceite do MVP permanecem com o responsável funcional.
 
 ## 4. Procedimento de execução
 
